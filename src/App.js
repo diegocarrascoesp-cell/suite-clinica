@@ -1,132 +1,249 @@
 import { useState } from "react";
 
 const DRUGS_VASOA = [
-  { name: "Norepinefrina", conc_mg_ml: 1, ind: null, cri: { lo: 0.01, hi: 3, unit: "mcg/kg/min" }, dilucion: "Diluir en SG5% (no SF). Concentración habitual: 4–8 mcg/mL en 250 mL." },
-  { name: "Dopamina", conc_mg_ml: 40, ind: null, cri: { lo: 2, hi: 20, unit: "mcg/kg/min" }, dilucion: "Diluir en SG5% o SF hasta 1600–3200 mcg/mL." },
-  { name: "Dobutamina", conc_mg_ml: 12.5, ind: null, cri: { lo: 2, hi: 20, unit: "mcg/kg/min" }, dilucion: "Reconstituir y diluir hasta 1000–2000 mcg/mL en SG5% o SF." },
-  { name: "Epinefrina", conc_mg_ml: 1, ind: { lo: 0.01, hi: 0.01, unit: "mg/kg" }, cri: { lo: 0.01, hi: 1, unit: "mcg/kg/min" }, dilucion: "Para infusión: diluir en SG5%. Concentración habitual 4–8 mcg/mL." },
+  { name: "Norepinefrina", conc_mg_ml: 1, ind: null, cri: { lo: 0.02, hi: 3, unit: "mcg/kg/min" }, dilucion: "Diluir en SG5% (preferido). Concentración habitual: 8 mg en 50 mL (160 mcg/mL) o 16 mg en 100 mL. Vía central preferible.", nota: "Primera línea en shock séptico y vasodilatador. Sin ajuste renal/hepático." },
+  { name: "Epinefrina", conc_mg_ml: 1, ind: { lo: 0.01, hi: 0.01, unit: "mg/kg" }, cri: { lo: 0.01, hi: 1, unit: "mcg/kg/min" }, dilucion: "Diluir en SG5%. 4 mg en 50 mL (80 mcg/mL) o 8 mg en 100 mL. Vía central preferible.", nota: "Shock refractario con bajo GC, anafilaxia. Vigilar taquiarritmias e hiperlactatemia." },
+  { name: "Dobutamina", conc_mg_ml: 12.5, ind: null, cri: { lo: 2.5, hi: 20, unit: "mcg/kg/min" }, dilucion: "250 mg en 50 mL (5000 mcg/mL) o 500 mg en 250 mL (2000 mcg/mL) en SG5% o SF.", nota: "Inotrópico puro. Shock cardiogénico con bajo GC. Vigilar arritmias e hipotensión." },
+  { name: "Dopamina", conc_mg_ml: 40, ind: null, cri: { lo: 2, hi: 20, unit: "mcg/kg/min" }, dilucion: "400 mg en 250 mL SF o SG5% (1600 mcg/mL). O 800 mg en 250 mL (3200 mcg/mL).", nota: "⚠️ Las guías actuales (SSC 2021) desaconsejan su uso en shock séptico. Preferir Norepinefrina." },
+  { name: "Milrinona", conc_mg_ml: 1, ind: null, cri: { lo: 0.25, hi: 0.75, unit: "mcg/kg/min" }, dilucion: "Diluir en SF o SG5% hasta 0.2 mg/mL. Evitar bolo inicial en hipotensos. Vía central.", nota: "⚠️ Disponibilidad variable según centro. Inodilatador (↑GC + ↓RVS). Útil en shock cardiogénico con HTP/VD o pacientes en β-bloqueo. Ajustar en insuficiencia renal." },
+  { name: "Vasopresina", conc_mg_ml: 20, ind: null, cri: { lo: 0.01, hi: 0.04, unit: "U/min" }, dilucion: "20 UI en 50 mL SF (0.4 UI/mL) o 40 UI en 100 mL. CVC OBLIGATORIA.", nota: "Dosis fija 0.03–0.04 U/min. No titular. Segunda línea en shock séptico refractario a Norepinefrina ≥0.2 µg/kg/min." },
+  { name: "Azul de metileno", conc_mg_ml: 5, ind: null, cri: { lo: 0.25, hi: 2, unit: "mcg/kg/min" }, dilucion: "50 mg en 50 mL SG5% (1000 mcg/mL) o 100 mg en 100 mL. Infusión por 1–4 horas.", nota: "Inhibidor de óxido nítrico. Shock vasodilatador refractario. Puede teñir orina de azul." },
 ];
+
+const DVA_PREP = {
+  'Norepinefrina': { ampolla:'4 mg/4 mL (1 mg/mL)', preparaciones:[{vol:'50 mL',mg:'8 mg (2 amp)',conc:'160 mcg/mL',nota:'Jeringa estándar UCI'},{vol:'100 mL',mg:'16 mg (4 amp)',conc:'160 mcg/mL',nota:'Fleboclisis'},{vol:'250 mL',mg:'8 mg (2 amp)',conc:'32 mcg/mL',nota:'Fleboclisis diluida'}], disolvente:'SG5% (preferido)', nota:'No mezclar con soluciones alcalinas. Usar vía central preferentemente.' },
+  'Epinefrina': { ampolla:'1 mg/1 mL', preparaciones:[{vol:'50 mL',mg:'4 mg (4 amp)',conc:'80 mcg/mL',nota:'Jeringa estándar UCI'},{vol:'100 mL',mg:'8 mg (8 amp)',conc:'80 mcg/mL',nota:'Fleboclisis'},{vol:'250 mL',mg:'4 mg (4 amp)',conc:'16 mcg/mL',nota:'Fleboclisis diluida'}], disolvente:'SG5% (preferido)', nota:'Efecto α y β. Usar en shock anafiláctico, shock refractario o paro cardíaco.' },
+  'Dobutamina': { ampolla:'250 mg/20 mL (12.5 mg/mL)', preparaciones:[{vol:'50 mL',mg:'250 mg (1 amp + 30 mL)',conc:'5000 mcg/mL',nota:'Jeringa estándar'},{vol:'250 mL',mg:'500 mg (2 amp)',conc:'2000 mcg/mL',nota:'Fleboclisis estándar'}], disolvente:'SG5% o SF 0.9%', nota:'Inotrópico puro. Puede causar hipotensión y taquicardia. Vigilar arritmias.' },
+  'Dopamina': { ampolla:'200 mg/5 mL (40 mg/mL)', preparaciones:[{vol:'250 mL',mg:'400 mg (2 amp)',conc:'1600 mcg/mL',nota:'Fleboclisis estándar'},{vol:'250 mL',mg:'800 mg (4 amp)',conc:'3200 mcg/mL',nota:'Fleboclisis concentrada'}], disolvente:'SG5% o SF 0.9%', nota:'⚠️ Desaconsejada en shock séptico (SSC 2021). Preferir Norepinefrina.' },
+  'Milrinona': { ampolla:'10 mg/10 mL (1 mg/mL)', preparaciones:[{vol:'50 mL',mg:'10 mg (1 amp + 40 mL)',conc:'200 mcg/mL',nota:'Jeringa estándar'},{vol:'100 mL',mg:'20 mg (2 amp)',conc:'200 mcg/mL',nota:'Fleboclisis'}], disolvente:'SF 0.9% o SG5%', nota:'⚠️ Disponibilidad variable. Evitar bolo en hipotensos. Ajustar en insuficiencia renal (vida media 2–3h). Vía central.' },
+  'Vasopresina': { ampolla:'20 UI/mL', preparaciones:[{vol:'50 mL',mg:'20 UI (1 amp + 49 mL SF)',conc:'0.4 UI/mL',nota:'Jeringa estándar — dosis fija'},{vol:'100 mL',mg:'40 UI (2 amp)',conc:'0.4 UI/mL',nota:'Fleboclisis'}], disolvente:'SF 0.9% o SG5%', nota:'Dosis fija 0.03–0.04 U/min. No titular. Se agrega a Norepinefrina, no la reemplaza.' },
+  'Azul de metileno': { ampolla:'50 mg/10 mL (5 mg/mL)', preparaciones:[{vol:'50 mL',mg:'50 mg (1 amp + 40 mL)',conc:'1000 mcg/mL',nota:'Infusión habitual'},{vol:'100 mL',mg:'100 mg (2 amp)',conc:'1000 mcg/mL',nota:'Fleboclisis'}], disolvente:'SG5%', nota:'Inhibidor de óxido nítrico. Infusión por 1–4 horas. Puede teñir orina de azul.' },
+};
+
+const DVA_ESCALA = {
+  'Norepinefrina': [{at:0.2,color:'warning',title:'Umbral de escalada',body:'Norepinefrina ≥0.2 mcg/kg/min → Agregar Vasopresina 0.03–0.04 U/min (SSC 2021)'},{at:0.5,color:'danger',title:'Shock refractario',body:'Considerar Epinefrina o Azul de metileno. Evaluar causa reversible.'}],
+  'Epinefrina': [{at:0.5,color:'warning',title:'Dosis alta',body:'Epinefrina >0.5 mcg/kg/min → vigilar hiperlactatemia, arritmias e isquemia coronaria.'}],
+  'Dobutamina': [{at:15,color:'warning',title:'Dosis alta de inotrópico',body:'Dobutamina >15 mcg/kg/min → mayor riesgo de arritmias. Evaluar respuesta clínica.'}],
+  'Dopamina': [{at:10,color:'warning',title:'Dosis vasopresora',body:'Dopamina >10 mcg/kg/min → efecto alfa predominante. Considerar cambio a Norepinefrina.'},{at:20,color:'danger',title:'Dosis máxima',body:'Dosis límite alcanzada. Escalar a Norepinefrina si no responde.'}],
+  'Milrinona': [{at:0.5,color:'warning',title:'Dosis alta',body:'Milrinona >0.5 mcg/kg/min → vigilar hipotensión. Ajustar si insuficiencia renal.'},{at:0.75,color:'danger',title:'Dosis máxima',body:'Dosis máxima alcanzada.'}],
+  'Vasopresina': [{at:0.04,color:'warning',title:'Dosis habitual máxima',body:'Vasopresina >0.04 U/min → mayor riesgo de isquemia. Mantener dosis fija 0.03–0.04 U/min.'}],
+  'Azul de metileno': [{at:2,color:'danger',title:'Dosis máxima',body:'Dosis máxima alcanzada. Infusión habitualmente por 1–4 horas continuas.'}],
+};
 
 const SRI_DRUGS = {
   ind: [
-    { name: "Ketamina", lo: 1, hi: 2, conc: 50, unit: "mg/kg", nota: "Primera línea en inestabilidad hemodinámica. Broncodilatador." },
-    { name: "Propofol", lo: 1.5, hi: 2.5, conc: 10, unit: "mg/kg", nota: "Cuidado en hipotensión. Inicio rápido." },
-    { name: "Etomidato", lo: 0.2, hi: 0.3, conc: 2, unit: "mg/kg", nota: "Mejor estabilidad hemodinámica. Evitar en sepsis severa (supresión adrenal)." },
-    { name: "Midazolam", lo: 0.05, hi: 0.1, conc: 5, unit: "mg/kg", nota: "Útil como coadyuvante. Precaución en inestabilidad." },
+    { name:"Ketamina", lo:1, hi:2, conc:50, unit:"mg/kg", nota:"Primera línea en inestabilidad hemodinámica. Broncodilatador." },
+    { name:"Propofol", lo:1.5, hi:2.5, conc:10, unit:"mg/kg", nota:"Cuidado en hipotensión. Inicio rápido." },
+    { name:"Etomidato", lo:0.2, hi:0.3, conc:2, unit:"mg/kg", nota:"Mejor estabilidad hemodinámica. Evitar en sepsis severa." },
+    { name:"Midazolam", lo:0.05, hi:0.1, conc:5, unit:"mg/kg", nota:"Útil como coadyuvante. Precaución en inestabilidad." },
   ],
   anal: [
-    { name: "Fentanilo", lo: 1, hi: 3, conc: 0.05, unit: "mcg/kg", nota: "Primera línea. Administrar 3 min antes de la inducción." },
-    { name: "Ketamina (analgésica)", lo: 0.3, hi: 0.5, conc: 50, unit: "mg/kg", nota: "Dosis subanestésica. Alternativa si contraindicado opiáceo." },
+    { name:"Fentanilo", lo:1, hi:3, conc:0.05, unit:"mcg/kg", nota:"Primera línea. Administrar 3 min antes de la inducción." },
+    { name:"Ketamina (analgésica)", lo:0.3, hi:0.5, conc:50, unit:"mg/kg", nota:"Dosis subanestésica. Alternativa si contraindicado opiáceo." },
   ],
   bnm: [
-    { name: "Rocuronio", lo: 1, hi: 1.2, conc: 10, unit: "mg/kg", nota: "Reversible con sugammadex. De elección si contraindicada succinilcolina." },
-    { name: "Succinilcolina", lo: 1.5, hi: 2, conc: 20, unit: "mg/kg", nota: "Inicio ultrarrápido. Contraindicado en hipercalemia, quemados >48h, denervación." },
+    { name:"Rocuronio", lo:1, hi:1.2, conc:10, unit:"mg/kg", nota:"Reversible con sugammadex. De elección si contraindicada succinilcolina." },
+    { name:"Succinilcolina", lo:1.5, hi:2, conc:20, unit:"mg/kg", nota:"Inicio ultrarrápido. Contraindicado en hipercalemia, quemados >48h, denervación." },
   ],
 };
 
 const PROC_DRUGS = [
-  { name: "Etomidato", lo: 0.05, hi: 0.1, conc: 2, unit: "mg/kg", duracion: "3–5 min", indicacion: "Cardioversión, procedimientos cortos. Excelente estabilidad HD.", color: "#a78bfa" },
-  { name: "Ketamina", lo: 0.5, hi: 1.5, conc: 50, unit: "mg/kg", duracion: "10–20 min", indicacion: "Reducción fracturas, curaciones, procedimientos dolorosos. Analgesia + sedación.", color: "#22d3ee" },
-  { name: "Midazolam", lo: 0.02, hi: 0.05, conc: 5, unit: "mg/kg", duracion: "20–30 min", indicacion: "Ansiolisis, procedimientos menores. Combinar con analgésico.", color: "#34d399" },
-  { name: "Fentanilo", lo: 1, hi: 2, conc: 0.05, unit: "mcg/kg", duracion: "30–60 min", indicacion: "Analgesia procedimental. Siempre acompañar con sedante si necesario.", color: "#f59e0b" },
-  { name: "Propofol", lo: 0.5, hi: 1.5, conc: 10, unit: "mg/kg", duracion: "5–10 min", indicacion: "Cardioversión, endoscopia, procedimientos rápidos. Vigilar hipotensión.", color: "#f87171" },
-  { name: "Dexmedetomidina", lo: 0.5, hi: 1, conc: 0.2, unit: "mcg/kg", duracion: "Bolo pre-procedimiento", indicacion: "Sedación cooperativa. CVC, curaciones, procedimientos que requieren colaboración.", color: "#818cf8" },
+  { name:"Etomidato", lo:0.05, hi:0.1, conc:2, unit:"mg/kg", duracion:"3–5 min", indicacion:"Cardioversión, procedimientos cortos. Excelente estabilidad HD.", color:"#a78bfa" },
+  { name:"Ketamina", lo:0.5, hi:1.5, conc:50, unit:"mg/kg", duracion:"10–20 min", indicacion:"Reducción fracturas, curaciones, procedimientos dolorosos.", color:"#22d3ee" },
+  { name:"Midazolam", lo:0.02, hi:0.05, conc:5, unit:"mg/kg", duracion:"20–30 min", indicacion:"Ansiolisis, procedimientos menores. Combinar con analgésico.", color:"#34d399" },
+  { name:"Fentanilo", lo:1, hi:2, conc:0.05, unit:"mcg/kg", duracion:"30–60 min", indicacion:"Analgesia procedimental. Acompañar con sedante si necesario.", color:"#f59e0b" },
+  { name:"Propofol", lo:0.5, hi:1.5, conc:10, unit:"mg/kg", duracion:"5–10 min", indicacion:"Cardioversión, procedimientos rápidos. Vigilar hipotensión.", color:"#f87171" },
+  { name:"Dexmedetomidina", lo:0.5, hi:1, conc:0.2, unit:"mcg/kg", duracion:"Bolo pre-procedimiento", indicacion:"Sedación cooperativa. CVC, curaciones, procedimientos con colaboración.", color:"#818cf8" },
 ];
 
 function calcInd(w, drug) {
   if (!drug.ind) return null;
-  const f = drug.ind.unit === "mcg/kg" ? 0.001 : 1;
-  const loMg = drug.ind.lo * w * f, hiMg = drug.ind.hi * w * f;
-  return { loMg, hiMg, loMl: loMg / drug.conc_mg_ml, hiMl: hiMg / drug.conc_mg_ml, unit: drug.ind.unit };
+  const f = drug.ind.unit==="mcg/kg"?0.001:1;
+  const loMg=drug.ind.lo*w*f, hiMg=drug.ind.hi*w*f;
+  return { loMg, hiMg, loMl:loMg/drug.conc_mg_ml, hiMl:hiMg/drug.conc_mg_ml, unit:drug.ind.unit };
 }
 function calcCRI(w, drug) {
-  const { cri, conc_mg_ml } = drug; if (!cri) return null;
-  if (cri.unit === "mcg/kg/min") return { loMlhr: (cri.lo*w*60)/(conc_mg_ml*1000), hiMlhr: (cri.hi*w*60)/(conc_mg_ml*1000), loMcghr: cri.lo*w*60, hiMcghr: cri.hi*w*60, unit: cri.unit };
-  if (cri.unit === "mg/kg/hr") return { loMlhr: (cri.lo*w)/conc_mg_ml, hiMlhr: (cri.hi*w)/conc_mg_ml, loMcghr: cri.lo*w*1000, hiMcghr: cri.hi*w*1000, unit: cri.unit };
+  const { cri, conc_mg_ml }=drug; if(!cri) return null;
+  if(cri.unit==="mcg/kg/min") return { loMlhr:(cri.lo*w*60)/(conc_mg_ml*1000), hiMlhr:(cri.hi*w*60)/(conc_mg_ml*1000), loMcghr:cri.lo*w*60, hiMcghr:cri.hi*w*60, unit:cri.unit };
+  if(cri.unit==="mg/kg/hr") return { loMlhr:(cri.lo*w)/conc_mg_ml, hiMlhr:(cri.hi*w)/conc_mg_ml, loMcghr:cri.lo*w*1000, hiMcghr:cri.hi*w*1000, unit:cri.unit };
+  if(cri.unit==="U/min") return { loMlhr:(cri.lo*60*50)/(conc_mg_ml*1000), hiMlhr:(cri.hi*60*50)/(conc_mg_ml*1000), loMcghr:cri.lo*60, hiMcghr:cri.hi*60, unit:cri.unit };
   return null;
 }
-function fmt(n, d=2) { if (n===undefined||n===null||isNaN(n)) return "—"; return n.toFixed(d).replace(/\.?0+$/,"")||"0"; }
+function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "—"; return n.toFixed(d).replace(/\.?0+$/,"")||"0"; }
 
 function Badge({ children, color }) {
-  return <span style={{ background: color+"18", border:`1px solid ${color}44`, color, borderRadius:20, padding:"2px 10px", fontSize:10, fontWeight:700, letterSpacing:1, textTransform:"uppercase" }}>{children}</span>;
+  return <span style={{ background:color+"18", border:`1px solid ${color}44`, color, borderRadius:20, padding:"2px 10px", fontSize:10, fontWeight:700, letterSpacing:1, textTransform:"uppercase" }}>{children}</span>;
 }
 function Section({ label, color, children }) {
   return <div style={{ background:"#06101f", borderRadius:8, padding:"12px 14px", borderLeft:`3px solid ${color}` }}><div style={{ fontSize:9, color, letterSpacing:2, marginBottom:8, fontWeight:700 }}>{label}</div>{children}</div>;
 }
 
-function DrugCard({ drug, weight }) {
-  const [showDil, setShowDil] = useState(false);
+function DVATab({ weight }) {
+  const [selDrug, setSelDrug] = useState('Norepinefrina');
+  const [showPrep, setShowPrep] = useState(false);
+  const [mg, setMg] = useState('');
+  const [vol, setVol] = useState('50');
+  const [dose, setDose] = useState('');
   const valid = weight > 0;
-  const ind = valid ? calcInd(weight, drug) : null;
-  const cri = valid ? calcCRI(weight, drug) : null;
+  const drug = DRUGS_VASOA.find(d=>d.name===selDrug);
+  const prep = DVA_PREP[selDrug];
+  const escala = DVA_ESCALA[selDrug];
+  const concMcgMl = mg&&vol ? (parseFloat(mg)*1000)/parseFloat(vol) : null;
+  const doseNum = parseFloat(dose);
+  const isU = drug.cri.unit==='U/min';
+
+  let mlhr=null, mcgMin=null, mcgHr=null;
+  if(valid&&concMcgMl&&doseNum>0){
+    if(isU){ mlhr=(doseNum*60*parseFloat(vol))/(parseFloat(mg)*1000); mcgMin=doseNum; mcgHr=doseNum*60; }
+    else { mcgMin=doseNum*weight; mcgHr=mcgMin*60; mlhr=(mcgMin*60)/concMcgMl; }
+  }
+
+  const pct = doseNum>0 ? Math.min((doseNum/drug.cri.hi)*100,100) : 0;
+  const barColor = pct<40?'#22c55e':pct<70?'#f59e0b':'#ef4444';
+  const triggered = doseNum>0 ? escala.slice().reverse().find(e=>doseNum>=e.at) : null;
+
   return (
-    <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"16px 18px", marginBottom:10 }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-        <span style={{ fontSize:15, fontWeight:700 }}>{drug.name}</span>
-        <div style={{ display:"flex", gap:6, flexWrap:"wrap", justifyContent:"flex-end" }}>
-          {drug.ind && <Badge color="#a78bfa">Inducción</Badge>}
-          {drug.cri && <Badge color="#22d3ee">CRI</Badge>}
+    <div>
+      <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"14px 16px", marginBottom:12 }}>
+        <div style={{ fontSize:10, color:"#22d3ee", letterSpacing:2, marginBottom:8 }}>FÁRMACO — toca el nombre para ver preparación</div>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+          {DRUGS_VASOA.map(d=>(
+            <button key={d.name} onClick={()=>{ if(selDrug===d.name){setShowPrep(s=>!s);}else{setSelDrug(d.name);setShowPrep(true);setDose('');} }}
+              style={{ padding:"7px 12px", borderRadius:8, fontFamily:"inherit", fontSize:12, fontWeight:700, cursor:"pointer", border:selDrug===d.name?"1px solid #22d3ee":"1px solid #1a3060", background:selDrug===d.name?"#0d2a4e":"#060d1f", color:selDrug===d.name?"#22d3ee":"#4a6a9f" }}>
+              {d.name}
+            </button>
+          ))}
         </div>
       </div>
-      {!valid && <p style={{ color:"#3a5a8f", fontSize:12, fontStyle:"italic", margin:0 }}>Ingresa el peso para ver los cálculos</p>}
-      {valid && (
-        <div style={{ display:"grid", gridTemplateColumns: ind&&cri?"1fr 1fr":"1fr", gap:10, marginBottom:10 }}>
-          {ind && <Section label="DOSIS INDUCCIÓN" color="#a78bfa"><div style={{ fontSize:16, fontWeight:800, color:"#e8edf5" }}>{fmt(ind.loMg,1)}–{fmt(ind.hiMg,1)} {ind.unit==="mcg/kg"?"mcg":"mg"}</div><div style={{ fontSize:12, color:"#a78bfa", marginTop:3 }}>{fmt(ind.loMl,2)}–{fmt(ind.hiMl,2)} mL</div></Section>}
-          {cri && <Section label={`CRI (${drug.cri.unit})`} color="#22d3ee"><div style={{ fontSize:15, fontWeight:800, color:"#e8edf5" }}>{fmt(cri.loMlhr,2)}–{fmt(cri.hiMlhr,2)} mL/hr</div><div style={{ fontSize:11, color:"#22d3ee", marginTop:3 }}>{fmt(cri.loMcghr,1)}–{fmt(cri.hiMcghr,1)} {cri.unit.startsWith("mcg")?"mcg":"mg"}/hr</div></Section>}
+
+      {showPrep && prep && (
+        <div style={{ background:"#0b1730", border:"1px solid #22d3ee44", borderRadius:14, padding:"14px 16px", marginBottom:12 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+            <div style={{ fontSize:11, color:"#22d3ee", letterSpacing:2, fontWeight:700 }}>💊 PREPARACIÓN — {selDrug}</div>
+            <button onClick={()=>setShowPrep(false)} style={{ background:"transparent", border:"none", color:"#4a6a9f", cursor:"pointer", fontSize:16 }}>✕</button>
+          </div>
+          <div style={{ fontSize:12, color:"#7aa2d4", marginBottom:6 }}><strong style={{ color:"#e8edf5" }}>Presentación:</strong> {prep.ampolla}</div>
+          <div style={{ fontSize:12, color:"#7aa2d4", marginBottom:10 }}><strong style={{ color:"#e8edf5" }}>Disolvente:</strong> {prep.disolvente}</div>
+          {prep.preparaciones.map((p,i)=>(
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:"1px solid #1a3060", fontSize:12 }}>
+              <span style={{ color:"#7aa2d4" }}>{p.nota} · {p.vol} · {p.mg}</span>
+              <span style={{ color:"#22d3ee", fontWeight:700 }}>{p.conc}</span>
+            </div>
+          ))}
+          <div style={{ marginTop:10, padding:"8px 10px", background:"#040c1c", borderRadius:8, fontSize:11, color:"#7aa2d4" }}>{prep.nota}</div>
         </div>
       )}
-      <button onClick={() => setShowDil(s=>!s)} style={{ background:"transparent", border:"1px solid #1a3060", color:"#4a6a9f", borderRadius:8, padding:"5px 12px", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
-        {showDil?"▲ Ocultar dilución":"▼ Ver dilución"}
-      </button>
-      {showDil && <div style={{ marginTop:10, padding:"10px 14px", background:"#040c1c", borderRadius:8, fontSize:12, color:"#7aa2d4", lineHeight:1.7, borderLeft:"3px solid #1a3060" }}>{drug.dilucion}</div>}
+
+      <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"14px 16px", marginBottom:12 }}>
+        <div style={{ fontSize:10, color:"#4a6a9f", letterSpacing:2, marginBottom:10 }}>DILUCIÓN PREPARADA</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:8 }}>
+          <div>
+            <div style={{ fontSize:11, color:"#4a6a9f", marginBottom:4 }}>mg en la jeringa/fleboclisis</div>
+            <input type="number" value={mg} onChange={e=>setMg(e.target.value)} placeholder="Ej: 8"
+              style={{ width:"100%", background:"#040c1c", border:"1px solid #1a3060", borderRadius:8, color:"#e8edf5", fontSize:15, padding:"8px 12px", outline:"none", fontFamily:"inherit", boxSizing:"border-box" }}/>
+          </div>
+          <div>
+            <div style={{ fontSize:11, color:"#4a6a9f", marginBottom:4 }}>Volumen total (mL)</div>
+            <div style={{ display:"flex", gap:6, marginBottom:6 }}>
+              {['50','100','250'].map(v=>(
+                <button key={v} onClick={()=>setVol(v)} style={{ flex:1, padding:"5px 0", borderRadius:6, fontFamily:"inherit", fontSize:11, fontWeight:700, cursor:"pointer", border:vol===v?"1px solid #22d3ee":"1px solid #1a3060", background:vol===v?"#0d2a4e":"#060d1f", color:vol===v?"#22d3ee":"#4a6a9f" }}>{v}</button>
+              ))}
+            </div>
+            <input type="number" value={vol} onChange={e=>setVol(e.target.value)}
+              style={{ width:"100%", background:"#040c1c", border:"1px solid #1a3060", borderRadius:8, color:"#e8edf5", fontSize:13, padding:"7px 12px", outline:"none", fontFamily:"inherit", boxSizing:"border-box" }}/>
+          </div>
+        </div>
+        {concMcgMl && <div style={{ fontSize:12, color:"#4a9eff" }}>→ Concentración: {(parseFloat(mg)/parseFloat(vol)).toFixed(3)} mg/mL = {concMcgMl.toFixed(1)} mcg/mL</div>}
+      </div>
+
+      <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"14px 16px", marginBottom:12 }}>
+        <div style={{ fontSize:10, color:"#4a6a9f", letterSpacing:2, marginBottom:6 }}>DOSIS QUE ESTÁS ADMINISTRANDO ({drug.cri.unit})</div>
+        <input type="number" value={dose} onChange={e=>setDose(e.target.value)} placeholder={fmt(drug.cri.lo,3)} step="0.01"
+          style={{ width:"140px", background:"#040c1c", border:"1px solid #1a4080", borderRadius:8, color:"#22d3ee", fontSize:22, fontWeight:800, padding:"6px 14px", outline:"none", fontFamily:"inherit" }}/>
+        {doseNum>0 && (
+          <div style={{ marginTop:12 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"#4a6a9f", marginBottom:4 }}>
+              <span>{drug.cri.lo} {drug.cri.unit}</span>
+              <span>{((drug.cri.lo+drug.cri.hi)/2).toFixed(2)}</span>
+              <span>{drug.cri.hi} {drug.cri.unit}</span>
+            </div>
+            <div style={{ background:"#040c1c", borderRadius:20, height:10, overflow:"hidden" }}>
+              <div style={{ height:"100%", borderRadius:20, width:pct+"%", background:barColor, transition:"width 0.3s" }}/>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {mlhr!==null && (
+        <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"16px", marginBottom:12 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:triggered?12:0 }}>
+            {[{label:"VELOCIDAD",val:fmt(mlhr,2),unit:"mL/hr"},{label:isU?"DOSIS":"DOSIS TOTAL",val:fmt(mcgMin,4),unit:isU?"U/min":"mcg/min"},{label:"DOSIS/HR",val:fmt(mcgHr,2),unit:isU?"U/hr":"mcg/hr"}].map(item=>(
+              <div key={item.label} style={{ background:"#040c1c", borderRadius:8, padding:"12px", textAlign:"center" }}>
+                <div style={{ fontSize:9, color:"#4a6a9f", letterSpacing:1, marginBottom:4 }}>{item.label}</div>
+                <div style={{ fontSize:20, fontWeight:800, color:"#22d3ee" }}>{item.val}</div>
+                <div style={{ fontSize:11, color:"#4a6a9f" }}>{item.unit}</div>
+              </div>
+            ))}
+          </div>
+          {triggered && (
+            <div style={{ background:triggered.color==='danger'?"#2a0505":"#2a1a00", border:`1px solid ${triggered.color==='danger'?"#ef444444":"#f59e0b44"}`, borderRadius:10, padding:"12px 14px" }}>
+              <div style={{ fontSize:12, fontWeight:700, color:triggered.color==='danger'?"#ef4444":"#f59e0b" }}>⚡ {triggered.title}</div>
+              <div style={{ fontSize:12, color:triggered.color==='danger'?"#ef4444":"#f59e0b", marginTop:4 }}>{triggered.body}</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"14px 16px" }}>
+        <div style={{ fontSize:10, color:"#4a6a9f", letterSpacing:2, marginBottom:8 }}>RANGOS DE REFERENCIA — {selDrug}</div>
+        <div style={{ fontSize:12, color:"#7aa2d4", lineHeight:2 }}>
+          Rango: {drug.cri.lo}–{drug.cri.hi} {drug.cri.unit}<br/>
+          {escala.map(e=><span key={e.at}>⚡ {e.at} {drug.cri.unit}: {e.title}<br/></span>)}
+        </div>
+        {drug.nota && <div style={{ marginTop:8, padding:"8px 10px", background:"#040c1c", borderRadius:8, fontSize:11, color:"#7aa2d4" }}>{drug.nota}</div>}
+      </div>
     </div>
   );
 }
 
 function SRITab({ weight }) {
-  const [sel, setSel] = useState({ ind:null, anal:null, bnm:null });
+  const [sel, setSel] = useState({ind:null,anal:null,bnm:null});
   const valid = weight > 0;
-  function pick(g, d) { setSel(p=>({...p,[g]:p[g]?.name===d.name?null:d})); }
-  const colors = { ind:"#a78bfa", anal:"#22d3ee", bnm:"#34d399" };
-  const labels = { ind:"1. Inductor", anal:"2. Analgesia", bnm:"3. Bloqueador neuromuscular" };
-  const allSel = sel.ind && sel.anal && sel.bnm;
-
-  function calcDose(d) {
-    if (!valid || !d) return null;
-    const isMcg = d.unit==="mcg/kg", f = isMcg?0.001:1;
+  function pick(g,d){ setSel(p=>({...p,[g]:p[g]?.name===d.name?null:d})); }
+  const colors={ind:"#a78bfa",anal:"#22d3ee",bnm:"#34d399"};
+  const labels={ind:"1. Inductor",anal:"2. Analgesia",bnm:"3. Bloqueador neuromuscular"};
+  const allSel=sel.ind&&sel.anal&&sel.bnm;
+  function calcDose(d){
+    if(!valid||!d) return null;
+    const isMcg=d.unit==="mcg/kg", f=isMcg?0.001:1;
     const loMg=d.lo*weight*f, hiMg=d.hi*weight*f;
-    return { loMg, hiMg, loMl: loMg/d.conc, hiMl: hiMg/d.conc, isMcg };
+    return {loMg,hiMg,loMl:loMg/d.conc,hiMl:hiMg/d.conc,isMcg};
   }
-
   return (
     <div>
-      {["ind","anal","bnm"].map(g => (
-        <div key={g} style={{ background:"#0b1730", border:`1px solid ${sel[g]?"#1a3060":"#1a3060"}`, borderRadius:14, padding:"16px 18px", marginBottom:12 }}>
+      {["ind","anal","bnm"].map(g=>(
+        <div key={g} style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"16px 18px", marginBottom:12 }}>
           <div style={{ fontSize:10, color:colors[g], letterSpacing:2, fontWeight:700, marginBottom:10 }}>{labels[g].toUpperCase()}</div>
-          {SRI_DRUGS[g].map(d => {
-            const isSelected = sel[g]?.name===d.name;
-            const dose = isSelected ? calcDose(d) : null;
+          {SRI_DRUGS[g].map(d=>{
+            const isSelected=sel[g]?.name===d.name;
+            const dose=isSelected?calcDose(d):null;
             return (
-              <button key={d.name} onClick={()=>pick(g,d)} style={{ width:"100%", textAlign:"left", background: isSelected?colors[g]+"22":"#060d1f", border: isSelected?`1px solid ${colors[g]}`:"1px solid #1a3060", borderRadius:10, padding:"10px 14px", cursor:"pointer", marginBottom:6, fontFamily:"inherit" }}>
+              <button key={d.name} onClick={()=>pick(g,d)} style={{ width:"100%", textAlign:"left", background:isSelected?colors[g]+"22":"#060d1f", border:isSelected?`1px solid ${colors[g]}`:"1px solid #1a3060", borderRadius:10, padding:"10px 14px", cursor:"pointer", marginBottom:6, fontFamily:"inherit" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                  <span style={{ fontSize:14, fontWeight:700, color: isSelected?colors[g]:"#e8edf5" }}>{d.name}</span>
-                  <span style={{ fontSize:11, background:"#040c1c", borderRadius:20, padding:"2px 10px", color: isSelected?colors[g]:"#4a6a9f" }}>{d.lo}–{d.hi} {d.unit}</span>
+                  <span style={{ fontSize:14, fontWeight:700, color:isSelected?colors[g]:"#e8edf5" }}>{d.name}</span>
+                  <span style={{ fontSize:11, background:"#040c1c", borderRadius:20, padding:"2px 10px", color:isSelected?colors[g]:"#4a6a9f" }}>{d.lo}–{d.hi} {d.unit}</span>
                 </div>
-                {isSelected && valid && dose && (
-                  <div style={{ marginTop:6, fontSize:12, color:colors[g] }}>
-                    {fmt(dose.loMg,1)}–{fmt(dose.hiMg,1)} {dose.isMcg?"mcg":"mg"} · {fmt(dose.loMl,2)}–{fmt(dose.hiMl,2)} mL
-                  </div>
-                )}
+                {isSelected&&valid&&dose&&<div style={{ marginTop:6, fontSize:12, color:colors[g] }}>{fmt(dose.loMg,1)}–{fmt(dose.hiMg,1)} {dose.isMcg?"mcg":"mg"} · {fmt(dose.loMl,2)}–{fmt(dose.hiMl,2)} mL</div>}
                 <div style={{ fontSize:11, color:"#4a6a9f", marginTop:4 }}>{d.nota}</div>
               </button>
             );
           })}
         </div>
       ))}
-      {allSel && valid && (
+      {allSel&&valid&&(
         <div style={{ background:"#040c1c", border:"1px solid #22d3ee44", borderRadius:14, padding:"18px" }}>
           <div style={{ fontSize:10, color:"#22d3ee", letterSpacing:2, fontWeight:700, marginBottom:14 }}>RESUMEN SRI — {weight} kg</div>
-          {[["ind","Inductor"],["anal","Analgesia"],["bnm","BNM"]].map(([g,label]) => {
+          {[["ind","Inductor"],["anal","Analgesia"],["bnm","BNM"]].map(([g,label])=>{
             const d=sel[g], dose=calcDose(d);
             return (
               <div key={g} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0", borderBottom:"1px solid #1a3060" }}>
@@ -141,46 +258,59 @@ function SRITab({ weight }) {
           <button onClick={()=>setSel({ind:null,anal:null,bnm:null})} style={{ marginTop:12, background:"transparent", border:"1px solid #1a3060", color:"#4a6a9f", borderRadius:8, padding:"6px 16px", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>Reiniciar</button>
         </div>
       )}
-      {!valid && <div style={{ color:"#3a5a8f", fontSize:12, fontStyle:"italic", textAlign:"center", padding:16 }}>Ingresa el peso arriba para ver las dosis calculadas</div>}
+      {!valid&&<div style={{ color:"#3a5a8f", fontSize:12, fontStyle:"italic", textAlign:"center", padding:16 }}>Ingresa el peso arriba para ver las dosis calculadas</div>}
     </div>
   );
 }
 
-function CustomCRI({ weight }) {
-  const [state, setState] = useState({ drug:"", dose:"", unit:"mcg/kg/min", conc:"", vol:"50" });
-  const valid = weight > 0;
-  function set(k,v) { setState(p=>({...p,[k]:v})); }
-  const d=parseFloat(state.dose), c=parseFloat(state.conc), v=parseFloat(state.vol);
-  let result=null;
-  if(valid&&d>0&&c>0&&v>0){
-    const concDil=(c*1000)/v;
-    if(state.unit==="mcg/kg/min") result={mlhr:(d*weight*60)/concDil,totalPerMin:d*weight,totalPerHr:d*weight*60};
-    else if(state.unit==="mg/kg/hr") result={mlhr:(d*weight*1000)/concDil,totalPerMin:(d*weight*1000)/60,totalPerHr:d*weight*1000};
-    else if(state.unit==="mcg/kg/hr") result={mlhr:(d*weight)/concDil,totalPerMin:(d*weight)/60,totalPerHr:d*weight};
+function CRITab({ weight }) {
+  const [state, setState] = useState({drug:"",mg:"",vol:"",w:"",dose:"",unit:"mcg/kg/min"});
+  function set(k,v){ setState(p=>({...p,[k]:v})); }
+  const mg=parseFloat(state.mg), vol=parseFloat(state.vol), w=parseFloat(state.w)||weight, dose=parseFloat(state.dose);
+  const mgMl = mg>0&&vol>0 ? mg/vol : null;
+  let mlhr=null, mghr=null, mg24=null;
+  if(mgMl&&dose>0){
+    if(state.unit==="mg/h"){ mghr=dose; mlhr=dose/mgMl; }
+    else if(state.unit==="mcg/kg/min"&&w>0){ const mcgMin=dose*w; mghr=(mcgMin*60)/1000; mlhr=mghr/mgMl; }
+    else if(state.unit==="mcg/kg/h"&&w>0){ mghr=(dose*w)/1000; mlhr=mghr/mgMl; }
+    if(mghr!==null) mg24=mghr*24;
   }
-  const inp = { display:"block", width:"100%", marginTop:6, background:"#040c1c", border:"1px solid #1a3060", borderRadius:8, color:"#e8edf5", fontSize:14, padding:"9px 13px", outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
+  const inp={background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",fontSize:14,padding:"9px 13px",outline:"none",fontFamily:"inherit",width:"100%",boxSizing:"border-box"};
   return (
     <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"20px" }}>
-      <div style={{ fontSize:11, color:"#34d399", letterSpacing:2, marginBottom:16 }}>INFUSIÓN PERSONALIZADA</div>
-      <div style={{ marginBottom:14 }}><label style={{ fontSize:10, color:"#34d399", letterSpacing:2 }}>FÁRMACO</label><input value={state.drug} onChange={e=>set("drug",e.target.value)} placeholder="Ej: Vasopresina..." style={inp}/></div>
+      <div style={{ fontSize:11, color:"#34d399", letterSpacing:2, marginBottom:16 }}>CALCULADORA DE INFUSIÓN</div>
+      <div style={{ marginBottom:14 }}><label style={{ fontSize:10, color:"#34d399", letterSpacing:2 }}>FÁRMACO</label><input value={state.drug} onChange={e=>set("drug",e.target.value)} placeholder="Ej: Morfina, Midazolam..." style={inp}/></div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:14 }}>
-        <div><label style={{ fontSize:10, color:"#34d399", letterSpacing:2 }}>DOSIS DESEADA</label><input type="number" value={state.dose} onChange={e=>set("dose",e.target.value)} placeholder="0.1" style={inp}/></div>
-        <div><label style={{ fontSize:10, color:"#34d399", letterSpacing:2 }}>UNIDAD</label><select value={state.unit} onChange={e=>set("unit",e.target.value)} style={{...inp,marginTop:6}}><option>mcg/kg/min</option><option>mcg/kg/hr</option><option>mg/kg/hr</option></select></div>
+        <div><label style={{ fontSize:10, color:"#34d399", letterSpacing:2 }}>mg CARGADOS</label><input type="number" value={state.mg} onChange={e=>set("mg",e.target.value)} placeholder="Ej: 100" style={inp}/></div>
+        <div><label style={{ fontSize:10, color:"#34d399", letterSpacing:2 }}>VOLUMEN (mL)</label><input type="number" value={state.vol} onChange={e=>set("vol",e.target.value)} placeholder="Ej: 250" style={inp}/></div>
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:14 }}>
-        <div><label style={{ fontSize:10, color:"#34d399", letterSpacing:2 }}>CONC. DILUCIÓN (mg/mL)</label><input type="number" value={state.conc} onChange={e=>set("conc",e.target.value)} placeholder="mg totales" style={inp}/></div>
-        <div><label style={{ fontSize:10, color:"#34d399", letterSpacing:2 }}>VOLUMEN JERINGA (mL)</label><input type="number" value={state.vol} onChange={e=>set("vol",e.target.value)} placeholder="50" style={inp}/></div>
+      {mgMl&&<div style={{ fontSize:12, color:"#4a9eff", marginBottom:14 }}>→ Concentración: {mgMl.toFixed(3)} mg/mL = {(mgMl*1000).toFixed(1)} mcg/mL</div>}
+      <div style={{ marginBottom:14 }}>
+        <label style={{ fontSize:10, color:"#34d399", letterSpacing:2 }}>UNIDAD</label>
+        <div style={{ display:"flex", gap:8, marginTop:6 }}>
+          {["mcg/kg/min","mcg/kg/h","mg/h"].map(u=>(
+            <button key={u} onClick={()=>set("unit",u)} style={{ flex:1, padding:"8px 4px", borderRadius:8, fontFamily:"inherit", fontSize:11, fontWeight:700, cursor:"pointer", border:state.unit===u?"1px solid #34d399":"1px solid #1a3060", background:state.unit===u?"#052a10":"#060d1f", color:state.unit===u?"#34d399":"#4a6a9f" }}>{u}</button>
+          ))}
+        </div>
       </div>
-      {result && (
+      {state.unit!=="mg/h"&&(
+        <div style={{ marginBottom:14 }}><label style={{ fontSize:10, color:"#34d399", letterSpacing:2 }}>PESO (kg)</label><input type="number" value={state.w||weight||""} onChange={e=>set("w",e.target.value)} placeholder={weight||"70"} style={inp}/></div>
+      )}
+      <div style={{ marginBottom:14 }}><label style={{ fontSize:10, color:"#34d399", letterSpacing:2 }}>DOSIS DESEADA ({state.unit})</label><input type="number" value={state.dose} onChange={e=>set("dose",e.target.value)} placeholder="0.1" step="0.01" style={{...inp,fontSize:18,fontWeight:700,color:"#34d399"}}/></div>
+      {mlhr!==null&&(
         <div style={{ background:"#040c1c", borderRadius:10, padding:"16px", border:"1px solid #34d39944" }}>
-          <div style={{ fontSize:10, color:"#34d399", letterSpacing:2, marginBottom:12 }}>✓ {state.drug||"Fármaco"} — {weight} kg</div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8 }}>
-            {[{label:"VELOCIDAD",value:fmt(result.mlhr,2)+" mL/hr",accent:"#34d399"},{label:"DOSIS/min",value:fmt(result.totalPerMin,2)+" mcg/min",accent:"#22d3ee"},{label:"DOSIS/hr",value:fmt(result.totalPerHr,1)+" mcg/hr",accent:"#a78bfa"}].map(item=>(
+          <div style={{ fontSize:10, color:"#34d399", letterSpacing:2, marginBottom:12 }}>✓ {state.drug||"Fármaco"} — {state.mg} mg en {state.vol} mL</div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:12 }}>
+            {[{label:"VELOCIDAD",val:fmt(mlhr,2)+" mL/hr",accent:"#34d399"},{label:"DOSIS/HR",val:fmt(mghr,3)+" mg/hr",accent:"#22d3ee"},{label:"DOSIS/24H",val:fmt(mg24,1)+" mg/24h",accent:"#a78bfa"}].map(item=>(
               <div key={item.label} style={{ background:"#0b1730", borderRadius:8, padding:"10px", borderTop:`2px solid ${item.accent}` }}>
                 <div style={{ fontSize:9, color:item.accent, letterSpacing:1, marginBottom:4 }}>{item.label}</div>
-                <div style={{ fontSize:13, fontWeight:800, color:"#e8edf5" }}>{item.value}</div>
+                <div style={{ fontSize:13, fontWeight:800, color:"#e8edf5" }}>{item.val}</div>
               </div>
             ))}
+          </div>
+          <div style={{ background:"#052a10", borderRadius:8, padding:"10px 12px", fontSize:12, color:"#34d399", lineHeight:1.8 }}>
+            <strong>Indicación:</strong> {state.drug||"Fármaco"} {state.mg} mg en {state.vol} mL → pasar a <strong>{fmt(mlhr,2)} mL/hr</strong>
+            {state.unit!=="mg/h"&&w>0&&<><br/>Dosis: {state.dose} {state.unit} para {w} kg</>}
           </div>
         </div>
       )}
@@ -190,13 +320,13 @@ function CustomCRI({ weight }) {
 
 function GlasgowTab() {
   const [sc, setSc] = useState({E:0,V:0,M:0});
-  function select(g,v) { setSc(p=>({...p,[g]:v})); }
+  function select(g,v){ setSc(p=>({...p,[g]:v})); }
   const {E,V,M}=sc, total=E&&V&&M?E+V+M:null;
   let color="#4a6a9f", interp="Selecciona E + V + M", rec="";
   if(total!==null){
     if(total>=13){color="#22c55e";interp="TEC leve";rec="Observación · TAC según criterios clínicos";}
     else if(total>=9){color="#f59e0b";interp="TEC moderado";rec="Hospitalización · TAC · monitorización neurológica";}
-    else{color="#ef4444";interp="TEC grave — considerar intubación";rec="IOT si GCS ≤ 8 · UCI · neurocirugía";}
+    else{color="#ef4444";interp="TEC grave — considerar intubación";rec="IOT si GCS ≤8 · UCI · neurocirugía";}
   }
   const BtnG=({group,val,label})=>(
     <button onClick={()=>select(group,val)} style={{ width:"100%", textAlign:"left", background:sc[group]===val?color+"22":"#060d1f", border:sc[group]===val?`1px solid ${color}`:"1px solid #1a3060", borderRadius:8, padding:"9px 12px", cursor:"pointer", marginBottom:5, display:"flex", justifyContent:"space-between", alignItems:"center", fontFamily:"inherit" }}>
@@ -220,23 +350,14 @@ function GlasgowTab() {
         </div>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:14 }}>
-        <div>
-          <div style={{ fontSize:10, color:"#a78bfa", letterSpacing:2, marginBottom:8, fontWeight:700, textAlign:"center" }}>👁 APERTURA OCULAR</div>
-          <BtnG group="E" val={4} label="Espontánea"/><BtnG group="E" val={3} label="Al sonido"/><BtnG group="E" val={2} label="A la presión"/><BtnG group="E" val={1} label="Ausente"/>
-        </div>
-        <div>
-          <div style={{ fontSize:10, color:"#22d3ee", letterSpacing:2, marginBottom:8, fontWeight:700, textAlign:"center" }}>💬 VERBAL</div>
-          <BtnG group="V" val={5} label="Orientado"/><BtnG group="V" val={4} label="Confuso"/><BtnG group="V" val={3} label="Palabras"/><BtnG group="V" val={2} label="Sonidos"/><BtnG group="V" val={1} label="Ausente"/>
-        </div>
-        <div>
-          <div style={{ fontSize:10, color:"#34d399", letterSpacing:2, marginBottom:8, fontWeight:700, textAlign:"center" }}>✋ MOTORA</div>
-          <BtnG group="M" val={6} label="Obedece"/><BtnG group="M" val={5} label="Localiza"/><BtnG group="M" val={4} label="Flex. normal"/><BtnG group="M" val={3} label="Flex. anormal"/><BtnG group="M" val={2} label="Extensión"/><BtnG group="M" val={1} label="Ausente"/>
-        </div>
+        <div><div style={{ fontSize:10, color:"#a78bfa", letterSpacing:2, marginBottom:8, fontWeight:700, textAlign:"center" }}>👁 APERTURA OCULAR</div><BtnG group="E" val={4} label="Espontánea"/><BtnG group="E" val={3} label="Al sonido"/><BtnG group="E" val={2} label="A la presión"/><BtnG group="E" val={1} label="Ausente"/></div>
+        <div><div style={{ fontSize:10, color:"#22d3ee", letterSpacing:2, marginBottom:8, fontWeight:700, textAlign:"center" }}>💬 VERBAL</div><BtnG group="V" val={5} label="Orientado"/><BtnG group="V" val={4} label="Confuso"/><BtnG group="V" val={3} label="Palabras"/><BtnG group="V" val={2} label="Sonidos"/><BtnG group="V" val={1} label="Ausente"/></div>
+        <div><div style={{ fontSize:10, color:"#34d399", letterSpacing:2, marginBottom:8, fontWeight:700, textAlign:"center" }}>✋ MOTORA</div><BtnG group="M" val={6} label="Obedece"/><BtnG group="M" val={5} label="Localiza"/><BtnG group="M" val={4} label="Flex. normal"/><BtnG group="M" val={3} label="Flex. anormal"/><BtnG group="M" val={2} label="Extensión"/><BtnG group="M" val={1} label="Ausente"/></div>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:0, borderRadius:10, overflow:"hidden" }}>
-        <div style={{ background:"#052a10", padding:"10px", textAlign:"center" }}><div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>Leve</div><div style={{ fontSize:12, color:"#22c55e" }}>13 – 15</div></div>
-        <div style={{ background:"#2a1a00", padding:"10px", textAlign:"center" }}><div style={{ fontSize:13, fontWeight:700, color:"#f59e0b" }}>Moderado</div><div style={{ fontSize:12, color:"#f59e0b" }}>9 – 12</div></div>
-        <div style={{ background:"#2a0505", padding:"10px", textAlign:"center" }}><div style={{ fontSize:13, fontWeight:700, color:"#ef4444" }}>Grave</div><div style={{ fontSize:12, color:"#ef4444" }}>3 – 8</div></div>
+        <div style={{ background:"#052a10", padding:"10px", textAlign:"center" }}><div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>Leve</div><div style={{ fontSize:12, color:"#22c55e" }}>13–15</div></div>
+        <div style={{ background:"#2a1a00", padding:"10px", textAlign:"center" }}><div style={{ fontSize:13, fontWeight:700, color:"#f59e0b" }}>Moderado</div><div style={{ fontSize:12, color:"#f59e0b" }}>9–12</div></div>
+        <div style={{ background:"#2a0505", padding:"10px", textAlign:"center" }}><div style={{ fontSize:13, fontWeight:700, color:"#ef4444" }}>Grave</div><div style={{ fontSize:12, color:"#ef4444" }}>3–8</div></div>
       </div>
       <button onClick={()=>setSc({E:0,V:0,M:0})} style={{ marginTop:12, background:"transparent", border:"1px solid #1a3060", color:"#4a6a9f", borderRadius:8, padding:"6px 16px", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>Reiniciar</button>
     </div>
@@ -245,9 +366,8 @@ function GlasgowTab() {
 
 function SedacionTab({ weight }) {
   const [subTab, setSubTab] = useState(0);
-  const valid = weight > 0;
   const w = weight;
-
+  const valid = w > 0;
   const FP_F=[0.6,1.2,1.8,1.8,2.4,2.4,3.0,3.0,3.6,3.6,3.6,3.6];
   const FP_P=[null,null,null,0.5,0.5,1,1,1.5,1.5,2,2.5,3];
   const FD_F=[0.3,0.6,1.2,1.2,1.2,1.2,1.8,1.8,1.8,2.4,2.4,2.4];
@@ -257,40 +377,29 @@ function SedacionTab({ weight }) {
   const ACT_F=[0.6,1.2,1.8,2.4,3.0,3.6];
   const DEX=[0.2,0.5,0.8,1.0,1.2,1.5];
   const PROP=[0.5,1.0,1.5,2.0,2.5,3.0];
-
-  function fmtEsc(base, w, unit) {
-    if (!valid) return fmt(base, unit==="mg/kg/h"&&base<0.1?3:1);
-    return fmt(base*w, 0)+" ("+fmt(base, base<0.1?3:1)+")";
-  }
-
-  const subTabs = ["Protocolo original","Protocolo actualizado","Decisión","SAS / RASS"];
-
-  const thStyle = { background:"#06101f", padding:"6px 8px", textAlign:"center", fontWeight:700, fontSize:10, color:"#4a6a9f", border:"1px solid #1a3060", letterSpacing:1 };
-  const tdStyle = { padding:"7px 8px", textAlign:"center", border:"1px solid #1a3060", color:"#e8edf5", fontSize:12 };
-  const tdInit = { ...tdStyle, background:"#0d2a4e", color:"#22d3ee", fontWeight:700 };
-
+  function fe(base,w,d=1){ return valid?`${fmt(base*w,0)} (${fmt(base,d)})`:fmt(base,d); }
+  const thS={background:"#06101f",padding:"6px 8px",textAlign:"center",fontWeight:700,fontSize:10,color:"#4a6a9f",border:"1px solid #1a3060"};
+  const tdS={padding:"7px 8px",textAlign:"center",border:"1px solid #1a3060",color:"#e8edf5",fontSize:11};
+  const tdI={...tdS,background:"#0d2a4e",color:"#22d3ee",fontWeight:700};
   return (
     <div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:6, marginBottom:16 }}>
-        {subTabs.map((t,i)=>(
+        {["Protocolo original","Protocolo actualizado","Decisión","SAS / RASS"].map((t,i)=>(
           <button key={i} onClick={()=>setSubTab(i)} style={{ padding:"8px 4px", borderRadius:8, fontSize:10, fontFamily:"inherit", fontWeight:700, cursor:"pointer", textAlign:"center", border:subTab===i?"1px solid #22d3ee":"1px solid #1a3060", background:subTab===i?"#0d2a4e":"#0b1730", color:subTab===i?"#22d3ee":"#3a5a8f" }}>{t}</button>
         ))}
       </div>
-
-      {subTab===0 && (
+      {subTab===0&&(
         <div>
-          <p style={{ fontSize:12, color:"#4a6a9f", marginBottom:12 }}>Protocolo HCUCH pre-actualización. Inicio en escalón 3. {valid&&`Dosis calculadas para ${w} kg.`}</p>
-          {[["Fentanilo / Propofol","#4a9eff",FP_F,FP_P,"Propofol mg/kg/h","mg/h"],["Fentanilo / Dexmedetomidina","#f59e0b",FD_F,FD_D,"Dexmedetomidina µg/kg/h","µg/h"],["Fentanilo / Midazolam","#ef4444",FM_F,FM_M,"Midazolam mg/kg/h","mg/h"]].map(([title,color,fArr,sArr,secLabel])=>(
-            <div key={title} style={{ background:"#0b1730", border:`1px solid #1a3060`, borderRadius:14, padding:"14px 16px", marginBottom:12 }}>
+          <p style={{ fontSize:12, color:"#4a6a9f", marginBottom:12 }}>Protocolo HCUCH pre-actualización. Inicio escalón 3. {valid&&`Calculado para ${w} kg.`}</p>
+          {[["Fentanilo / Propofol","#4a9eff",FP_F,FP_P,"Propofol mg/kg/h"],["Fentanilo / Dexmedetomidina","#f59e0b",FD_F,FD_D,"Dexmedetomidina µg/kg/h"],["Fentanilo / Midazolam","#ef4444",FM_F,FM_M,"Midazolam mg/kg/h"]].map(([title,color,fArr,sArr,secLabel])=>(
+            <div key={title} style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"14px 16px", marginBottom:12 }}>
               <div style={{ fontSize:11, color, letterSpacing:2, fontWeight:700, marginBottom:10 }}>{title.toUpperCase()}</div>
               <div style={{ overflowX:"auto" }}>
                 <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
-                  <thead>
-                    <tr><th style={thStyle}>Escalón</th>{[1,2,3,4,5,6,7,8,9,10,11,12].map(n=><th key={n} style={n===3?{...thStyle,background:"#0d2a4e",color:"#22d3ee"}:thStyle}>{n}{n===3&&" ★"}</th>)}</tr>
-                  </thead>
+                  <thead><tr><th style={thS}>Escalón</th>{[1,2,3,4,5,6,7,8,9,10,11,12].map(n=><th key={n} style={n===3?{...thS,background:"#0d2a4e",color:"#22d3ee"}:thS}>{n}{n===3&&"★"}</th>)}</tr></thead>
                   <tbody>
-                    <tr><td style={{...tdStyle,textAlign:"left",fontWeight:700,fontSize:11}}>Fentanilo<br/><span style={{fontSize:10,color:"#4a6a9f"}}>µg/kg/h</span></td>{fArr.map((v,i)=><td key={i} style={i===2?tdInit:tdStyle}>{fmtEsc(v,w,"µg/kg/h")}</td>)}</tr>
-                    <tr><td style={{...tdStyle,textAlign:"left",fontWeight:700,fontSize:11}}>{secLabel.split(" ")[0]}<br/><span style={{fontSize:10,color:"#4a6a9f"}}>{secLabel.split(" ").slice(1).join(" ")}</span></td>{sArr.map((v,i)=><td key={i} style={i===2?tdInit:tdStyle}>{v===null?"—":fmtEsc(v,w,secLabel.includes("mg")?"mg/kg/h":"µg/kg/h")}</td>)}</tr>
+                    <tr><td style={{...tdS,textAlign:"left",fontWeight:700}}>Fentanilo µg/kg/h</td>{fArr.map((v,i)=><td key={i} style={i===2?tdI:tdS}>{fe(v,w)}</td>)}</tr>
+                    <tr><td style={{...tdS,textAlign:"left",fontWeight:700}}>{secLabel.split(" ")[0]}</td>{sArr.map((v,i)=><td key={i} style={i===2?tdI:tdS}>{v===null?"—":fe(v,w,3)}</td>)}</tr>
                   </tbody>
                 </table>
               </div>
@@ -298,60 +407,44 @@ function SedacionTab({ weight }) {
           ))}
         </div>
       )}
-
-      {subTab===1 && (
+      {subTab===1&&(
         <div>
-          <p style={{ fontSize:12, color:"#4a6a9f", marginBottom:12 }}>Protocolo actualizado HCUCH 2019. Analgesia y sedación se titulan de forma independiente. Paracetamol 1g/8h cuando disponible.</p>
+          <p style={{ fontSize:12, color:"#4a6a9f", marginBottom:12 }}>Protocolo actualizado HCUCH 2019. Escalones independientes. Paracetamol 1g/8h cuando disponible.</p>
           <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"14px 16px", marginBottom:12 }}>
             <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-              <div style={{ width:22, height:22, borderRadius:"50%", background:"#0d2a4e", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, color:"#22d3ee" }}>1</div>
+              <div style={{ width:22,height:22,borderRadius:"50%",background:"#0d2a4e",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#22d3ee" }}>1</div>
               <div style={{ fontSize:11, color:"#22d3ee", letterSpacing:2, fontWeight:700 }}>ESCALÓN ANALGESIA — FENTANILO (µg/kg/h)</div>
             </div>
             <div style={{ fontSize:11, color:"#4a6a9f", marginBottom:8 }}>Inicio escalón 1 → sedación superficial · Inicio escalón 2 → sedación profunda</div>
             <div style={{ overflowX:"auto" }}>
               <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
-                <thead><tr><th style={thStyle}>Escalón</th>{[1,2,3,4,5,6].map(n=><th key={n} style={thStyle}>{n}</th>)}</tr></thead>
-                <tbody><tr><td style={{...tdStyle,textAlign:"left",fontWeight:700}}>Fentanilo µg/kg/h</td>{ACT_F.map((v,i)=><td key={i} style={tdStyle}>{fmtEsc(v,w,"µg/kg/h")}</td>)}</tr></tbody>
+                <thead><tr><th style={thS}>Escalón</th>{[1,2,3,4,5,6].map(n=><th key={n} style={thS}>{n}</th>)}</tr></thead>
+                <tbody><tr><td style={{...tdS,textAlign:"left",fontWeight:700}}>Fentanilo µg/kg/h</td>{ACT_F.map((v,i)=><td key={i} style={tdS}>{fe(v,w)}</td>)}</tr></tbody>
               </table>
             </div>
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-            <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"14px 16px" }}>
-              <div style={{ fontSize:10, color:"#22c55e", letterSpacing:2, fontWeight:700, marginBottom:6 }}>SEDACIÓN SUPERFICIAL<br/>Meta SAS 3–4 · Inicio escalón 3</div>
-              <div style={{ fontSize:10, color:"#4a6a9f", marginBottom:8 }}>Dexmedetomidina µg/kg/h</div>
-              <div style={{ overflowX:"auto" }}>
-                <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
-                  <thead><tr>{[1,2,3,4,5,6].map(n=><th key={n} style={n===3?{...thStyle,background:"#0d2a4e",color:"#22d3ee"}:thStyle}>{n}{n===3&&"★"}</th>)}</tr></thead>
-                  <tbody><tr>{DEX.map((v,i)=><td key={i} style={i===2?tdInit:tdStyle}>{fmtEsc(v,w,"µg/kg/h")}</td>)}</tr></tbody>
-                </table>
+            {[["Sedación Superficial — Meta SAS 3–4","#22c55e","Dexmedetomidina µg/kg/h · Inicio escalón 3",DEX],["Sedación Profunda — Meta SAS 1–2","#ef4444","Propofol mg/kg/h · Inicio escalón 3",PROP]].map(([title,color,sub,arr])=>(
+              <div key={title} style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"14px 16px" }}>
+                <div style={{ fontSize:10, color, letterSpacing:1, fontWeight:700, marginBottom:4 }}>{title}</div>
+                <div style={{ fontSize:10, color:"#4a6a9f", marginBottom:8 }}>{sub}</div>
+                <div style={{ overflowX:"auto" }}>
+                  <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
+                    <thead><tr>{[1,2,3,4,5,6].map(n=><th key={n} style={n===3?{...thS,background:"#0d2a4e",color:"#22d3ee"}:thS}>{n}{n===3&&"★"}</th>)}</tr></thead>
+                    <tbody><tr>{arr.map((v,i)=><td key={i} style={i===2?tdI:tdS}>{fe(v,w)}</td>)}</tr></tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-            <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"14px 16px" }}>
-              <div style={{ fontSize:10, color:"#ef4444", letterSpacing:2, fontWeight:700, marginBottom:6 }}>SEDACIÓN PROFUNDA<br/>Meta SAS 1–2 · Inicio escalón 3</div>
-              <div style={{ fontSize:10, color:"#4a6a9f", marginBottom:8 }}>Propofol mg/kg/h</div>
-              <div style={{ overflowX:"auto" }}>
-                <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
-                  <thead><tr>{[1,2,3,4,5,6].map(n=><th key={n} style={n===3?{...thStyle,background:"#0d2a4e",color:"#22d3ee"}:thStyle}>{n}{n===3&&"★"}</th>)}</tr></thead>
-                  <tbody><tr>{PROP.map((v,i)=><td key={i} style={i===2?tdInit:tdStyle}>{fmtEsc(v,w,"mg/kg/h")}</td>)}</tr></tbody>
-                </table>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       )}
-
-      {subTab===2 && (
+      {subTab===2&&(
         <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"16px" }}>
           <div style={{ textAlign:"center", fontSize:13, fontWeight:700, marginBottom:12 }}>Paciente ≥18 años con necesidad de VM &gt;48h</div>
           <div style={{ background:"#040c1c", borderRadius:10, padding:"12px 14px", marginBottom:10 }}>
-            <div style={{ fontSize:12, fontWeight:700, marginBottom:6, color:"#e8edf5" }}>¿El paciente presenta alguna de estas condiciones?</div>
-            <div style={{ fontSize:12, color:"#7aa2d4", lineHeight:1.9 }}>
-              1. Insuf. respiratoria aguda/crónica descompensada moderada-severa (PaO₂/FiO₂ &lt;150)<br/>
-              2. Shock severo (NA &gt;0.3 µg/min y/o Lactato &gt;4.0 mmol/L)<br/>
-              3. Hipertensión intracraneana<br/>
-              4. Estatus convulsivo<br/>
-              5. Síndrome compartimental del abdomen
-            </div>
+            <div style={{ fontSize:12, fontWeight:700, color:"#e8edf5", marginBottom:6 }}>¿El paciente presenta alguna de estas condiciones?</div>
+            <div style={{ fontSize:12, color:"#7aa2d4", lineHeight:1.9 }}>1. Insuf. respiratoria aguda/crónica descompensada moderada-severa (PaO₂/FiO₂ &lt;150)<br/>2. Shock severo (NA &gt;0.3 µg/min y/o Lactato &gt;4.0 mmol/L)<br/>3. Hipertensión intracraneana<br/>4. Estatus convulsivo<br/>5. Síndrome compartimental del abdomen</div>
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:10 }}>
             {[["NO","#22c55e","Sedación superficial","Meta SAS 3–4","Escalón 1 Fentanilo + Escalón 3 Dexmedetomidina"],["NO SEGURO","#f59e0b","Evaluar con equipo","Iniciar superficial","Reevaluar c/6h"],["SÍ","#ef4444","Sedación profunda","Meta SAS 1–2","Escalón 2 Fentanilo + Escalón 3 Propofol"]].map(([tag,color,t1,t2,t3])=>(
@@ -365,23 +458,18 @@ function SedacionTab({ weight }) {
           </div>
           <div style={{ background:"#040c1c", borderRadius:10, padding:"12px 14px" }}>
             <div style={{ fontSize:12, fontWeight:700, color:"#e8edf5", marginBottom:6 }}>Evaluar meta SAS c/6h</div>
-            <div style={{ fontSize:12, color:"#7aa2d4", lineHeight:1.8 }}>
-              ✓ Meta cumplida → Mantener esquema<br/>
-              ✗ SAS ≥5 → Titular según escalones / considerar asociación de sedantes<br/>
-              ✗ SAS 1–2 en meta superficial → Bajar 1 escalón
-            </div>
+            <div style={{ fontSize:12, color:"#7aa2d4", lineHeight:1.8 }}>✓ Meta cumplida → Mantener esquema<br/>✗ SAS ≥5 → Titular según escalones / considerar asociación<br/>✗ SAS 1–2 en meta superficial → Bajar 1 escalón</div>
           </div>
         </div>
       )}
-
-      {subTab===3 && (
+      {subTab===3&&(
         <div>
           <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"16px", marginBottom:12 }}>
             <div style={{ fontSize:11, color:"#22d3ee", letterSpacing:2, fontWeight:700, marginBottom:10 }}>SEDATION-AGITATION SCALE (SAS)</div>
             <div style={{ fontSize:11, color:"#4a6a9f", marginBottom:10 }}>1–2 = Sedación profunda · 3–4 = Sedación superficial · 5–7 = Agitación</div>
             {[[1,"No despertable","Se mueve o gesticula levemente con estímulos dolorosos.","#ef4444"],[2,"Muy sedado","Puede despertar con estímulo físico. No comunica ni obedece órdenes.","#ef4444"],[3,"Sedado","Difícil de despertar. Obedece órdenes sencillas.","#22c55e"],[4,"Calmado y cooperador","Fácilmente despertable. Obedece órdenes.","#22c55e"],[5,"Agitado","Ansioso. Intenta sentarse, se calma con estímulo verbal.","#f59e0b"],[6,"Muy agitado","Muerde TET. Necesita contención física.","#f59e0b"],[7,"Agitación peligrosa","Intenta retirar TET y catéteres. Arremete contra el personal.","#ef4444"]].map(([n,term,desc,color])=>(
               <div key={n} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"8px 0", borderBottom:"1px solid #1a3060" }}>
-                <div style={{ minWidth:30, height:30, borderRadius:8, background:color+"22", border:`1px solid ${color}44`, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:14, color }}>{n}</div>
+                <div style={{ minWidth:30,height:30,borderRadius:8,background:color+"22",border:`1px solid ${color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,color }}>{n}</div>
                 <div><div style={{ fontSize:13, fontWeight:700, color:"#e8edf5" }}>{term}</div><div style={{ fontSize:12, color:"#7aa2d4", marginTop:2 }}>{desc}</div></div>
               </div>
             ))}
@@ -389,15 +477,13 @@ function SedacionTab({ weight }) {
           <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"16px" }}>
             <div style={{ fontSize:11, color:"#a78bfa", letterSpacing:2, fontWeight:700, marginBottom:10 }}>RICHMOND AGITATION-SEDATION SCALE (RASS)</div>
             <div style={{ fontSize:11, color:"#4a6a9f", marginBottom:10 }}>Meta UCI: –2 a 0 · Sedación profunda: –3 a –5 · Agitación: +1 a +4</div>
-            {[["+4","Combativo","Violento, peligro inmediato para el personal","#ef4444"],["+3","Muy agitado","Agresivo, intenta retirar tubos/catéteres","#ef4444"],["+2","Agitado","Movimientos frecuentes, lucha con el ventilador","#f59e0b"],["+1","Inquieto","Ansioso, movimientos no agresivos","#f59e0b"],["0","Alerta y calmado","Estado normal","#22c55e"],["-1","Somnoliento","No completamente alerta, se mantiene despierto >10 seg","#22c55e"],["-2","Sedación leve","Despierta brevemente (<10 seg) con voz, contacto visual","#22d3ee"],["-3","Sedación moderada","Movimiento o apertura ocular a la voz. Sin contacto visual","#22d3ee"],["-4","Sedación profunda","Sin respuesta a voz. Responde a estímulo físico","#ef4444"],["-5","No despertable","Sin respuesta a voz ni estímulo físico","#ef4444"]].map(([n,term,desc,color])=>(
+            {[["+4","Combativo","Violento, peligro inmediato","#ef4444"],["+3","Muy agitado","Agresivo, intenta retirar tubos","#ef4444"],["+2","Agitado","Movimientos frecuentes, lucha con VM","#f59e0b"],["+1","Inquieto","Ansioso, movimientos no agresivos","#f59e0b"],["0","Alerta y calmado","Estado normal","#22c55e"],["-1","Somnoliento","Se mantiene despierto >10 seg con voz","#22c55e"],["-2","Sedación leve","Despierta brevemente con voz, contacto visual","#22d3ee"],["-3","Sedación moderada","Movimiento a la voz. Sin contacto visual","#22d3ee"],["-4","Sedación profunda","Sin respuesta a voz. Responde a estímulo físico","#ef4444"],["-5","No despertable","Sin respuesta a voz ni estímulo físico","#ef4444"]].map(([n,term,desc,color])=>(
               <div key={n} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"7px 0", borderBottom:"1px solid #1a3060" }}>
-                <div style={{ minWidth:34, height:28, borderRadius:8, background:color+"22", border:`1px solid ${color}44`, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:13, color }}>{n}</div>
+                <div style={{ minWidth:34,height:28,borderRadius:8,background:color+"22",border:`1px solid ${color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,color }}>{n}</div>
                 <div><div style={{ fontSize:13, fontWeight:700, color:"#e8edf5" }}>{term}</div><div style={{ fontSize:11, color:"#7aa2d4", marginTop:1 }}>{desc}</div></div>
               </div>
             ))}
-            <div style={{ marginTop:10, padding:"10px 12px", background:"#040c1c", borderRadius:8, fontSize:11, color:"#7aa2d4" }}>
-              <strong style={{ color:"#e8edf5" }}>Equivalencia SAS/RASS:</strong> SAS 1–2 ≈ RASS –4/–5 · SAS 3 ≈ RASS –2/–3 · SAS 4 ≈ RASS 0/–1 · SAS 5–7 ≈ RASS +1/+4
-            </div>
+            <div style={{ marginTop:10, padding:"10px 12px", background:"#040c1c", borderRadius:8, fontSize:11, color:"#7aa2d4" }}><strong style={{ color:"#e8edf5" }}>Equivalencia SAS/RASS:</strong> SAS 1–2 ≈ RASS –4/–5 · SAS 3 ≈ RASS –2/–3 · SAS 4 ≈ RASS 0/–1 · SAS 5–7 ≈ RASS +1/+4</div>
           </div>
         </div>
       )}
@@ -408,71 +494,186 @@ function SedacionTab({ weight }) {
 function ProcedimientosTab({ weight }) {
   const [sel, setSel] = useState(null);
   const valid = weight > 0;
-
-  function calcDose(d) {
-    if (!valid) return null;
-    const isMcg = d.unit === "mcg/kg", f = isMcg ? 0.001 : 1;
-    const loMg = d.lo * weight * f, hiMg = d.hi * weight * f;
-    return { loMg, hiMg, loMl: loMg / d.conc, hiMl: hiMg / d.conc, isMcg };
+  function calcDose(d){
+    if(!valid) return null;
+    const isMcg=d.unit==="mcg/kg", f=isMcg?0.001:1;
+    const loMg=d.lo*weight*f, hiMg=d.hi*weight*f;
+    return {loMg,hiMg,loMl:loMg/d.conc,hiMl:hiMg/d.conc,isMcg};
   }
-
   return (
     <div>
-      <p style={{ fontSize:12, color:"#4a6a9f", marginBottom:14 }}>Sedación de corta duración para procedimientos. Selecciona un fármaco para ver la dosis calculada.</p>
+      <p style={{ fontSize:12, color:"#4a6a9f", marginBottom:14 }}>Sedación de corta duración para procedimientos. Selecciona un fármaco para ver la dosis.</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-        {PROC_DRUGS.map(d => {
-          const isSelected = sel?.name === d.name;
-          const dose = isSelected ? calcDose(d) : null;
+        {PROC_DRUGS.map(d=>{
+          const isSelected=sel?.name===d.name;
+          const dose=isSelected?calcDose(d):null;
           return (
-            <div key={d.name} onClick={()=>setSel(isSelected?null:d)}
-              style={{ background: isSelected?d.color+"18":"#0b1730", border:`1px solid ${isSelected?d.color:"#1a3060"}`, borderRadius:12, padding:"14px", cursor:"pointer", transition:"all 0.15s" }}>
+            <div key={d.name} onClick={()=>setSel(isSelected?null:d)} style={{ background:isSelected?d.color+"18":"#0b1730", border:`1px solid ${isSelected?d.color:"#1a3060"}`, borderRadius:12, padding:"14px", cursor:"pointer" }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
-                <span style={{ fontSize:14, fontWeight:700, color: isSelected?d.color:"#e8edf5" }}>{d.name}</span>
+                <span style={{ fontSize:14, fontWeight:700, color:isSelected?d.color:"#e8edf5" }}>{d.name}</span>
                 <span style={{ fontSize:10, background:"#040c1c", borderRadius:20, padding:"2px 8px", color:"#4a6a9f" }}>{d.duracion}</span>
               </div>
               <div style={{ fontSize:11, color:"#4a6a9f", marginBottom:8, lineHeight:1.5 }}>{d.indicacion}</div>
-              <div style={{ fontSize:11, color: isSelected?d.color:"#3a5a8f", background:"#040c1c", borderRadius:6, padding:"4px 8px", display:"inline-block" }}>
-                {d.lo}–{d.hi} {d.unit}
-              </div>
-              {isSelected && valid && dose && (
+              <div style={{ fontSize:11, color:isSelected?d.color:"#3a5a8f", background:"#040c1c", borderRadius:6, padding:"4px 8px", display:"inline-block" }}>{d.lo}–{d.hi} {d.unit}</div>
+              {isSelected&&valid&&dose&&(
                 <div style={{ marginTop:10, padding:"10px 12px", background:"#040c1c", borderRadius:8, borderLeft:`3px solid ${d.color}` }}>
-                  <div style={{ fontSize:10, color:d.color, letterSpacing:1, marginBottom:4 }}>DOSIS CALCULADA — {weight} kg</div>
+                  <div style={{ fontSize:10, color:d.color, letterSpacing:1, marginBottom:4 }}>DOSIS — {weight} kg</div>
                   <div style={{ fontSize:16, fontWeight:800, color:"#e8edf5" }}>{fmt(dose.loMg,2)}–{fmt(dose.hiMg,2)} {dose.isMcg?"mcg":"mg"}</div>
                   <div style={{ fontSize:12, color:d.color, marginTop:2 }}>{fmt(dose.loMl,2)}–{fmt(dose.hiMl,2)} mL</div>
                 </div>
               )}
-              {isSelected && !valid && (
-                <div style={{ marginTop:8, fontSize:12, color:"#3a5a8f", fontStyle:"italic" }}>Ingresa el peso arriba para calcular</div>
-              )}
+              {isSelected&&!valid&&<div style={{ marginTop:8, fontSize:12, color:"#3a5a8f", fontStyle:"italic" }}>Ingresa el peso arriba para calcular</div>}
             </div>
           );
         })}
       </div>
       <div style={{ marginTop:14, padding:"12px 16px", background:"#0b1730", border:"1px solid #1a3060", borderRadius:10, fontSize:11, color:"#4a6a9f", lineHeight:1.8 }}>
-        <strong style={{ color:"#e8edf5" }}>Recordar siempre:</strong> monitorización continua · vía aérea disponible · revertir si necesario · dosis según respuesta clínica
+        <strong style={{ color:"#e8edf5" }}>Recordar siempre:</strong> monitorización continua · vía aérea disponible · dosis según respuesta clínica
       </div>
     </div>
   );
 }
 
-const TABS = ["💉 SRI","🩸 DVA","⚗️ CRI","🧠 Glasgow","🛏️ Sedación UCI","🔧 Procedimientos"];
+function ScoresTab() {
+  const [cat, setCat] = useState(0);
+  const cats = ["🚨 Sepsis","🫁 Trombosis","❤️ Cardio","🧠 Neuro"];
+
+  function ScoreCard({ title, sub, items, scores, id, levels }) {
+    const [vals, setVals] = useState(Array(items.length).fill(false));
+    const total = vals.reduce((s,v,i)=>v?s+scores[i]:s, 0);
+    const found = levels.slice().reverse().find(l=>total>=l.min)||levels[0];
+    function toggle(i){ setVals(v=>{ const n=[...v]; n[i]=!n[i]; return n; }); }
+    return (
+      <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"16px", marginBottom:12 }}>
+        <div style={{ fontSize:14, fontWeight:700, marginBottom:4 }}>{title}</div>
+        <div style={{ fontSize:12, color:"#4a6a9f", marginBottom:12 }}>{sub}</div>
+        {items.map((item,i)=>(
+          <div key={i} onClick={()=>toggle(i)} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 0", borderBottom:"1px solid #1a3060", cursor:"pointer" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <div style={{ width:18,height:18,borderRadius:4,border:`1px solid ${vals[i]?"#22d3ee":"#1a3060"}`,background:vals[i]?"#22d3ee":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#040c1c",flexShrink:0 }}>{vals[i]&&"✓"}</div>
+              <span style={{ fontSize:13, color:vals[i]?"#e8edf5":"#7aa2d4" }}>{item}</span>
+            </div>
+            <span style={{ fontSize:12, color:"#4a6a9f", minWidth:32, textAlign:"right" }}>{scores[i]>0?"+"+scores[i]:scores[i]}</span>
+          </div>
+        ))}
+        <div style={{ marginTop:12, background:found.color+"15", border:`1px solid ${found.color}44`, borderRadius:10, padding:"12px 14px", display:"flex", alignItems:"center", gap:16 }}>
+          <div style={{ fontSize:36, fontWeight:800, color:found.color, minWidth:48, textAlign:"center" }}>{fmt(total,1)}</div>
+          <div>
+            <div style={{ fontSize:13, fontWeight:700, color:found.color }}>{found.label}</div>
+            <div style={{ fontSize:12, color:found.color, marginTop:2 }}>{found.rec}</div>
+          </div>
+        </div>
+        <button onClick={()=>setVals(Array(items.length).fill(false))} style={{ marginTop:10, background:"transparent", border:"1px solid #1a3060", color:"#4a6a9f", borderRadius:8, padding:"5px 14px", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>Reiniciar</button>
+      </div>
+    );
+  }
+
+  function SofaCard() {
+    const opts = [
+      {label:"Resp PaO₂/FiO₂",id:"resp",options:[">400 (0)",  "301–400 (1)","201–300 (2)","101–200+VM (3)","≤100+VM (4)"]},
+      {label:"Coag Plaquetas ×10³",id:"coag",options:[">150 (0)","101–150 (1)","51–100 (2)","21–50 (3)","≤20 (4)"]},
+      {label:"Hígado Bilirrubina",id:"bili",options:["<1.2 (0)","1.2–1.9 (1)","2–5.9 (2)","6–11.9 (3)","≥12 (4)"]},
+      {label:"Cardiovascular",id:"cv",options:["PAM≥70 (0)","PAM<70 (1)","Dopa≤5 o Dobu (2)","Dopa5-15 o Epi≤0.1 (3)","Dopa>15 o Epi>0.1 (4)"]},
+      {label:"SNC Glasgow",id:"snc",options:["15 (0)","13–14 (1)","10–12 (2)","6–9 (3)","<6 (4)"]},
+      {label:"Renal Creatinina",id:"renal",options:["<1.2 (0)","1.2–1.9 (1)","2–3.4 (2)","3.5–4.9 o <500mL/d (3)","≥5 o <200mL/d (4)"]},
+    ];
+    const [vals, setVals] = useState(Array(6).fill(0));
+    const total = vals.reduce((a,b)=>a+b,0);
+    const color = total<=1?"#22c55e":total<=6?"#f59e0b":"#ef4444";
+    const interp = total<=1?"Sin disfunción orgánica":total<=6?"Disfunción leve-moderada":total<=9?"Disfunción moderada":"Disfunción grave";
+    const rec = total<=1?"Mortalidad <10%":total<=6?"Mortalidad ~10–20%":total<=9?"Mortalidad ~40%":"Mortalidad >50%";
+    return (
+      <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"16px", marginBottom:12 }}>
+        <div style={{ fontSize:14, fontWeight:700, marginBottom:4 }}>SOFA</div>
+        <div style={{ fontSize:12, color:"#4a6a9f", marginBottom:12 }}>Disfunción orgánica en UCI. Aumento ≥2 = criterio de sepsis.</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
+          {opts.map((o,i)=>(
+            <div key={i}>
+              <div style={{ fontSize:11, color:"#4a6a9f", marginBottom:4 }}>{o.label}</div>
+              <select value={vals[i]} onChange={e=>{ const n=[...vals]; n[i]=parseInt(e.target.value); setVals(n); }}
+                style={{ width:"100%", background:"#040c1c", border:"1px solid #1a3060", borderRadius:8, color:"#e8edf5", fontSize:12, padding:"6px 8px", outline:"none", fontFamily:"inherit" }}>
+                {o.options.map((opt,j)=><option key={j} value={j}>{opt}</option>)}
+              </select>
+            </div>
+          ))}
+        </div>
+        <div style={{ background:color+"15", border:`1px solid ${color}44`, borderRadius:10, padding:"12px 14px", display:"flex", alignItems:"center", gap:16 }}>
+          <div style={{ fontSize:36, fontWeight:800, color, minWidth:48, textAlign:"center" }}>{total}</div>
+          <div><div style={{ fontSize:13, fontWeight:700, color }}>{interp}</div><div style={{ fontSize:12, color, marginTop:2 }}>{rec}</div></div>
+        </div>
+        <button onClick={()=>setVals(Array(6).fill(0))} style={{ marginTop:10, background:"transparent", border:"1px solid #1a3060", color:"#4a6a9f", borderRadius:8, padding:"5px 14px", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>Reiniciar</button>
+      </div>
+    );
+  }
+
+  function NewsCard() {
+    const opts = [
+      {label:"SpO₂ (%)",id:"spo2",vals:[3,2,1,0],opts:["≤91","92–93","94–95","≥96"]},
+      {label:"O₂ suplementario",id:"o2",vals:[0,2],opts:["No","Sí"]},
+      {label:"Frecuencia respiratoria",id:"fr",vals:[3,1,0,2,3],opts:["≤8","9–11","12–20","21–24","≥25"]},
+      {label:"PAS (mmHg)",id:"pas",vals:[3,2,1,0,3],opts:["≤90","91–100","101–110","111–219","≥220"]},
+      {label:"Frecuencia cardíaca",id:"fc",vals:[3,1,0,1,2,3],opts:["≤40","41–50","51–90","91–110","111–130","≥131"]},
+      {label:"Temperatura (°C)",id:"temp",vals:[3,1,0,1,2],opts:["≤35.0","35.1–36.0","36.1–38.0","38.1–39.0","≥39.1"]},
+      {label:"Conciencia",id:"conc",vals:[0,3],opts:["Alerta","Confuso/AVPU≠A"]},
+    ];
+    const [vals, setVals] = useState(opts.map(o=>0));
+    const total = opts.reduce((s,o,i)=>s+o.vals[vals[i]],0);
+    const color = total<=4?"#22c55e":total<=6?"#f59e0b":"#ef4444";
+    const interp = total<=4?"Riesgo bajo":total<=6?"Riesgo intermedio":"Riesgo alto";
+    const rec = total<=4?"Control cada 12h":total<=6?"Avisar médico · control horario":"Evaluación urgente · considerar UCI";
+    return (
+      <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"16px", marginBottom:12 }}>
+        <div style={{ fontSize:14, fontWeight:700, marginBottom:4 }}>NEWS2</div>
+        <div style={{ fontSize:12, color:"#4a6a9f", marginBottom:12 }}>Deterioro clínico agudo. Score ≥7 → respuesta de emergencia.</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
+          {opts.map((o,i)=>(
+            <div key={i}>
+              <div style={{ fontSize:11, color:"#4a6a9f", marginBottom:4 }}>{o.label}</div>
+              <select value={vals[i]} onChange={e=>{ const n=[...vals]; n[i]=parseInt(e.target.value); setVals(n); }}
+                style={{ width:"100%", background:"#040c1c", border:"1px solid #1a3060", borderRadius:8, color:"#e8edf5", fontSize:12, padding:"6px 8px", outline:"none", fontFamily:"inherit" }}>
+                {o.opts.map((opt,j)=><option key={j} value={j}>{opt} (+{o.vals[j]})</option>)}
+              </select>
+            </div>
+          ))}
+        </div>
+        <div style={{ background:color+"15", border:`1px solid ${color}44`, borderRadius:10, padding:"12px 14px", display:"flex", alignItems:"center", gap:16 }}>
+          <div style={{ fontSize:36, fontWeight:800, color, minWidth:48, textAlign:"center" }}>{total}</div>
+          <div><div style={{ fontSize:13, fontWeight:700, color }}>{interp}</div><div style={{ fontSize:12, color, marginTop:2 }}>{rec}</div></div>
+        </div>
+        <button onClick={()=>setVals(opts.map(()=>0))} style={{ marginTop:10, background:"transparent", border:"1px solid #1a3060", color:"#4a6a9f", borderRadius:8, padding:"5px 14px", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>Reiniciar</button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:6, marginBottom:16 }}>
+        {cats.map((c,i)=><button key={i} onClick={()=>setCat(i)} style={{ padding:"8px 4px", borderRadius:8, fontSize:10, fontFamily:"inherit", fontWeight:700, cursor:"pointer", textAlign:"center", border:cat===i?"1px solid #22d3ee":"1px solid #1a3060", background:cat===i?"#0d2a4e":"#0b1730", color:cat===i?"#22d3ee":"#3a5a8f" }}>{c}</button>)}
+      </div>
+      {cat===0&&<><ScoreCard title="qSOFA" sub="Screening rápido de sepsis fuera de UCI. Score ≥2 → alta sospecha." items={["FR ≥22/min","Alteración estado mental (GCS <15)","PAS ≤100 mmHg"]} scores={[1,1,1]} id="qsofa" levels={[{min:0,label:"Sin criterios de alarma",rec:"Reevaluar según evolución",color:"#22c55e"},{min:2,label:"Alta sospecha de sepsis",rec:"Evaluar lactato · Hemocultivos · Antibióticos",color:"#ef4444"}]}/><SofaCard/><NewsCard/><ScoreCard title="MEWS" sub="Deterioro clínico en sala. Score ≥5 → considerar UCI." items={["FC <40 o ≥130","PAS <70 mmHg","PAS 71–80 mmHg","FR <9 o ≥30","Temperatura <35°C o ≥38.5°C","AVPU: responde al dolor","AVPU: sin respuesta"]} scores={[2,3,2,2,2,2,3]} id="mews" levels={[{min:0,label:"Bajo riesgo",rec:"Control habitual",color:"#22c55e"},{min:3,label:"Riesgo intermedio",rec:"Aumentar frecuencia de controles",color:"#f59e0b"},{min:5,label:"Alto riesgo — deterioro clínico",rec:"Evaluación médica urgente / UCI",color:"#ef4444"}]}/></>}
+      {cat===1&&<><ScoreCard title="Wells TVP" sub="Probabilidad pretest de trombosis venosa profunda." items={["Cáncer activo","Parálisis/paresia/inmovilización EEII","Encamado >3 días o cirugía mayor <12 sem","Dolor a palpación trayecto venoso profundo","Edema en toda la pierna","Edema con fóvea mayor en pierna sintomática","Circulación colateral superficial (no várices)","TVP previa documentada","Diagnóstico alternativo tan probable o más"]} scores={[1,1,1,1,1,1,1,1,-2]} id="wtvp" levels={[{min:-9,label:"Probabilidad baja",rec:"D-dímero. Si positivo: Eco doppler",color:"#22c55e"},{min:1,label:"Probabilidad moderada",rec:"Eco doppler directo",color:"#f59e0b"},{min:3,label:"Probabilidad alta",rec:"Eco doppler urgente · Anticoagular si demora",color:"#ef4444"}]}/><ScoreCard title="Wells TEP" sub="Probabilidad pretest de tromboembolismo pulmonar." items={["TVP o TEP previo (+1.5)","FC >100/min (+1.5)","Cirugía o inmovilización últimas 4 sem (+1.5)","Signos clínicos de TVP (+3)","TEP es diagnóstico más probable (+3)","Hemoptisis (+1)","Cáncer activo últimos 6 meses (+1)"]} scores={[1.5,1.5,1.5,3,3,1,1]} id="wtep" levels={[{min:0,label:"Probabilidad baja",rec:"D-dímero. Si positivo: AngioTC",color:"#22c55e"},{min:2,label:"Probabilidad intermedia",rec:"AngioTC de tórax",color:"#f59e0b"},{min:6,label:"Probabilidad alta",rec:"AngioTC urgente · Anticoagular",color:"#ef4444"}]}/><ScoreCard title="PADUA" sub="Riesgo de TEV en paciente hospitalizado. Score ≥4 → profilaxis anticoagulante." items={["Cáncer activo (+3)","TEV previo excepto trombosis superficial (+3)","Movilidad reducida ≥3 días (+3)","Trombofilia conocida (+3)","Trauma o cirugía reciente ≤1 mes (+2)","Edad ≥70 años","Insuficiencia cardíaca o respiratoria","IAM o ACV","Infección aguda / enfermedad reumatológica","Obesidad IMC ≥30","Tratamiento hormonal activo"]} scores={[3,3,3,3,2,1,1,1,1,1,1]} id="padua" levels={[{min:0,label:"Riesgo bajo",rec:"Movilización precoz",color:"#22c55e"},{min:4,label:"Riesgo alto",rec:"Profilaxis anticoagulante indicada",color:"#ef4444"}]}/></>}
+      {cat===2&&<><ScoreCard title="CHA₂DS₂-VASc" sub="Riesgo de ACV en fibrilación auricular no valvular." items={["Insuficiencia cardíaca congestiva","Hipertensión arterial","Edad ≥75 años (+2)","Diabetes mellitus","ACV/AIT/tromboembolismo previo (+2)","Enfermedad vascular (IAM, arteriopatía, placa aórtica)","Edad 65–74 años","Sexo femenino"]} scores={[1,1,2,1,2,1,1,1]} id="chads" levels={[{min:0,label:"Riesgo bajo",rec:"No anticoagulación rutinaria",color:"#22c55e"},{min:2,label:"Riesgo moderado",rec:"Considerar anticoagulación oral",color:"#f59e0b"},{min:3,label:"Riesgo alto",rec:"Anticoagulación oral indicada",color:"#ef4444"}]}/><ScoreCard title="HAS-BLED" sub="Riesgo de sangrado mayor en anticoagulación. Score ≥3 → alto riesgo." items={["HTA no controlada (PAS >160 mmHg)","Función renal anormal (diálisis, Cr >2.26)","Función hepática anormal (cirrosis, bili >2x)","ACV previo","Sangrado previo o predisposición","INR lábil (TTR <60%)","Edad >65 años","Drogas (antiagregantes, AINEs) o alcohol"]} scores={[1,1,1,1,1,1,1,1]} id="hasbled" levels={[{min:0,label:"Riesgo bajo",rec:"Anticoagular si indicado",color:"#22c55e"},{min:3,label:"Riesgo alto de sangrado",rec:"Corregir factores modificables · Vigilancia estrecha",color:"#ef4444"}]}/></>}
+      {cat===3&&<><ScoreCard title="ABCD² — Riesgo de ACV post-AIT" sub="Riesgo de ACV en las 48h siguientes a un AIT." items={["Edad ≥60 años","PAS ≥140 o PAD ≥90 mmHg","Debilidad focal unilateral (+2)","Alteración del habla sin debilidad","Duración AIT ≥60 min (+2)","Duración AIT 10–59 min","Diabetes mellitus"]} scores={[1,1,2,1,2,1,1]} id="abcd" levels={[{min:0,label:"Riesgo bajo",rec:"Riesgo ACV 48h ~1%",color:"#22c55e"},{min:4,label:"Riesgo moderado",rec:"Riesgo ACV 48h ~4% · Hospitalizar",color:"#f59e0b"},{min:6,label:"Riesgo alto",rec:"Riesgo ACV 48h ~8% · Hospitalizar urgente",color:"#ef4444"}]}/><ScoreCard title="CURB-65 — Severidad NAC" sub="Gravedad de neumonía adquirida en la comunidad." items={["Confusión (desorientación o GCS <15)","Urea >7 mmol/L (BUN >19 mg/dL)","FR ≥30/min","PAS <90 o PAD ≤60 mmHg","Edad ≥65 años"]} scores={[1,1,1,1,1]} id="curb" levels={[{min:0,label:"Bajo riesgo",rec:"Tratamiento ambulatorio",color:"#22c55e"},{min:2,label:"Riesgo intermedio",rec:"Hospitalización o supervisión estrecha",color:"#f59e0b"},{min:3,label:"Alto riesgo — NAC grave",rec:"Hospitalización · Considerar UCI",color:"#ef4444"}]}/></>}
+    </div>
+  );
+}
+
+const TABS = ["💉 SRI","🩸 DVA","⚗️ CRI","🧠 Glasgow","🛏️ Sedación UCI","🔧 Procedimientos","📊 Scores"];
 
 export default function App() {
   const [weight, setWeight] = useState("");
   const [tab, setTab] = useState(0);
   const w = parseFloat(weight);
-  const valid = w > 0 && w < 250;
-
+  const valid = w>0&&w<250;
   return (
-    <div style={{ minHeight:"100vh", background:"radial-gradient(ellipse at 20% 0%, #0d1f40 0%, #050d1c 60%)", color:"#e8edf5", fontFamily:"'IBM Plex Mono','Courier New',monospace", paddingBottom:60 }}>
+    <div style={{ minHeight:"100vh", background:"radial-gradient(ellipse at 20% 0%,#0d1f40 0%,#050d1c 60%)", color:"#e8edf5", fontFamily:"'IBM Plex Mono','Courier New',monospace", paddingBottom:60 }}>
       <div style={{ background:"linear-gradient(180deg,#0a1a38 0%,#050d1c 100%)", borderBottom:"1px solid #1a3060", padding:"20px 20px 16px" }}>
         <div style={{ maxWidth:640, margin:"0 auto" }}>
           <div style={{ fontSize:10, color:"#22d3ee", letterSpacing:3, marginBottom:4 }}>ANESTESIOLOGÍA · URGENCIAS · UCI</div>
           <div style={{ fontSize:22, fontWeight:800 }}>💉 Suite Clínica</div>
-          <div style={{ fontSize:11, color:"#3a5a8f", marginTop:2 }}>SRI · DVA · CRI · Glasgow · Sedación · Procedimientos</div>
+          <div style={{ fontSize:11, color:"#3a5a8f", marginTop:2 }}>SRI · DVA · CRI · Glasgow · Sedación · Procedimientos · Scores</div>
         </div>
       </div>
-
       <div style={{ maxWidth:640, margin:"0 auto", padding:"20px 16px 0" }}>
         <div style={{ background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"16px 20px", marginBottom:20, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
           <div>
@@ -483,22 +684,20 @@ export default function App() {
               <span style={{ fontSize:18, color:"#22d3ee", fontWeight:700 }}>kg</span>
             </div>
           </div>
-          {valid && <div style={{ marginLeft:"auto", textAlign:"right" }}><div style={{ fontSize:10, color:"#34d399", letterSpacing:2 }}>ACTIVO</div><div style={{ fontSize:22, fontWeight:800, color:"#34d399" }}>{w} kg</div></div>}
+          {valid&&<div style={{ marginLeft:"auto", textAlign:"right" }}><div style={{ fontSize:10, color:"#34d399", letterSpacing:2 }}>ACTIVO</div><div style={{ fontSize:22, fontWeight:800, color:"#34d399" }}>{w} kg</div></div>}
         </div>
-
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:6, marginBottom:20 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:6, marginBottom:20 }}>
           {TABS.map((t,i)=>(
-            <button key={i} onClick={()=>setTab(i)} style={{ padding:"10px 4px", borderRadius:10, fontSize:10, fontFamily:"inherit", fontWeight:700, cursor:"pointer", textAlign:"center", lineHeight:1.4, border:tab===i?"1px solid #22d3ee":"1px solid #1a3060", background:tab===i?"#0d2a4e":"#0b1730", color:tab===i?"#22d3ee":"#3a5a8f" }}>{t}</button>
+            <button key={i} onClick={()=>setTab(i)} style={{ padding:"10px 4px", borderRadius:10, fontSize:9, fontFamily:"inherit", fontWeight:700, cursor:"pointer", textAlign:"center", lineHeight:1.4, border:tab===i?"1px solid #22d3ee":"1px solid #1a3060", background:tab===i?"#0d2a4e":"#0b1730", color:tab===i?"#22d3ee":"#3a5a8f" }}>{t}</button>
           ))}
         </div>
-
-        {tab===0 && <SRITab weight={valid?w:0}/>}
-        {tab===1 && DRUGS_VASOA.map(d=><DrugCard key={d.name} drug={d} weight={valid?w:0}/>)}
-        {tab===2 && <CustomCRI weight={valid?w:0}/>}
-        {tab===3 && <GlasgowTab/>}
-        {tab===4 && <SedacionTab weight={valid?w:0}/>}
-        {tab===5 && <ProcedimientosTab weight={valid?w:0}/>}
-
+        {tab===0&&<SRITab weight={valid?w:0}/>}
+        {tab===1&&<DVATab weight={valid?w:0}/>}
+        {tab===2&&<CRITab weight={valid?w:0}/>}
+        {tab===3&&<GlasgowTab/>}
+        {tab===4&&<SedacionTab weight={valid?w:0}/>}
+        {tab===5&&<ProcedimientosTab weight={valid?w:0}/>}
+        {tab===6&&<ScoresTab/>}
         <div style={{ marginTop:24, padding:"12px 16px", background:"#08111f", border:"1px solid #1a2a4f", borderRadius:10, fontSize:11, color:"#2a4a7f", lineHeight:1.7 }}>
           ⚠️ Herramienta de apoyo clínico. Verificar siempre con protocolos institucionales y criterio médico.
         </div>
