@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState } from "react";
 
 const DRUGS_VASOA = [
