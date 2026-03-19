@@ -913,9 +913,11 @@ function ElectrolyteTab() {
   let defHiper=null, volHiper=null, velHiper=null, horasHiper=null;
   if(act&&na&&obj&&na>obj&&na>145){
     defHiper=act*((na/obj)-1);
-    horasHiper=Math.ceil((na-obj)/0.5);
-    volHiper=defHiper*1000;
-    velHiper=volHiper/horasHiper;
+    const maxCorrHiper=Math.min(na-obj,10);
+    const defSeguro=act*((na/(na-maxCorrHiper))-1);
+    horasHiper=24;
+    volHiper = via==='sf045' ? defSeguro*2*1000 : defSeguro*1000;
+    velHiper = volHiper/24;
   }
 
   const inp={background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",fontSize:14,padding:"8px 12px",outline:"none",fontFamily:"inherit",width:"100%",boxSizing:"border-box"};
@@ -1266,39 +1268,38 @@ function ElectrolyteTab() {
               <div style={{background:"#040c1c",borderRadius:10,padding:14}}>
                 <div style={{fontSize:10,color:"#f59e0b",letterSpacing:2,marginBottom:10}}>RESULTADO — Hipernatremia · Déficit de agua libre</div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
-                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>DÉFICIT TOTAL</div><div style={{fontSize:22,fontWeight:700,color:"#f59e0b"}}>{defHiper.toFixed(1)}</div><div style={{fontSize:11,color:"#4a6a9f"}}>litros</div></div>
-                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>VELOCIDAD 24h</div><div style={{fontSize:22,fontWeight:700,color:"#f59e0b"}}>{(defHiper*1000/24).toFixed(0)}</div><div style={{fontSize:11,color:"#4a6a9f"}}>mL/hr</div></div>
-                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>TIEMPO SEGURO</div><div style={{fontSize:22,fontWeight:700,color:"#f59e0b"}}>{Math.ceil((na-obj)/0.5)}h</div><div style={{fontSize:11,color:"#4a6a9f"}}>a 0.5 mEq/h</div></div>
-                </div>
-                <div style={{background:"#0b1730",borderRadius:8,padding:12,marginBottom:8}}>
-                  <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:8}}>Velocidades de corrección</div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                    <div style={{background:"#2a1a00",borderRadius:8,padding:10}}>
-                      <div style={{fontSize:10,color:"#f59e0b",marginBottom:4}}>VELOCIDAD SEGURA — 0.5 mEq/h</div>
-                      <div style={{fontSize:16,fontWeight:700,color:"#f59e0b"}}>{(defHiper*1000/Math.ceil((na-obj)/0.5)).toFixed(0)} mL/hr</div>
-                      <div style={{fontSize:11,color:"#f59e0b",marginTop:2}}>Tiempo: {Math.ceil((na-obj)/0.5)}h · Recomendado siempre</div>
-                    </div>
-                    <div style={{background:"#2a0505",borderRadius:8,padding:10}}>
-                      <div style={{fontSize:10,color:"#ef4444",marginBottom:4}}>VELOCIDAD AGUDA — 1 mEq/h</div>
-                      <div style={{fontSize:16,fontWeight:700,color:"#ef4444"}}>{(defHiper*1000/Math.ceil((na-obj)/1)).toFixed(0)} mL/hr</div>
-                      <div style={{fontSize:11,color:"#ef4444",marginTop:2}}>Tiempo: {Math.ceil((na-obj)/1)}h · Solo si aguda confirmada</div>
-                    </div>
+                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}>
+                    <div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>DÉFICIT TOTAL</div>
+                    <div style={{fontSize:22,fontWeight:700,color:"#f59e0b"}}>{defHiper.toFixed(1)}</div>
+                    <div style={{fontSize:11,color:"#4a6a9f"}}>litros</div>
+                  </div>
+                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}>
+                    <div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>VELOCIDAD 24h</div>
+                    <div style={{fontSize:22,fontWeight:700,color:"#f59e0b"}}>{velHiper.toFixed(0)}</div>
+                    <div style={{fontSize:11,color:"#4a6a9f"}}>mL/hr</div>
+                  </div>
+                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}>
+                    <div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>VOLUMEN TOTAL</div>
+                    <div style={{fontSize:22,fontWeight:700,color:"#f59e0b"}}>{volHiper.toFixed(0)}</div>
+                    <div style={{fontSize:11,color:"#4a6a9f"}}>mL en 24h</div>
                   </div>
                 </div>
                 <div style={{background:"#2a1a00",borderRadius:8,padding:10,fontSize:12,color:"#f59e0b",lineHeight:1.9,marginBottom:8}}>
-                  <strong>Plan 24h ({via==='oral'?'Agua destilada oral/SNG':via==='sg5'?'SG 5% IV':'SF 0.45% IV'}):</strong><br/>
-                  → Pasar <strong>{(defHiper*1000/24).toFixed(0)} mL/hr</strong> durante 24h<br/>
-                  → Objetivo: bajar Na máx {Math.min(na-obj,10).toFixed(0)} mEq/L en 24h (aguda) o máx 8 mEq/L (crónica)<br/>
-                  → Agregar pérdidas insensibles: +30–50 mL/hr según contexto clínico
+                  <strong>Plan 24h ({via==='oral'?'Agua destilada oral/SNG':via==='sg5'?'SG 5% IV':'SF 0.45% IV — doble volumen por contenido de Na'}):</strong><br/>
+                  → Pasar <strong>{velHiper.toFixed(0)} mL/hr</strong> durante 24h<br/>
+                  → Corrige máx {Math.min(na-obj,10).toFixed(0)} mEq/L en 24h{via==='sf045'?' · SF 0.45% requiere el doble de volumen que agua libre':''}<br/>
+                  → Agregar pérdidas insensibles: +30–50 mL/hr según contexto
                 </div>
                 <div style={{background:"#0d2a4e",borderRadius:8,padding:10,fontSize:12,color:"#22d3ee",lineHeight:1.8,marginBottom:8}}>
                   <strong>📋 Control de exámenes:</strong><br/>
-                  → ELP + creatinina a las <strong>6h</strong> de inicio<br/>
-                  → ELP a las <strong>12h</strong> — ajustar velocidad según respuesta<br/>
+                  → ELP a las <strong>6h</strong> de inicio · ELP a las <strong>12h</strong> — ajustar velocidad<br/>
                   → ELP a las <strong>24h</strong> — evaluar necesidad de continuar
                 </div>
+                <div style={{background:"#052a10",borderRadius:8,padding:10,fontSize:11,color:"#22c55e",lineHeight:1.7,marginBottom:8}}>
+                  💡 Mantener 0.5 mEq/h es la velocidad más segura. Aumentar a 1 mEq/h solo si hipernatremia aguda confirmada (&lt;48h).
+                </div>
                 <div style={{padding:"8px 10px",background:"#2a0505",borderRadius:8,fontSize:11,color:"#ef4444"}}>
-                  ⚠️ Corrección rápida → edema cerebral · Si crónica o desconocida: máx 8 mEq/L en 24h · 1 mEq/h solo si aguda confirmada
+                  ⚠️ Corrección rápida → edema cerebral · Si crónica o desconocida: máx 8 mEq/L en 24h
                 </div>
               </div>
             )}
@@ -1308,8 +1309,582 @@ function ElectrolyteTab() {
     </div>
   );
 }
+function RCPTab() {
+  const [ciclo, setCiclo] = useState(0);
+  const [adreCount, setAdreCount] = useState(0);
+  const [amioCount, setAmioCount] = useState(0);
+  const [ciclosFV, setCiclosFV] = useState(0);
+  const [ritmoActual, setRitmoActual] = useState(null);
+  const [vaaHecho, setVaaHecho] = useState(false);
+  const [cincoHecho, setCincoHecho] = useState(false);
+  const [iniciado, setIniciado] = useState(false);
+  const [log, setLog] = useState([]);
+  const [timerSec, setTimerSec] = useState(0);
+  const [timerOn, setTimerOn] = useState(false);
+  const [bpm, setBpm] = useState(100);
+  const [metroOn, setMetroOn] = useState(false);
+  const [beat, setBeat] = useState(false);
+  const timerRef = useState(null);
+  const metroRef = useState(null);
+  const logEndRef = useState(null);
 
-const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","🧠 Glasgow","🛏️ Sedación UCI","🔧 Procedimientos","📊 Scores","🧂 Electrolitos"];
+  function tiempo(sec) {
+    const s = sec !== undefined ? sec : timerSec;
+    return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  }
+
+  function addLog(texto, color, bg) {
+    setLog(l => [...l, {texto, color: color||'#7aa2d4', bg: bg||'#040c1c'}]);
+  }
+
+  function toggleTimer() {
+    if(timerOn) {
+      clearInterval(timerRef[0]);
+      timerRef[0] = null;
+      setTimerOn(false);
+    } else {
+      timerRef[0] = setInterval(() => setTimerSec(s => s+1), 1000);
+      setTimerOn(true);
+    }
+  }
+
+  function resetTodo() {
+    clearInterval(timerRef[0]);
+    clearInterval(metroRef[0]);
+    timerRef[0] = null; metroRef[0] = null;
+    setTimerOn(false); setTimerSec(0); setMetroOn(false); setBeat(false);
+    setCiclo(0); setAdreCount(0); setAmioCount(0); setCiclosFV(0);
+    setRitmoActual(null); setVaaHecho(false); setCincoHecho(false); setIniciado(false);
+    setLog([]);
+  }
+
+  function toggleMetro() {
+    if(metroOn) {
+      clearInterval(metroRef[0]);
+      metroRef[0] = null;
+      setMetroOn(false);
+      setBeat(false);
+    } else {
+      const ms = Math.round(60000/bpm);
+      metroRef[0] = setInterval(() => {
+        setBeat(b => !b);
+        try {
+          const ctx = new (window.AudioContext||window.webkitAudioContext)();
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.connect(g); g.connect(ctx.destination);
+          o.frequency.value = 880;
+          g.gain.setValueAtTime(0.3, ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.08);
+          o.start(ctx.currentTime); o.stop(ctx.currentTime+0.09);
+        } catch(e) {}
+      }, ms);
+      setMetroOn(true);
+    }
+  }
+
+  function updateBpm(v) {
+    setBpm(parseInt(v));
+    if(metroOn) {
+      clearInterval(metroRef[0]);
+      const ms = Math.round(60000/parseInt(v));
+      metroRef[0] = setInterval(() => {
+        setBeat(b => !b);
+        try {
+          const ctx = new (window.AudioContext||window.webkitAudioContext)();
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.connect(g); g.connect(ctx.destination);
+          o.frequency.value = 880;
+          g.gain.setValueAtTime(0.3, ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.08);
+          o.start(ctx.currentTime); o.stop(ctx.currentTime+0.09);
+        } catch(e) {}
+      }, ms);
+    }
+  }
+
+  function setCicloRitmo(ritmo) {
+    const cambio = iniciado && ritmoActual && ritmoActual !== ritmo;
+    setRitmoActual(ritmo);
+    if(!iniciado) {
+      setIniciado(true);
+      const logs = [];
+      logs.push({texto:'⏱ '+tiempo(timerSec)+' — <strong>PCR iniciada</strong> · RCP de alta calidad · Acceso IV/IO · Monitorización continua', color:'#e8edf5', bg:'#0b1730'});
+      if(ritmo==='fv') {
+        logs.push({texto:'⚡ <strong>FV / TVSP detectada</strong> — ritmo DESFIBRILABLE<br/>Preparar desfibrilador: <strong>120–200 J bifásico</strong> · Aplicar gel · Cargar · Desfibrilar y reiniciar RCP inmediatamente', color:'#ef4444', bg:'#2a0505'});
+      } else {
+        logs.push({texto:'🔲 <strong>AESP / Asistolia detectada</strong> — ritmo NO desfibrilable<br/>Confirmar en 2 derivaciones', color:'#22d3ee', bg:'#0d2a4e'});
+        logs.push({texto:'💊 <strong>Adrenalina 1 mg IV/IO</strong> — dosis #1 administrada · Flush 20 mL SF · No interrumpir RCP', color:'#f59e0b', bg:'#2a1a00'});
+        setAdreCount(1);
+      }
+      setLog(l => [...l, ...logs]);
+    } else if(cambio) {
+      if(ritmo==='fv') {
+        addLog('⚠️ '+tiempo(timerSec)+' — <strong>Cambio de ritmo: FV / TVSP</strong> — ahora DESFIBRILABLE<br/>⚡ Desfibrilar: <strong>120–200 J</strong> · Reiniciar RCP inmediatamente','#ef4444','#2a0505');
+        setCiclosFV(0);
+      } else {
+        addLog('⚠️ '+tiempo(timerSec)+' — <strong>Cambio de ritmo: AESP / Asistolia</strong> — NO desfibrilable<br/>Continuar RCP · No desfibrilar','#22d3ee','#0d2a4e');
+        setCiclosFV(0);
+      }
+    }
+  }
+
+  function siguienteCiclo() {
+    if(!ritmoActual || !iniciado) return;
+    const newCiclo = ciclo + 1;
+    const newLogs = [];
+    let newAdre = adreCount;
+    let newAmio = amioCount;
+    let newCiclosFV = ciclosFV;
+    let newVaa = vaaHecho;
+    let newCinco = cincoHecho;
+
+    newLogs.push({texto:'───── CICLO '+newCiclo+' · '+tiempo(timerSec)+' ─────', color:'#1a3060', bg:'#060d1f'});
+    newLogs.push({texto:'🔄 Cambio de reanimador · RCP 2 min · Verificar ritmo al terminar', color:'#22d3ee', bg:'#0d2a4e'});
+
+    // Adrenalina
+    let darAdre = false;
+    if(ritmoActual==='fv' && newCiclo>=2 && newCiclo%2===0) darAdre=true;
+    if(ritmoActual==='aesp' && newCiclo%2===0) darAdre=true;
+    if(darAdre) {
+      newAdre++;
+      newLogs.push({texto:'💊 <strong>Adrenalina 1 mg IV/IO</strong> — dosis #'+newAdre+' · Flush 20 mL SF · Elevar extremidad', color:'#f59e0b', bg:'#2a1a00'});
+    }
+
+    // Desfibrilación FV
+    if(ritmoActual==='fv' && newCiclo%2===1) {
+      newLogs.push({texto:'⚡ <strong>Desfibrilar si persiste FV/TVSP</strong> — '+(newCiclo===1?'120–200 J bifásico':'aumentar si no responde')+' · Reiniciar RCP inmediatamente', color:'#ef4444', bg:'#2a0505'});
+    }
+
+    // Amiodarona FV — contar ciclos en FV
+    if(ritmoActual==='fv') {
+      newCiclosFV++;
+      if(newCiclosFV===3 && newAmio===0) {
+        newAmio=1;
+        newLogs.push({texto:'💊 <strong>Amiodarona 300 mg IV/IO</strong> — 1° dosis · Diluir en 20 mL SG5% · Bolo rápido<br/>Alternativa: Lidocaína 1–1.5 mg/kg si no hay amiodarona', color:'#f472b6', bg:'#1a0a2e'});
+      } else if(newCiclosFV===5 && newAmio===1) {
+        newAmio=2;
+        newLogs.push({texto:'💊 <strong>Amiodarona 150 mg IV/IO</strong> — 2° dosis · Si FV/TVSP persiste', color:'#f472b6', bg:'#1a0a2e'});
+      }
+    }
+
+    // VAA ciclo 1-2
+    if(!newVaa && newCiclo<=2) {
+      newVaa=true;
+      newLogs.push({texto:'🫁 Considerar <strong>vía aérea avanzada</strong> — IOT o supraglótico · Confirmar con capnografía<br/>Con VAA: 1 ventilación cada 6 seg sin interrumpir compresiones', color:'#34d399', bg:'#052a10'});
+    }
+
+    // 5H5T ciclo 3-4
+    if(!newCinco && newCiclo>=3 && newCiclo<=4) {
+      newCinco=true;
+      newLogs.push({texto:'🔍 <strong>Buscar causas reversibles — 5H 5T</strong><br/><strong>5H:</strong> Hipovolemia · Hipoxia · H⁺ (acidosis) · Hipo/Hipercalemia · Hipotermia<br/><strong>5T:</strong> Neumotórax tensión · Taponamiento · Tóxicos · Trombosis pulmonar · Trombosis coronaria', color:'#22d3ee', bg:'#0d2a4e'});
+    }
+
+    // Aviso tardío
+    if(newCiclo>=10 && newCiclo%2===0) {
+      newLogs.push({texto:'⚠️ '+newCiclo+' ciclos completados (~'+(newCiclo*2)+' min) — Evaluar pronóstico · Considerar finalización si no hay causa reversible', color:'#4a6a9f', bg:'#0a1a38'});
+    }
+
+    setCiclo(newCiclo);
+    setAdreCount(newAdre);
+    setAmioCount(newAmio);
+    setCiclosFV(newCiclosFV);
+    setVaaHecho(newVaa);
+    setCincoHecho(newCinco);
+    setLog(l => [...l, ...newLogs]);
+  }
+
+  function ritmoOrganizado() {
+    const resumen = [
+      {texto:'────────────────────────────────────────', color:'#1a3060', bg:'#060d1f'},
+      {texto:'✅ <strong>RITMO ORGANIZADO — Verificar pulso (máx 10 seg)</strong>', color:'#22c55e', bg:'#052a10'},
+      {texto:'Si hay pulso → <strong>ROSC logrado</strong><br/>• FiO₂ 100% inicial · Titular SpO₂ 94–98%<br/>• ECG 12 derivaciones urgente · Coronariografía si sospecha SCA<br/>• TTM 32–36°C si coma post-PCR · Trasladar a UCI', color:'#22c55e', bg:'#052a10'},
+      {texto:'Si no hay pulso → <strong>continuar RCP</strong> · Tratar como AESP', color:'#f59e0b', bg:'#2a1a00'},
+      {texto:'📋 Resumen: <strong>'+ciclo+' ciclos</strong> · <strong>'+adreCount+' adrenalinas</strong> · Amiodarona: <strong>'+(amioCount===0?'no administrada':amioCount===1?'300mg':'300mg + 150mg')+'</strong> · Tiempo: <strong>'+tiempo(timerSec)+'</strong>', color:'#7aa2d4', bg:'#040c1c'},
+    ];
+    setLog(l => [...l, ...resumen]);
+    setIniciado(false);
+    setRitmoActual(null);
+  }
+
+  const bpmColor = bpm>=100&&bpm<=120?'#22c55e':'#f59e0b';
+  const drugRows = [
+    {d:'Adrenalina',dose:'1 mg IV/IO',freq:'Cada 3–5 min (cada 2 ciclos)',prep:'1 amp (1 mg/mL) directa · Flush 20 mL SF',color:'#f59e0b'},
+    {d:'Amiodarona',dose:'300 mg (1°) · 150 mg (2°)',freq:'FV: ciclo 3 y ciclo 5 en FV',prep:'300 mg en 20 mL SG5% · Bolo rápido IV',color:'#f472b6'},
+    {d:'Lidocaína',dose:'1–1.5 mg/kg IV/IO',freq:'Alternativa a amiodarona',prep:'Directa · Bolo IV · Mant: 1–4 mg/min',color:'#22d3ee'},
+    {d:'Atropina',dose:'1 mg IV · Máx 3 mg',freq:'c/3–5 min en bradicardia',prep:'Directa IV rápido',color:'#34d399'},
+    {d:'Bicarbonato',dose:'1 mEq/kg IV',freq:'Según gasometría',prep:'Directo IV lento · No rutinario',color:'#4a6a9f'},
+  ];
+
+  const inp = {background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",fontSize:14,padding:"8px 12px",outline:"none",fontFamily:"inherit",width:"100%",boxSizing:"border-box"};
+
+  return (
+    <div>
+      <div style={{background:"#2a0505",border:"1px solid #ef444444",borderRadius:12,padding:"12px 14px",marginBottom:14}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#ef4444",marginBottom:2}}>❤️ RCP — Guías AHA/ACLS 2020</div>
+        <div style={{fontSize:12,color:"#ef4444"}}>Algoritmo continuo · El ritmo puede cambiar en cualquier ciclo sin reiniciar.</div>
+      </div>
+
+      {/* Timer + Metrónomo */}
+      <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+          <div style={{background:"#040c1c",borderRadius:10,padding:12,textAlign:"center"}}>
+            <div style={{fontSize:10,color:"#4a6a9f",letterSpacing:2,marginBottom:6}}>TIEMPO DE PCR</div>
+            <div style={{fontSize:36,fontWeight:800,color:timerOn?"#ef4444":"#e8edf5",fontFamily:"monospace",marginBottom:8}}>{tiempo(timerSec)}</div>
+            <div style={{display:"flex",gap:6,justifyContent:"center"}}>
+              <button onClick={toggleTimer} style={{padding:"6px 14px",borderRadius:8,fontFamily:"inherit",fontSize:12,fontWeight:700,cursor:"pointer",border:`1px solid ${timerOn?"#ef4444":"#22c55e"}`,background:timerOn?"#2a0505":"#052a10",color:timerOn?"#ef4444":"#22c55e"}}>{timerOn?"⏸ Pausar":"▶ Iniciar"}</button>
+              <button onClick={resetTodo} style={{padding:"6px 14px",borderRadius:8,fontFamily:"inherit",fontSize:12,cursor:"pointer",border:"1px solid #1a3060",background:"#060d1f",color:"#4a6a9f"}}>Reset</button>
+            </div>
+          </div>
+          <div style={{background:"#040c1c",borderRadius:10,padding:12,textAlign:"center"}}>
+            <div style={{fontSize:10,color:"#4a6a9f",letterSpacing:2,marginBottom:4}}>METRÓNOMO</div>
+            <div style={{width:50,height:50,borderRadius:"50%",margin:"0 auto 8px",background:metroOn&&beat?"#ef4444":"#2a0505",border:`3px solid ${metroOn?"#ef4444":"#1a3060"}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,transition:"background 0.05s"}}>❤️</div>
+            <div style={{fontSize:11,color:"#4a6a9f",marginBottom:3}}>BPM: <strong style={{color:bpmColor}}>{bpm}</strong></div>
+            <input type="range" min="90" max="140" value={bpm} onChange={e=>updateBpm(e.target.value)} style={{width:"100%",marginBottom:4,accentColor:"#22d3ee"}}/>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#4a6a9f",marginBottom:6}}><span>90</span><span style={{color:"#22c55e"}}>100–120</span><span>140</span></div>
+            <button onClick={toggleMetro} style={{width:"100%",padding:6,borderRadius:8,fontFamily:"inherit",fontSize:11,fontWeight:700,cursor:"pointer",border:`1px solid ${metroOn?"#ef4444":"#22c55e"}`,background:metroOn?"#2a0505":"#052a10",color:metroOn?"#ef4444":"#22c55e"}}>{metroOn?"⏹ Detener":"▶ Metrónomo"}</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Técnica */}
+      <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+        <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:8}}>TÉCNICA RCP</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginBottom:8}}>
+          {[["Frecuencia","100–120/min","#22d3ee"],["Profundidad","≥5 cm (máx 6)","#22c55e"],["Relación","30:2 sin VAA","#f59e0b"],["Con VAA","1 c/6 seg","#a78bfa"],["Interrupciones","Máx 10 seg","#ef4444"],["Cambio reanimador","Cada 2 min","#34d399"]].map(([l,v,c])=>(
+            <div key={l} style={{background:"#040c1c",borderRadius:8,padding:8,textAlign:"center"}}><div style={{fontSize:10,color:"#4a6a9f"}}>{l}</div><div style={{fontSize:12,fontWeight:700,color:c}}>{v}</div></div>
+          ))}
+        </div>
+      </div>
+
+      {/* Verificación pulso */}
+      <div style={{background:"#0b1730",border:"1px solid #22c55e44",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+        <div style={{fontSize:10,color:"#22c55e",letterSpacing:2,marginBottom:8}}>⏱ CUÁNDO VERIFICAR PULSO</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+          <div style={{background:"#052a10",borderRadius:8,padding:10,fontSize:12,color:"#22c55e",lineHeight:1.8}}>✓ Cada 2 min (cambio reanimador)<br/>✓ Si ritmo organizado en monitor<br/>✓ Si paciente se mueve/abre ojos</div>
+          <div style={{background:"#2a0505",borderRadius:8,padding:10,fontSize:12,color:"#ef4444",lineHeight:1.8}}>✗ Durante compresiones<br/>✗ Al dar medicamentos<br/>✗ Tras desfibrilación inmediata</div>
+        </div>
+        <div style={{fontSize:11,color:"#4a6a9f"}}>Pulso máx 10 seg · Carotídeo adultos · Braquial lactantes · Si duda → continuar RCP</div>
+      </div>
+
+      {/* Panel algoritmo */}
+      <div style={{background:"#0b1730",border:"1px solid #ef444444",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
+          <div>
+            <div style={{fontSize:10,color:"#4a6a9f",letterSpacing:2,marginBottom:4}}>ESTADO ACTUAL</div>
+            <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+              <span style={{fontSize:12,color:"#4a6a9f"}}>Ciclo: <strong style={{color:"#e8edf5",fontSize:16}}>{ciclo}</strong></span>
+              <span style={{fontSize:12,color:"#4a6a9f"}}>· Adrenalinas: <strong style={{color:"#f59e0b"}}>{adreCount}</strong></span>
+              <span style={{fontSize:12,color:"#4a6a9f"}}>· Amiodarona: <strong style={{color:"#a78bfa"}}>{amioCount===0?"—":amioCount===1?"300mg ✓":"300+150mg ✓"}</strong></span>
+            </div>
+          </div>
+          <div style={{fontSize:11,padding:"4px 10px",background:"#040c1c",borderRadius:20,color:ritmoActual==='fv'?"#ef4444":ritmoActual==='aesp'?"#22d3ee":"#4a6a9f"}}>
+            {ritmoActual==='fv'?"⚡ FV / TVSP":ritmoActual==='aesp'?"🔲 AESP / Asistolia":"Sin iniciar"}
+          </div>
+        </div>
+        <div style={{fontSize:10,color:"#4a6a9f",letterSpacing:2,marginBottom:8}}>RITMO EN MONITOR — Seleccionar al verificar cada 2 min</div>
+        <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+          {[["fv","⚡ FV / TVSP","#ef4444","#2a0505"],["aesp","🔲 AESP / Asistolia","#22d3ee","#0d2a4e"]].map(([r,label,color,bg])=>(
+            <button key={r} onClick={()=>setCicloRitmo(r)} style={{flex:1,padding:"8px 14px",borderRadius:8,fontFamily:"inherit",fontSize:12,fontWeight:700,cursor:"pointer",border:`1px solid ${ritmoActual===r?color:"#1a3060"}`,background:ritmoActual===r?bg:"#060d1f",color:ritmoActual===r?color:"#4a6a9f"}}>{label}</button>
+          ))}
+          <button onClick={ritmoOrganizado} style={{flex:1,padding:"8px 14px",borderRadius:8,fontFamily:"inherit",fontSize:12,fontWeight:700,cursor:"pointer",border:"1px solid #22c55e",background:"#052a10",color:"#22c55e"}}>✓ Ritmo organizado</button>
+        </div>
+        <button onClick={siguienteCiclo} disabled={!iniciado} style={{width:"100%",padding:12,borderRadius:10,fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:iniciado?"pointer":"not-allowed",border:`1px solid ${iniciado?"#ef4444":"#1a3060"}`,background:iniciado?"#2a0505":"#060d1f",color:iniciado?"#ef4444":"#4a6a9f",marginBottom:12}}>⏭ Siguiente ciclo (2 min)</button>
+        <div style={{maxHeight:420,overflowY:"auto"}}>
+          {log.map((l,i)=>(
+            <div key={i} style={{padding:"8px 12px",borderRadius:8,marginBottom:6,fontSize:12,lineHeight:1.7,background:l.bg,border:`1px solid ${l.color}55`,color:l.color}} dangerouslySetInnerHTML={{__html:l.texto}}/>
+          ))}
+        </div>
+      </div>
+
+      {/* Energías */}
+      <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+        <div style={{fontSize:10,color:"#ef4444",letterSpacing:2,marginBottom:10}}>⚡ ENERGÍAS DE DESFIBRILACIÓN</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          <div style={{background:"#2a0505",borderRadius:8,padding:10}}>
+            <div style={{fontSize:11,color:"#ef4444",fontWeight:700,marginBottom:6}}>Adulto</div>
+            <div style={{fontSize:12,color:"#ef4444",lineHeight:1.9}}>Bifásico: <strong>120–200 J</strong><br/>Si no responde → duplicar<br/>Monofásico: <strong>360 J siempre</strong></div>
+          </div>
+          <div style={{background:"#2a1a00",borderRadius:8,padding:10}}>
+            <div style={{fontSize:11,color:"#f59e0b",fontWeight:700,marginBottom:6}}>Pediátrico</div>
+            <div style={{fontSize:12,color:"#f59e0b",lineHeight:1.9}}>1° choque: <strong>2 J/kg</strong><br/>2° choque: <strong>4 J/kg</strong><br/>Siguientes: <strong>4–10 J/kg</strong> (máx 200 J)</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Drogas */}
+      <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+        <div style={{fontSize:10,color:"#a78bfa",letterSpacing:2,marginBottom:12}}>💊 DROGAS — Preparación y dosis</div>
+        {drugRows.map((d,i)=>(
+          <div key={i} style={{background:"#040c1c",borderRadius:10,padding:"10px 12px",marginBottom:8,borderLeft:`3px solid ${d.color}`}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+              <span style={{fontSize:13,fontWeight:700,color:d.color}}>{d.d}</span>
+              <span style={{fontSize:10,color:"#4a6a9f"}}>{d.freq}</span>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <div><span style={{fontSize:10,color:"#4a6a9f"}}>DOSIS: </span><span style={{fontSize:12,fontWeight:700,color:"#e8edf5"}}>{d.dose}</span></div>
+              <div><span style={{fontSize:10,color:"#4a6a9f"}}>PREP: </span><span style={{fontSize:11,color:"#7aa2d4"}}>{d.prep}</span></div>
+            </div>
+            <div style={{fontSize:11,color:"#4a6a9f",marginTop:4}}>{d.nota}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{padding:"12px 16px",background:"#08111f",border:"1px solid #1a2a4f",borderRadius:10,fontSize:11,color:"#2a4a7f",lineHeight:1.7}}>
+        ⚠️ Basado en guías AHA/ACLS 2020. Verificar con protocolos institucionales. No reemplaza entrenamiento certificado en RCP.
+      </div>
+    </div>
+  );
+}
+
+function VMITab() {
+  const [subTab, setSubTab] = useState('equipo');
+  const [talla, setTalla] = useState('');
+  const [sexo, setSexo] = useState('h');
+  const [peso, setPeso] = useState('');
+
+  const t = parseFloat(talla);
+  const pi = t > 0 ? (sexo==='h' ? 50+0.91*(t-152.4) : 45.5+0.91*(t-152.4)) : null;
+  const piVal = pi && pi > 30 ? pi : pi && pi <= 30 ? 30 : null;
+
+  const inp = {background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",fontSize:14,padding:"8px 12px",outline:"none",fontFamily:"inherit",width:"100%",boxSizing:"border-box"};
+
+  return (
+    <div>
+      <div style={{background:"#0d2a4e",border:"1px solid #22d3ee44",borderRadius:12,padding:"12px 14px",marginBottom:14}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#22d3ee",marginBottom:2}}>🫁 Ventilación Mecánica Invasiva</div>
+        <div style={{fontSize:12,color:"#22d3ee"}}>Programación inicial · Equipamiento IOT · Perfiles clínicos</div>
+      </div>
+
+      <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+        {[["equipo","🔧 Equipo IOT"],["estandar","⚙️ VMI Estándar"],["paro","❤️ Post-ROSC"],["rcpactivo","🫁 VMI en Paro"],["transporte","🚑 Transporte"]].map(([s,label])=>(
+          <button key={s} onClick={()=>setSubTab(s)} style={{padding:"8px 12px",borderRadius:8,fontFamily:"inherit",fontSize:11,fontWeight:700,cursor:"pointer",border:`1px solid ${subTab===s?"#22d3ee":"#1a3060"}`,background:subTab===s?"#0d2a4e":"#0b1730",color:subTab===s?"#22d3ee":"#3a5a8f"}}>{label}</button>
+        ))}
+      </div>
+
+      {subTab==='equipo'&&(
+        <div>
+          <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+            <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:12}}>🔧 TUBOS ENDOTRAQUEALES</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+              <div style={{background:"#0d2a4e",borderRadius:10,padding:12}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:8}}>👨 Hombre adulto</div>
+                <div style={{fontSize:12,color:"#22d3ee",lineHeight:1.9}}>TET <strong>7.0 – 7.5 – 8.0</strong> mm<br/>Fijación: <strong>22–24 cm</strong> comisura labial<br/>Hoja: <strong>Macintosh 3–4</strong><br/>Alternativa: <strong>Miller 3</strong></div>
+              </div>
+              <div style={{background:"#1a0a2e",borderRadius:10,padding:12}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#a78bfa",marginBottom:8}}>👩 Mujer adulta</div>
+                <div style={{fontSize:12,color:"#a78bfa",lineHeight:1.9}}>TET <strong>6.0 – 6.5 – 7.0</strong> mm<br/>Fijación: <strong>20–22 cm</strong> comisura labial<br/>Hoja: <strong>Macintosh 3</strong><br/>Alternativa: <strong>Miller 2–3</strong></div>
+              </div>
+            </div>
+            <div style={{fontSize:10,color:"#34d399",letterSpacing:2,marginBottom:10}}>MÁSCARA LARÍNGEA — Número según peso</div>
+            <div style={{background:"#040c1c",borderRadius:10,padding:12,marginBottom:12,overflowX:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+                <thead><tr>{["Peso","Nº ML","Vol. cuff"].map(h=><th key={h} style={{padding:"6px 8px",color:"#4a6a9f",textAlign:"left",borderBottom:"1px solid #1a3060"}}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {[["<5 kg","1","≤4 mL"],["5–10 kg","1.5","≤7 mL"],["10–20 kg","2","≤10 mL"],["20–30 kg","2.5","≤14 mL"],["30–50 kg","3","≤20 mL"],["50–70 kg","4","≤30 mL"],[">70 kg","5","≤40 mL"]].map(([p,n,v])=>(
+                    <tr key={p} style={{borderBottom:"1px solid #1a3060"}}>
+                      <td style={{padding:"6px 8px",color:"#7aa2d4"}}>{p}</td>
+                      <td style={{padding:"6px 8px",fontWeight:700,color:"#22d3ee",textAlign:"center"}}>{n}</td>
+                      <td style={{padding:"6px 8px",color:"#34d399",textAlign:"center"}}>{v}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{fontSize:10,color:"#f59e0b",letterSpacing:2,marginBottom:10}}>HOJAS DE LARINGOSCOPIO</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+              <div style={{background:"#040c1c",borderRadius:8,padding:10}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#f59e0b",marginBottom:6}}>Macintosh (curva)</div>
+                <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.8}}>Nº 3 → adulto promedio<br/>Nº 4 → adulto grande<br/>Va en vallécula</div>
+              </div>
+              <div style={{background:"#040c1c",borderRadius:8,padding:10}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#f59e0b",marginBottom:6}}>Miller (recta)</div>
+                <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.8}}>Nº 2 → adulto pequeño/mujer<br/>Nº 3 → adulto hombre<br/>Eleva epiglotis directamente</div>
+              </div>
+            </div>
+            <div style={{fontSize:10,color:"#ef4444",letterSpacing:2,marginBottom:10}}>CHECKLIST PRE-IOT</div>
+            <div style={{background:"#2a0505",borderRadius:10,padding:12,fontSize:12,color:"#ef4444",lineHeight:2}}>
+              ☐ Monitorización: SpO₂ · ECG · ETCO₂ · PA<br/>
+              ☐ Preoxigenación O₂ 100% × 3–5 min<br/>
+              ☐ Vía venosa permeable · Fluidos disponibles<br/>
+              ☐ Aspiración lista y funcional<br/>
+              ☐ Medicamentos SRI preparados<br/>
+              ☐ Plan B: mascarilla · ML · cricotirotomía<br/>
+              ☐ Ventilador encendido y parámetros programados<br/>
+              ☐ Confirmar posición: capnografía + auscultación bilateral
+            </div>
+          </div>
+        </div>
+      )}
+
+      {subTab==='estandar'&&(
+        <div>
+          <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+            <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:12}}>⚙️ VMI ESTÁNDAR — Volumen Control</div>
+            <div style={{fontSize:10,color:"#4a6a9f",letterSpacing:1,marginBottom:8}}>Calcular Vt según talla y sexo (ARDSnet)</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+              <div>
+                <div style={{fontSize:11,color:"#4a6a9f",marginBottom:4}}>Talla (cm)</div>
+                <input type="number" value={talla} onChange={e=>setTalla(e.target.value)} placeholder="170" style={inp}/>
+              </div>
+              <div>
+                <div style={{fontSize:11,color:"#4a6a9f",marginBottom:4}}>Sexo</div>
+                <select value={sexo} onChange={e=>setSexo(e.target.value)} style={inp}>
+                  <option value="h">Hombre</option>
+                  <option value="m">Mujer</option>
+                </select>
+              </div>
+            </div>
+            {piVal&&(
+              <div style={{background:"#040c1c",borderRadius:10,padding:12,marginBottom:12}}>
+                <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:8}}>PESO IDEAL: <strong style={{color:"#e8edf5"}}>{piVal.toFixed(1)} kg</strong></div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+                  {[[6,"SDRA","#22c55e","#052a10"],[7,"Estándar","#22d3ee","#0d2a4e"],[8,"Límite","#f59e0b","#2a1a00"]].map(([ml,label,color,bg])=>(
+                    <div key={ml} style={{background:bg,borderRadius:8,padding:10,textAlign:"center"}}>
+                      <div style={{fontSize:10,color,marginBottom:4}}>{ml} mL/kg · {label}</div>
+                      <div style={{fontSize:22,fontWeight:800,color}}>{(piVal*ml).toFixed(0)} mL</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{marginTop:8,fontSize:11,color:"#4a6a9f"}}>💡 Ajustar al valor más cercano disponible en el ventilador</div>
+              </div>
+            )}
+            <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>PARÁMETROS INICIALES SUGERIDOS</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+              {[["Vt","6–8 mL/kg peso ideal","#22d3ee","SDRA: 6 · Normal: 7–8"],["FR","12–20 /min","#22c55e","Similar a FR previa al IOT"],["PEEP","5 cmH₂O inicial","#f59e0b","↑ según FiO₂ y PaO₂"],["FiO₂","100% al inicio","#ef4444","Titular SpO₂ 94–98%"],["I:E","1:2 estándar","#a78bfa","Obstrucción: 1:3 · SDRA: 1:1"],["Flujo","40–60 L/min","#34d399","Ajustar según curva flujo-tiempo"]].map(([l,v,c,n])=>(
+                <div key={l} style={{background:"#040c1c",borderRadius:8,padding:10}}>
+                  <div style={{fontSize:10,color:"#4a6a9f",marginBottom:2}}>{l}</div>
+                  <div style={{fontSize:15,fontWeight:700,color:c}}>{v}</div>
+                  <div style={{fontSize:10,color:"#4a6a9f",marginTop:2}}>{n}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{background:"#2a1a00",borderRadius:10,padding:12}}>
+              <div style={{fontSize:11,fontWeight:700,color:"#f59e0b",marginBottom:6}}>⚠️ Objetivos de ventilación</div>
+              <div style={{fontSize:12,color:"#f59e0b",lineHeight:1.9}}>
+                • SpO₂: <strong>94–98%</strong> (EPOC: 88–92%)<br/>
+                • PaCO₂: <strong>35–45 mmHg</strong> (SDRA: hipercapnia permisiva hasta 50–55)<br/>
+                • Presión plateau: <strong>&lt;30 cmH₂O</strong><br/>
+                • Driving pressure: <strong>&lt;15 cmH₂O</strong> (plateau − PEEP)
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {subTab==='paro'&&(
+        <div style={{background:"#0b1730",border:"1px solid #ef444444",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+          <div style={{fontSize:10,color:"#ef4444",letterSpacing:2,marginBottom:12}}>❤️ VMI POST-ROSC</div>
+          <div style={{background:"#2a0505",borderRadius:10,padding:12,marginBottom:10}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#ef4444",marginBottom:8}}>Durante RCP activa</div>
+            <div style={{fontSize:12,color:"#ef4444",lineHeight:1.9}}>
+              • Con VAA avanzada: <strong>10 ventilaciones/min</strong> (1 c/6 seg)<br/>
+              • Sin VAA: 30:2 — no interrumpir compresiones<br/>
+              • FiO₂ 100% durante el paro<br/>
+              • Evitar hiperventilación → ↓ RV → ↓ GC
+            </div>
+          </div>
+          <div style={{background:"#052a10",borderRadius:10,padding:12,marginBottom:10}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#22c55e",marginBottom:8}}>Post-ROSC — Programación inicial</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              {[["Vt","6 mL/kg peso ideal"],["FR","10–12 /min"],["FiO₂","Titular SpO₂ 94–98%"],["PEEP","5 cmH₂O inicial"],["Objetivo PaCO₂","35–45 mmHg"],["Evitar","Hiperoxia (SpO₂ <100%)"]].map(([l,v])=>(
+                <div key={l} style={{background:"#040c1c",borderRadius:8,padding:8}}>
+                  <div style={{fontSize:10,color:"#4a6a9f",marginBottom:2}}>{l}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#22c55e"}}>{v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{background:"#0d2a4e",borderRadius:10,padding:12}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#22d3ee",marginBottom:6}}>🌡️ Control temperatura post-ROSC</div>
+            <div style={{fontSize:12,color:"#22d3ee",lineHeight:1.9}}>
+              • TTM: <strong>32–36°C</strong> por 24h si coma post-PCR<br/>
+              • Evitar hiperpirexia (&gt;37.5°C) en primeras 72h<br/>
+              • Normoglicemia: <strong>140–180 mg/dL</strong>
+            </div>
+          </div>
+        </div>
+      )}
+      {subTab==='rcpactivo'&&(
+        <div style={{background:"#0b1730",border:"1px solid #ef444444",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+          <div style={{fontSize:10,color:"#ef4444",letterSpacing:2,marginBottom:12}}>🫁 VMI DURANTE RCP ACTIVA</div>
+          <div style={{background:"#2a0505",borderRadius:10,padding:12,marginBottom:10}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#ef4444",marginBottom:6}}>⚠️ Objetivo durante el paro</div>
+            <div style={{fontSize:12,color:"#ef4444",lineHeight:1.9}}>Evitar hiperventilación — aumenta presión intratorácica → ↓ retorno venoso → ↓ GC durante RCP<br/>Priorizar compresiones de calidad sobre ventilación</div>
+          </div>
+          <div style={{background:"#040c1c",borderRadius:10,padding:12,marginBottom:10}}>
+            <div style={{fontSize:10,color:"#ef4444",letterSpacing:2,marginBottom:10}}>PARÁMETROS DURANTE PCR</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              {[
+                ["Vt","8 mL/kg","#f59e0b","Mayor para asegurar volumen sin interrupción de compresiones"],
+                ["FR","10 /min","#22c55e","1 ventilación cada 6 seg — no interrumpir compresiones"],
+                ["PEEP","0 cmH₂O","#22d3ee","Sin PEEP durante paro — facilita retorno venoso"],
+                ["FiO₂","100%","#ef4444","Máxima durante paro"],
+                ["I:E","1:5","#a78bfa","Espiración prolongada — evitar atrapamiento aéreo"],
+                ["Trigger","Apagado","#4a6a9f","Evitar autociclos por movimiento de compresiones"],
+                ["P máx","60 cmH₂O","#f472b6","Límite de seguridad — compresiones pueden elevar presión"],
+                ["Flujo","Alto","#34d399","Para completar inspiración rápida entre compresiones"],
+              ].map(([l,v,c,n])=>(
+                <div key={l} style={{background:"#0b1730",borderRadius:8,padding:10}}>
+                  <div style={{fontSize:10,color:"#4a6a9f",marginBottom:2}}>{l}</div>
+                  <div style={{fontSize:18,fontWeight:800,color:c}}>{v}</div>
+                  <div style={{fontSize:10,color:"#4a6a9f",marginTop:2,lineHeight:1.4}}>{n}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{background:"#0d2a4e",borderRadius:10,padding:12}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#22d3ee",marginBottom:6}}>✓ Al lograr ROSC — cambiar a Post-ROSC</div>
+            <div style={{fontSize:12,color:"#22d3ee",lineHeight:1.9}}>
+              • Reducir Vt a <strong>6 mL/kg</strong> peso ideal<br/>
+              • Reducir FR a <strong>10–12 /min</strong><br/>
+              • Activar trigger · Ajustar PEEP a <strong>5 cmH₂O</strong><br/>
+              • Titular FiO₂ para SpO₂ <strong>94–98%</strong><br/>
+              • Ver pestaña Post-ROSC para manejo completo
+            </div>
+          </div>
+        </div>
+      )}
+      {subTab==='transporte'&&(
+        <div style={{background:"#0b1730",border:"1px solid #34d39944",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+          <div style={{fontSize:10,color:"#34d399",letterSpacing:2,marginBottom:12}}>🚑 VENTILADOR DE TRANSPORTE — AirMix</div>
+          <div style={{background:"#052a10",borderRadius:10,padding:12,marginBottom:10}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#34d399",marginBottom:8}}>Modo AirMix</div>
+            <div style={{fontSize:12,color:"#34d399",lineHeight:1.9}}>
+              • Mezcla aire ambiente + O₂ → FiO₂ aproximada <strong>50–60%</strong><br/>
+              • Útil para conservar O₂ en traslados prolongados<br/>
+              • <strong>NO usar</strong> en pacientes que requieren FiO₂ &gt;60% (SDRA grave, hipoxemia refractaria)
+            </div>
+          </div>
+          <div style={{background:"#040c1c",borderRadius:10,padding:12,marginBottom:10}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#e8edf5",marginBottom:8}}>Parámetros de transporte</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              {[["Vt","6–8 mL/kg peso ideal"],["FR","12–16 /min"],["FiO₂","100% o AirMix según SpO₂"],["PEEP","5 cmH₂O"],["Monitorizar","SpO₂ continua + ETCO₂"],["Alarmas","Revisar antes de salir"]].map(([l,v])=>(
+                <div key={l} style={{background:"#0b1730",borderRadius:8,padding:8}}>
+                  <div style={{fontSize:10,color:"#4a6a9f",marginBottom:2}}>{l}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#34d399"}}>{v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{background:"#2a1a00",borderRadius:10,padding:12}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#f59e0b",marginBottom:6}}>⚠️ Checklist pre-traslado</div>
+            <div style={{fontSize:12,color:"#f59e0b",lineHeight:2}}>
+              ☐ O₂ suficiente para traslado + 30 min extra<br/>
+              ☐ Batería del ventilador cargada<br/>
+              ☐ Sedación y analgesia adecuadas<br/>
+              ☐ TET bien fijado y posición confirmada<br/>
+              ☐ Aspiración portátil disponible<br/>
+              ☐ Signos vitales estables antes de mover
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","🧠 Glasgow","🛏️ Sedación UCI","🔧 Procedimientos","📊 Scores","🧂 Electrolitos","❤️ RCP","🫁 VMI"];
 
 export default function App() {
   const [weight, setWeight] = useState("");
@@ -1350,6 +1925,8 @@ export default function App() {
         {tab===5&&<ProcedimientosTab weight={valid?w:0}/>}
         {tab===6&&<ScoresTab/>}
         {tab===7&&<ElectrolyteTab/>}
+        {tab===8&&<RCPTab/>}
+        {tab===9&&<VMITab/>} 
         <div style={{marginTop:24,padding:"12px 16px",background:"#08111f",border:"1px solid #1a2a4f",borderRadius:10,fontSize:11,color:"#2a4a7f",lineHeight:1.7}}>
           ⚠️ Herramienta de apoyo clínico. Verificar siempre con protocolos institucionales y criterio médico.
         </div>
