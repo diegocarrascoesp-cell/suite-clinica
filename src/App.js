@@ -884,8 +884,408 @@ function ScoresTab() {
     </div>
   );
 }
+function ElectrolyteTab() {
+  const [tipo, setTipo] = useState(null);
+  const [vec, setVec] = useState(null);
+  const [calcOpen, setCalcOpen] = useState(false);
+  const [naActual, setNaActual] = useState('');
+  const [naObj, setNaObj] = useState('');
+  const [peso, setPeso] = useState('');
+  const [sexo, setSexo] = useState('0.6');
+  const [sol, setSol] = useState('3%');
+  const [hipokal, setHipokal] = useState(false);
+  const [via, setVia] = useState('oral');
 
-const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","🧠 Glasgow","🛏️ Sedación UCI","🔧 Procedimientos","📊 Scores"];
+  const na=parseFloat(naActual), obj=parseFloat(naObj), w=parseFloat(peso), f=parseFloat(sexo);
+  const act = w&&f ? w*f : null;
+
+  // Cálculo hiponatremia
+  let defHipo=null, volHipo=null, velHipo=null;
+  if(act&&na&&obj&&na<obj){
+    const diff=obj-na, maxCorr=Math.min(diff,10);
+    defHipo=act*diff;
+    const conc=sol==='3%'?513:sol==='2.7%'?462:154;
+    volHipo=(act*maxCorr/conc)*1000;
+    velHipo=volHipo/(maxCorr/0.5);
+  }
+
+  // Cálculo hipernatremia
+  let defHiper=null, volHiper=null, velHiper=null, horasHiper=null;
+  if(act&&na&&obj&&na>obj&&na>145){
+    defHiper=act*((na/obj)-1);
+    horasHiper=Math.ceil((na-obj)/0.5);
+    volHiper=defHiper*1000;
+    velHiper=volHiper/horasHiper;
+  }
+
+  const inp={background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",fontSize:14,padding:"8px 12px",outline:"none",fontFamily:"inherit",width:"100%",boxSizing:"border-box"};
+  const btnVec={width:"100%",textAlign:"left",background:"#060d1f",border:"1px solid #1a3060",borderRadius:10,padding:"10px 8px",cursor:"pointer",fontFamily:"inherit",marginBottom:8,flexDirection:"column",textAlign:"center"};
+
+  function VecHipoContent() {
+    if(!vec) return null;
+    if(vec==='hipo') return (
+      <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:10}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:10}}>⬇️ Hiponatremia Hipovolémica</div>
+        <div style={{background:"#2a0505",borderRadius:10,padding:"12px 14px",marginBottom:10}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#ef4444",marginBottom:6}}>🔴 Prioridad: restaurar perfusión</div>
+          <div style={{fontSize:12,color:"#ef4444",lineHeight:1.9}}>Antes de corregir el sodio, asegurar:<br/>• <strong>Diuresis</strong> &gt;0.5 mL/kg/h · <strong>PAM</strong> &gt;65 mmHg · <strong>GCS</strong> estable<br/>→ Solicitar ELP + creatinina + BUN una vez estabilizado<br/>→ El volumen de SF entregado superará el calculado por la fórmula</div>
+        </div>
+        {[["Na urinario <20 mEq/L → Pérdida extrarrenal","• Diarrea / vómitos — causa más frecuente\n• Tercer espacio — pancreatitis, quemaduras, íleo\n• Sudoración excesiva","SF 0.9% · Velocidad según estado hemodinámico"],["Na urinario >20 mEq/L → Pérdida renal","• Diuréticos tiazídicos\n• Insuficiencia suprarrenal — déficit aldosterona\n• Síndrome pierde sal cerebral — post-HSA, TEC","SF 0.9% · Suspender diurético · Hidrocortisona si insuf. suprarrenal"]].map(([title,causes,tto])=>(
+          <div key={title} style={{background:"#0d1b3e",borderRadius:8,padding:"12px 14px",marginBottom:8}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:6}}>{title}</div>
+            <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.9,marginBottom:8}}>{causes.split('\n').map((l,i)=><span key={i}>{l}<br/></span>)}</div>
+            <div style={{padding:"8px 12px",background:"#0d2a4e",borderRadius:8,fontSize:12,color:"#22d3ee"}}><strong>Tratamiento:</strong> {tto}</div>
+          </div>
+        ))}
+      </div>
+    );
+    if(vec==='eu') return (
+      <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:10}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#22c55e",marginBottom:10}}>➡️ Hiponatremia Euvolémica</div>
+        <div style={{background:"#0d1b3e",borderRadius:8,padding:"12px 14px",marginBottom:8}}>
+          <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:6}}>Causas principales</div>
+          <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.9}}>• <strong>SIADH</strong> — causa más frecuente<br/>• <strong>Hipotiroidismo</strong> — solicitar TSH<br/>• <strong>Insuficiencia suprarrenal secundaria</strong><br/>• <strong>Polidipsia primaria</strong> — Osm urinaria &lt;100 mOsm/kg<br/>• <strong>Beer potomania</strong></div>
+        </div>
+        <div style={{background:"#0d2a4e",border:"1px solid #22d3ee44",borderRadius:8,padding:"12px 14px"}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:8}}>SIADH — Receptor V2 tubular renal</div>
+          <div style={{fontSize:12,color:"#22d3ee",lineHeight:1.8,marginBottom:8}}>ADH actúa en <strong>receptor V2</strong> → retención agua libre → dilución Na<br/>Criterios: Na &lt;135 · Osm plasmática &lt;275 · Osm urinaria &gt;100 · Na urinario &gt;40 · Euvolemia</div>
+          <div style={{fontSize:11,fontWeight:700,color:"#22d3ee",marginBottom:6}}>⚠️ Siempre buscar causa secundaria:</div>
+          <div style={{fontSize:12,color:"#22d3ee",lineHeight:1.9,marginBottom:10}}>• <strong>Pulmonar:</strong> neumonía, TBC, EPOC, VM<br/>• <strong>SNC:</strong> ACV, meningitis, TEC, tumores<br/>• <strong>Fármacos:</strong> ISRS, carbamacepina, AINEs, opioides<br/>• <strong>Tumores:</strong> Ca pulmón células pequeñas, Ca páncreas</div>
+          <div style={{background:"#040c1c",borderRadius:8,padding:10}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:6}}>Tratamiento SIADH</div>
+            <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.9}}>1. <strong>Restricción hídrica</strong> 500–800 mL/día<br/>2. <strong>Tratar causa subyacente</strong><br/>3. <strong>NaCl 3%</strong> si Na &lt;120 o sintomático<br/>4. <strong>Urea oral</strong> 15–60 g/día — SIADH crónico<br/>5. <strong>Tolvaptán</strong> — antagonista V2 · uso hospitalario</div>
+          </div>
+        </div>
+      </div>
+    );
+    if(vec==='hiper') return (
+      <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:10}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#f59e0b",marginBottom:10}}>⬆️ Hiponatremia Hipervolémica</div>
+        <div style={{background:"#0d1b3e",borderRadius:8,padding:"12px 14px",marginBottom:8}}>
+          <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:8}}>Causas principales</div>
+          <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.9}}>• <strong>Insuficiencia cardíaca</strong> — ↓ GC → ↑ ADH + ↑ aldosterona<br/>• <strong>Cirrosis hepática</strong> — vasodilatación esplácnica → SRAA<br/>• <strong>Síndrome nefrótico</strong> — ↓ presión oncótica<br/>• <strong>Insuficiencia renal</strong></div>
+        </div>
+        <div style={{background:"#2a1a00",border:"1px solid #f59e0b44",borderRadius:8,padding:"12px 14px"}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#f59e0b",marginBottom:10}}>💊 Manejo escalonado de diuréticos</div>
+          <div style={{background:"#040c1c",borderRadius:8,padding:10,marginBottom:8}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:6}}>Paso 1 — Test de Furosemida</div>
+            <div style={{fontSize:12,color:"#7aa2d4",marginBottom:8}}>Solicitar <strong>Creatinina</strong> antes para evaluar función renal basal.</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+              <div style={{background:"#052a10",borderRadius:8,padding:8,textAlign:"center"}}><div style={{fontSize:11,color:"#22c55e",marginBottom:2}}>Sin diuréticos previos</div><div style={{fontSize:18,fontWeight:700,color:"#22c55e"}}>1 mg/kg IV</div></div>
+              <div style={{background:"#2a1a00",borderRadius:8,padding:8,textAlign:"center"}}><div style={{fontSize:11,color:"#f59e0b",marginBottom:2}}>Con diuréticos previos</div><div style={{fontSize:18,fontWeight:700,color:"#f59e0b"}}>1.5 mg/kg IV</div></div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <div style={{background:"#052a10",borderRadius:8,padding:8}}><div style={{fontSize:11,fontWeight:700,color:"#22c55e",marginBottom:4}}>✓ Buena respuesta (2h)</div><div style={{fontSize:12,color:"#22c55e",lineHeight:1.7}}>&gt;200 mL orina en 2h<br/>Na urinario &gt;50–70 mEq/L<br/>→ Función renal conservada</div></div>
+              <div style={{background:"#2a0505",borderRadius:8,padding:8}}><div style={{fontSize:11,fontWeight:700,color:"#ef4444",marginBottom:4}}>✗ Sin respuesta (2h)</div><div style={{fontSize:12,color:"#ef4444",lineHeight:1.7}}>&lt;200 mL en 2h<br/>Na urinario &lt;20 mEq/L<br/>→ Evaluar diálisis</div></div>
+            </div>
+          </div>
+          <div style={{background:"#040c1c",borderRadius:8,padding:10,marginBottom:8}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#22c55e",marginBottom:8}}>✓ Si buena respuesta — Escalada según causa</div>
+            {[["Insuficiencia Cardíaca","#22d3ee","1. Aumentar Furosemida oral (máx 160–240 mg/día)\n2. Respuesta insuficiente → agregar Espironolactona 25–100 mg/día\n3. Persistencia → Furosemida + Espironolactona + Restricción hídrica\n4. Refractario → Tolvaptán o ultrafiltración"],["Cirrosis Hepática","#22d3ee","1. Espironolactona 100 mg/día → primera línea\n2. Agregar Furosemida 40 mg/día si insuficiente\n3. Ratio: Espironolactona:Furosemida = 100:40\n4. Ascitis refractaria → paracentesis evacuadora + albúmina"]].map(([title,color,text])=>(
+              <div key={title} style={{background:"#0d2a4e",borderRadius:8,padding:10,marginBottom:8}}>
+                <div style={{fontSize:11,fontWeight:700,color,marginBottom:6}}>{title}</div>
+                <div style={{fontSize:12,color,lineHeight:1.9}}>{text.split('\n').map((l,i)=><span key={i}>{l}<br/></span>)}</div>
+              </div>
+            ))}
+            <div style={{background:"#2a1a00",borderRadius:8,padding:10}}>
+              <div style={{fontSize:11,fontWeight:700,color:"#f59e0b",marginBottom:6}}>⚠️ Monitorización</div>
+              <div style={{fontSize:12,color:"#f59e0b",lineHeight:1.9}}>• ELP + creatinina c/24–48h<br/>• Pérdida peso objetivo: <strong>0.5–1 kg/día</strong> (con edema) · <strong>máx 0.5 kg/día</strong> (solo ascitis)<br/>• Suspender si Cr &gt;2 mg/dL o Na &lt;120 mEq/L</div>
+            </div>
+          </div>
+          <div style={{background:"#040c1c",borderRadius:8,padding:10}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:8}}>Definiciones de diuresis</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
+              {[["Normal",">0.5 mL/kg/h","#22c55e","#052a10"],["Oliguria","<0.5 mL/kg/h","#f59e0b","#2a1a00"],["Anuria","<0.2 mL/kg/h","#ef4444","#2a0505"]].map(([label,val,color,bg])=>(
+                <div key={label} style={{background:bg,borderRadius:8,padding:8,textAlign:"center"}}><div style={{fontSize:11,color,fontWeight:700}}>{label}</div><div style={{fontSize:12,fontWeight:700,color}}>{val}</div></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+    return null;
+  }
+
+  return (
+    <div>
+      {/* Aviso glicemia */}
+      <div style={{background:"#2a1a00",border:"1px solid #f59e0b44",borderRadius:12,padding:"12px 14px",marginBottom:14}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#f59e0b",marginBottom:4}}>⚠️ Siempre evaluar glicemia</div>
+        <div style={{fontSize:12,color:"#f59e0b",lineHeight:1.7}}>Solicitar <strong>HGT o glicemia</strong> ante toda disnatremia. Por cada 100 mg/dL de glucosa sobre 100 → Na disminuye ~1.6 mEq/L. Corregir glucosa primero.</div>
+      </div>
+
+      {/* Selector hipo/hiper */}
+      <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+        <div style={{fontSize:10,color:"#4a6a9f",letterSpacing:2,marginBottom:12}}>Na⁺ — ALTERACIÓN</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          {[["hipo","Hiponatremia","Na⁺ <135 mEq/L","#22d3ee"],["hiper","Hipernatremia","Na⁺ >145 mEq/L","#f59e0b"]].map(([t,label,sub,color])=>(
+            <button key={t} onClick={()=>{setTipo(t);setVec(null);}} style={{background:tipo===t?color+"22":"#060d1f",border:`1px solid ${tipo===t?color:"#1a3060"}`,borderRadius:10,padding:"10px 14px",cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
+              <div style={{fontSize:15,fontWeight:700,color:tipo===t?color:"#e8edf5"}}>{label}</div>
+              <div style={{fontSize:11,color:"#4a6a9f",marginTop:4}}>{sub}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Hiponatremia */}
+      {tipo==='hipo'&&(
+        <div>
+          {/* Severidad */}
+          <div style={{background:"#0b1730",border:"1px solid #22d3ee44",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+            <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>CLASIFICACIÓN POR SEVERIDAD</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginBottom:12}}>
+              {[["Leve","130–134","#22c55e","#052a10"],["Moderada","125–129","#f59e0b","#2a1a00"],["Grave","<125","#ef4444","#2a0505"]].map(([l,v,c,bg])=>(
+                <div key={l} style={{background:bg,borderRadius:8,padding:8,textAlign:"center"}}><div style={{fontSize:12,fontWeight:700,color:c}}>{l}</div><div style={{fontSize:11,color:c}}>{v} mEq/L</div></div>
+              ))}
+            </div>
+            {/* Bolo emergencia */}
+            <div style={{background:"#2a0505",borderRadius:10,padding:"12px 14px",marginBottom:10}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#ef4444",marginBottom:8}}>🚨 Hiponatremia sintomática grave — Bolo NaCl 3%</div>
+              <div style={{fontSize:12,color:"#ef4444",marginBottom:8,lineHeight:1.7}}>Indicado ante: <strong>convulsiones · vómitos explosivos · coma · GCS &lt;8</strong></div>
+              <div style={{background:"#040c1c",borderRadius:8,padding:10,marginBottom:8}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:6}}>Preparación NaCl 3%</div>
+                <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.9}}><strong>Opción 1:</strong> NaCl 3% directo<br/><strong>Opción 2:</strong> 200 mL NaCl 10% + 800 mL SF 0.9% → 2.7%<br/><strong>Opción 3 (jeringa):</strong> 30 mL NaCl 10% + 70 mL SF → 100 mL al 3%</div>
+              </div>
+              <div style={{background:"#040c1c",borderRadius:8,padding:10}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:6}}>Protocolo de bolo</div>
+                <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.9}}>→ <strong>150 mL NaCl 3%</strong> IV en 20 min · Repetir hasta 3 veces<br/>→ Objetivo: subir Na 4–6 mEq/L en primeras horas<br/>→ <strong>Límite: 10 mEq/L en 24h</strong> · Controlar Na c/4–6h</div>
+              </div>
+            </div>
+            <div style={{fontSize:11,color:"#4a6a9f",lineHeight:1.7}}>⚠️ <strong style={{color:"#ef4444"}}>SDO:</strong> riesgo si corrección &gt;10 mEq/L en 24h · Mayor riesgo en: desnutrición, alcoholismo, hipokalemia</div>
+          </div>
+          {/* Aguda vs crónica */}
+          <div style={{background:"#0b1730",border:"1px solid #f59e0b44",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+            <div style={{fontSize:10,color:"#f59e0b",letterSpacing:2,marginBottom:8}}>⏱ SIEMPRE DIFERENCIAR — Aguda vs Crónica</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <div style={{background:"#2a0505",borderRadius:8,padding:10}}><div style={{fontSize:12,fontWeight:700,color:"#ef4444",marginBottom:4}}>Aguda (&lt;48h)</div><div style={{fontSize:11,color:"#ef4444",lineHeight:1.7}}><strong>Máx: 10 mEq/L en 24h</strong><br/>Menor riesgo SDO</div></div>
+              <div style={{background:"#2a1a00",borderRadius:8,padding:10}}><div style={{fontSize:12,fontWeight:700,color:"#f59e0b",marginBottom:4}}>Crónica (&gt;48h)</div><div style={{fontSize:11,color:"#f59e0b",lineHeight:1.7}}><strong>Objetivo: 6–8 mEq/L en 24h</strong><br/>Mayor riesgo SDO</div></div>
+            </div>
+          </div>
+          {/* VEC hiponatremia */}
+          <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+            <div style={{fontSize:10,color:"#4a6a9f",letterSpacing:2,marginBottom:12}}>VOLUMEN EXTRACELULAR (VEC)</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+              {[["hipo","⬇️ Hipovolémico","Piel seca · Taquicardia","#22d3ee"],["eu","➡️ Euvolémico","Sin edema · Sin deshidratación","#22c55e"],["hiper","⬆️ Hipervolémico","Edema · Ascitis","#f59e0b"]].map(([v,label,sub,color])=>(
+                <button key={v} onClick={()=>setVec(v)} style={{background:vec===v?color+"22":"#060d1f",border:`1px solid ${vec===v?color:"#1a3060"}`,borderRadius:10,padding:"10px 8px",cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
+                  <div style={{fontSize:13,fontWeight:700,color:vec===v?color:"#e8edf5"}}>{label}</div>
+                  <div style={{fontSize:11,color:"#4a6a9f",marginTop:4}}>{sub}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <VecHipoContent/>
+        </div>
+      )}
+
+      {/* Hipernatremia */}
+      {tipo==='hiper'&&(
+        <div>
+          <div style={{background:"#0b1730",border:"1px solid #f59e0b44",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+            <div style={{fontSize:10,color:"#f59e0b",letterSpacing:2,marginBottom:10}}>CLASIFICACIÓN POR SEVERIDAD</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginBottom:12}}>
+              {[["Leve","145–150","#f59e0b","#2a1a00"],["Moderada","150–160","#fb923c","#2a1500"],["Grave",">160","#ef4444","#2a0505"]].map(([l,v,c,bg])=>(
+                <div key={l} style={{background:bg,borderRadius:8,padding:8,textAlign:"center"}}><div style={{fontSize:12,fontWeight:700,color:c}}>{l}</div><div style={{fontSize:11,color:c}}>{v} mEq/L</div></div>
+              ))}
+            </div>
+            <div style={{background:"#2a0505",borderRadius:10,padding:"12px 14px",marginBottom:10}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#ef4444",marginBottom:8}}>⚠️ Velocidad máxima de corrección</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                <div style={{background:"#040c1c",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#ef4444",marginBottom:4}}>MÁX/hora</div><div style={{fontSize:18,fontWeight:700,color:"#ef4444"}}>0.5 mEq/h</div></div>
+                <div style={{background:"#040c1c",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#ef4444",marginBottom:4}}>MÁX/24h</div><div style={{fontSize:18,fontWeight:700,color:"#ef4444"}}>10–12 mEq</div></div>
+              </div>
+              <div style={{fontSize:11,color:"#ef4444",marginTop:8,lineHeight:1.7}}>⚠️ Corrección rápida → <strong>edema cerebral</strong> · Mayor riesgo en hipernatremia crónica (&gt;48h)</div>
+            </div>
+            <div style={{background:"#0d1b3e",borderRadius:10,padding:"12px 14px"}}>
+              <div style={{fontSize:11,color:"#a78bfa",letterSpacing:1,fontWeight:700,marginBottom:6}}>SÍNTOMAS — Principalmente neurológicos</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
+                {[["Leve","Sed intensa · Irritabilidad · Letargia","#a78bfa"],["Moderada","Confusión · Hiperreflexia · Debilidad","#f59e0b"],["Grave","Convulsiones · Coma · Hemorragia cerebral","#ef4444"]].map(([l,s,c])=>(
+                  <div key={l} style={{background:"#040c1c",borderRadius:8,padding:8,textAlign:"center"}}><div style={{fontSize:11,color:c,fontWeight:700}}>{l}</div><div style={{fontSize:11,color:"#7aa2d4",marginTop:4}}>{s}</div></div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* VEC hipernatremia */}
+          <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+            <div style={{fontSize:10,color:"#4a6a9f",letterSpacing:2,marginBottom:12}}>VOLUMEN EXTRACELULAR (VEC)</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+              {[["hipo","⬇️ Hipovolémico","Pérdida agua > pérdida Na","#22d3ee"],["eu","➡️ Euvolémico","Pérdida agua pura","#22c55e"],["hiper","⬆️ Hipervolémico","Exceso de sodio","#f59e0b"]].map(([v,label,sub,color])=>(
+                <button key={v} onClick={()=>setVec(v)} style={{background:vec===v?color+"22":"#060d1f",border:`1px solid ${vec===v?color:"#1a3060"}`,borderRadius:10,padding:"10px 8px",cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
+                  <div style={{fontSize:13,fontWeight:700,color:vec===v?color:"#e8edf5"}}>{label}</div>
+                  <div style={{fontSize:11,color:"#4a6a9f",marginTop:4}}>{sub}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {vec==='hipo'&&(
+            <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:10}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:10}}>⬇️ Hipernatremia Hipovolémica</div>
+              <div style={{fontSize:12,color:"#7aa2d4",marginBottom:10,lineHeight:1.7}}>Pérdida de agua <strong>mayor que pérdida de sodio</strong>. La más frecuente.</div>
+              {[["Osm urinaria alta (>800 mOsm/kg) → Pérdida extrarrenal","• Diarrea osmótica\n• Sudoración excesiva — fiebre, ejercicio\n• Quemaduras extensas — pérdida insensible masiva","Reponer volumen con SF 0.9% si inestable → luego agua libre oral/SNG o SG 5%"],["Osm urinaria baja (<300 mOsm/kg) → Pérdida renal","• Diuréticos de asa\n• Diuresis osmótica — glucosuria, manitol, urea","Corregir causa · Agua libre oral/SNG · SG 5% IV si no tolera oral"]].map(([title,causes,tto])=>(
+                <div key={title} style={{background:"#0d1b3e",borderRadius:8,padding:"12px 14px",marginBottom:8}}>
+                  <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:6}}>{title}</div>
+                  <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.9,marginBottom:8}}>{causes.split('\n').map((l,i)=><span key={i}>{l}<br/></span>)}</div>
+                  <div style={{padding:"8px 12px",background:"#0d2a4e",borderRadius:8,fontSize:12,color:"#22d3ee"}}><strong>Tratamiento:</strong> {tto}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {vec==='eu'&&(
+            <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:10}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#22c55e",marginBottom:10}}>➡️ Hipernatremia Euvolémica — Pérdida de agua pura</div>
+              <div style={{background:"#0d1b3e",borderRadius:8,padding:"12px 14px",marginBottom:8}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:6}}>Pérdidas insensibles puras</div>
+                <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.9}}>• <strong>Fiebre alta</strong> — cada 1°C sobre 37 → +100–150 mL/día<br/>• <strong>Hiperventilación</strong><br/>• <strong>Paciente intubado</strong> sin humidificación adecuada</div>
+              </div>
+              <div style={{background:"#0d2a4e",border:"1px solid #22d3ee44",borderRadius:8,padding:"12px 14px"}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:10}}>🔵 Diabetes Insípida (DI)</div>
+                <div style={{fontSize:12,color:"#22d3ee",marginBottom:8,lineHeight:1.7}}>Incapacidad de concentrar la orina → poliuria hipotónica → hipernatremia<br/>Diagnóstico: <strong>Osm urinaria &lt;300 mOsm/kg</strong> con Na &gt;145 y Osm plasmática &gt;295</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  {[["DI Central","#a78bfa","#1a0a2e","Déficit de ADH por daño hipofisario.\nCausas: Neurocirugía / TEC · Tumores (craneofaringioma) · Infiltración (sarcoidosis) · Isquemia hipofisaria · Idiopática","Test DDAVP → Osm urinaria sube >50% → DI Central","Desmopresina (DDAVP) — receptor V2\nIntranasal: 10–20 mcg c/12–24h\nOral: 0.1–0.4 mg c/8–12h\nSC/IV: 1–4 mcg c/12–24h"],["DI Nefrogénica","#34d399","#052a10","Resistencia tubular al efecto de ADH.\nCausas: Litio (más frecuente) · Hipercalcemia · Hipokalemia crónica · Amiloidosis · Congénita","Test DDAVP → Osm urinaria NO sube → DI Nefrogénica","Corregir causa · Restricción sodio · Tiazidas paradójicamente reducen diuresis · AINEs en casos seleccionados"]].map(([title,color,bg,causas,test,tto])=>(
+                    <div key={title} style={{background:bg,borderRadius:8,padding:10}}>
+                      <div style={{fontSize:11,fontWeight:700,color,marginBottom:6}}>{title}</div>
+                      <div style={{fontSize:11,color:"#7aa2d4",lineHeight:1.7,marginBottom:6}}>{causas.split('\n').map((l,i)=><span key={i}>{l}<br/></span>)}</div>
+                      <div style={{background:"#040c1c",borderRadius:6,padding:8,marginBottom:6}}>
+                        <div style={{fontSize:10,fontWeight:700,color,marginBottom:2}}>Test de desmopresina</div>
+                        <div style={{fontSize:11,color,lineHeight:1.5}}>{test}</div>
+                      </div>
+                      <div style={{background:"#040c1c",borderRadius:6,padding:8}}>
+                        <div style={{fontSize:10,fontWeight:700,color,marginBottom:2}}>Tratamiento</div>
+                        <div style={{fontSize:11,color,lineHeight:1.7}}>{tto.split('\n').map((l,i)=><span key={i}>{l}<br/></span>)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {vec==='hiper'&&(
+            <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:10}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#f59e0b",marginBottom:10}}>⬆️ Hipernatremia Hipervolémica</div>
+              <div style={{background:"#0d1b3e",borderRadius:8,padding:"12px 14px",marginBottom:8}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:6}}>Causas — generalmente iatrogénica</div>
+                <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.9}}>• <strong>Aporte excesivo de NaCl hipertónico</strong><br/>• <strong>NaHCO₃ hipertónico</strong> — corrección de acidosis<br/>• <strong>Alimentación parenteral</strong> hipertónica<br/>• <strong>Hiperaldosteronismo primario</strong> — Conn<br/>• <strong>Síndrome de Cushing</strong></div>
+              </div>
+              <div style={{background:"#2a1a00",border:"1px solid #f59e0b44",borderRadius:8,padding:"12px 14px"}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#f59e0b",marginBottom:8}}>Tratamiento</div>
+                <div style={{fontSize:12,color:"#f59e0b",lineHeight:1.9}}>1. <strong>Suspender aporte de sodio exógeno</strong><br/>2. <strong>Furosemida</strong> para eliminar exceso de Na⁺<br/>3. <strong>Agua libre</strong> oral/SNG o SG 5% IV<br/>4. Tratar causa subyacente</div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Calculadora */}
+      <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginTop:16}}>
+        <button onClick={()=>setCalcOpen(s=>!s)} style={{width:"100%",textAlign:"left",background:"transparent",border:"none",cursor:"pointer",fontFamily:"inherit",display:"flex",justifyContent:"space-between",alignItems:"center",padding:0,color:"#e8edf5"}}>
+          <div style={{fontSize:13,fontWeight:700}}>🧮 Calculadora de corrección de sodio</div>
+          <span>{calcOpen?"▲":"▼"}</span>
+        </button>
+        {calcOpen&&(
+          <div style={{marginTop:14}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+              <div><div style={{fontSize:11,color:"#4a6a9f",marginBottom:4}}>Na actual (mEq/L)</div><input type="number" value={naActual} onChange={e=>setNaActual(e.target.value)} placeholder="118" style={inp}/></div>
+              <div><div style={{fontSize:11,color:"#4a6a9f",marginBottom:4}}>Na objetivo (mEq/L)</div><input type="number" value={naObj} onChange={e=>setNaObj(e.target.value)} placeholder="125" style={inp}/></div>
+              <div><div style={{fontSize:11,color:"#4a6a9f",marginBottom:4}}>Peso (kg)</div><input type="number" value={peso} onChange={e=>setPeso(e.target.value)} placeholder="70" style={inp}/></div>
+              <div><div style={{fontSize:11,color:"#4a6a9f",marginBottom:4}}>Sexo / edad</div>
+                <select value={sexo} onChange={e=>setSexo(e.target.value)} style={inp}>
+                  <option value="0.6">Hombre (0.6)</option>
+                  <option value="0.5">Mujer (0.5)</option>
+                  <option value="0.45">Adulto mayor (0.45)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Hiponatremia opciones */}
+            {na&&obj&&na<obj&&(
+              <div>
+                <div style={{fontSize:11,color:"#4a6a9f",marginBottom:6}}>Solución (hiponatremia)</div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+                  {[["3%","NaCl 3%","513 mEq/L"],["2.7%","NaCl 2.7%","200mL 10%+800mL SF"],["0.9%","NaCl 0.9%","154 mEq/L"]].map(([s,label,sub])=>(
+                    <button key={s} onClick={()=>setSol(s)} style={{flex:1,minWidth:80,padding:8,borderRadius:8,fontFamily:"inherit",fontSize:11,fontWeight:700,cursor:"pointer",border:`1px solid ${sol===s?"#22d3ee":"#1a3060"}`,background:sol===s?"#0d2a4e":"#060d1f",color:sol===s?"#22d3ee":"#4a6a9f"}}>{label}<br/><span style={{fontWeight:400,fontSize:10}}>{sub}</span></button>
+                  ))}
+                </div>
+                <div style={{marginBottom:12}}>
+                  <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:12,color:"#7aa2d4"}}>
+                    <input type="checkbox" checked={hipokal} onChange={e=>setHipokal(e.target.checked)} style={{width:16,height:16}}/>
+                    Hipokalemia concomitante (agregar 10g KCl)
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* Hipernatremia opciones */}
+            {na&&obj&&na>obj&&na>145&&(
+              <div>
+                <div style={{fontSize:11,color:"#4a6a9f",marginBottom:6}}>Vía de reposición (hipernatremia)</div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+                  {[["oral","Agua destilada","Oral / SNG"],["sg5","SG 5% IV","0 mEq/L"],["sf045","SF 0.45% IV","77 mEq/L"]].map(([v,label,sub])=>(
+                    <button key={v} onClick={()=>setVia(v)} style={{flex:1,minWidth:80,padding:8,borderRadius:8,fontFamily:"inherit",fontSize:11,fontWeight:700,cursor:"pointer",border:`1px solid ${via===v?"#f59e0b":"#1a3060"}`,background:via===v?"#2a1a00":"#060d1f",color:via===v?"#f59e0b":"#4a6a9f"}}>{label}<br/><span style={{fontWeight:400,fontSize:10}}>{sub}</span></button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Resultado hiponatremia */}
+            {defHipo!==null&&(
+              <div style={{background:"#040c1c",borderRadius:10,padding:14}}>
+                <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>RESULTADO — Hiponatremia · Fórmula Adrogue-Madias</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>DÉFICIT Na</div><div style={{fontSize:22,fontWeight:700,color:"#22d3ee"}}>{defHipo.toFixed(1)}</div><div style={{fontSize:11,color:"#4a6a9f"}}>mEq</div></div>
+                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>ACT</div><div style={{fontSize:22,fontWeight:700,color:"#22d3ee"}}>{act.toFixed(1)}</div><div style={{fontSize:11,color:"#4a6a9f"}}>L</div></div>
+                </div>
+                <div style={{background:"#0b1730",borderRadius:8,padding:12,marginBottom:8}}>
+                  <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:8}}>Velocidad de corrección segura</div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
+                    <div style={{background:"#052a10",borderRadius:8,padding:8,textAlign:"center"}}><div style={{fontSize:10,color:"#22c55e",marginBottom:2}}>MÁX/hora</div><div style={{fontSize:15,fontWeight:700,color:"#22c55e"}}>0.5 mEq/h</div></div>
+                    <div style={{background:"#2a1a00",borderRadius:8,padding:8,textAlign:"center"}}><div style={{fontSize:10,color:"#f59e0b",marginBottom:2}}>MÁX/24h aguda</div><div style={{fontSize:15,fontWeight:700,color:"#f59e0b"}}>10 mEq</div></div>
+                    <div style={{background:"#2a0505",borderRadius:8,padding:8,textAlign:"center"}}><div style={{fontSize:10,color:"#ef4444",marginBottom:2}}>MÁX/24h crónica</div><div style={{fontSize:15,fontWeight:700,color:"#ef4444"}}>6–8 mEq</div></div>
+                  </div>
+                </div>
+                <div style={{background:"#0d2a4e",borderRadius:8,padding:10,fontSize:12,color:"#22d3ee",lineHeight:1.9,marginBottom:8}}>
+                  {(()=>{
+                    const diff=obj-na, maxCorr=Math.min(diff,10);
+                    const conc=sol==='3%'?513:sol==='2.7%'?462:154;
+                    const vol=(act*maxCorr/conc)*1000;
+                    const vel=vol/(maxCorr/0.5);
+                    const solName=sol==='3%'?'NaCl 3% (513 mEq/L)':sol==='2.7%'?'NaCl 2.7% — 200mL NaCl 10% + 800mL SF':'NaCl 0.9% (154 mEq/L)';
+                    return <><strong>{solName}:</strong>{diff>10?' ⚠️ Objetivo ajustado a máx 10 mEq/L':''}<br/>→ <strong>{vol.toFixed(0)} mL</strong> para corregir {maxCorr.toFixed(0)} mEq/L<br/>→ Velocidad sugerida: <strong>{vel.toFixed(1)} mL/hr</strong></>;
+                  })()}
+                </div>
+                {sol==='2.7%'&&<div style={{background:"#052a10",borderRadius:8,padding:10,fontSize:12,color:"#22c55e",lineHeight:1.8,marginBottom:8}}>💡 <strong>Tip clínico:</strong> NaCl 2.7% a <strong>1 mL/kg/h</strong>{hipokal?' + 10g KCl':''} → esperar subida 4–6 mEq/L en 4h → repetir ELP y reevaluar.</div>}
+                {hipokal&&<div style={{background:"#2a1a00",borderRadius:8,padding:10,fontSize:12,color:"#f59e0b",lineHeight:1.8,marginBottom:8}}>⚠️ <strong>Hipokalemia concomitante:</strong> Agregar <strong>10g KCl</strong> · La corrección del K⁺ también sube el Na → considerar en cálculo total.</div>}
+                <div style={{padding:"8px 10px",background:"#2a0505",borderRadius:8,fontSize:11,color:"#ef4444"}}>⚠️ Controlar Na c/4–6h · No superar 10 mEq/L en 24h · En hipovolémica pura el volumen real superará el calculado</div>
+              </div>
+            )}
+
+            {/* Resultado hipernatremia */}
+            {defHiper!==null&&(
+              <div style={{background:"#040c1c",borderRadius:10,padding:14}}>
+                <div style={{fontSize:10,color:"#f59e0b",letterSpacing:2,marginBottom:10}}>RESULTADO — Hipernatremia · Déficit de agua libre</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>DÉFICIT AGUA LIBRE</div><div style={{fontSize:22,fontWeight:700,color:"#f59e0b"}}>{defHiper.toFixed(1)}</div><div style={{fontSize:11,color:"#4a6a9f"}}>litros</div></div>
+                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>TIEMPO ESTIMADO</div><div style={{fontSize:22,fontWeight:700,color:"#f59e0b"}}>{horasHiper}h</div><div style={{fontSize:11,color:"#4a6a9f"}}>a 0.5 mEq/h</div></div>
+                </div>
+                <div style={{background:"#2a1a00",borderRadius:8,padding:10,fontSize:12,color:"#f59e0b",lineHeight:1.9,marginBottom:8}}>
+                  <strong>{via==='oral'?'Agua destilada oral/SNG':via==='sg5'?'SG 5% IV':'SF 0.45% IV'}:</strong><br/>
+                  → Déficit total: <strong>{(defHiper*1000).toFixed(0)} mL</strong><br/>
+                  → Velocidad segura: <strong>{velHiper.toFixed(0)} mL/hr</strong> por {horasHiper}h<br/>
+                  → Agregar pérdidas insensibles en curso: +30–50 mL/hr según contexto
+                </div>
+                <div style={{padding:"8px 10px",background:"#2a0505",borderRadius:8,fontSize:11,color:"#ef4444"}}>⚠️ Controlar Na c/4–6h · Corrección rápida → edema cerebral</div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","🧠 Glasgow","🛏️ Sedación UCI","🔧 Procedimientos","📊 Scores","🧂 Electrolitos"];
 
 export default function App() {
   const [weight, setWeight] = useState("");
@@ -925,6 +1325,7 @@ export default function App() {
         {tab===4&&<SedacionTab weight={valid?w:0}/>}
         {tab===5&&<ProcedimientosTab weight={valid?w:0}/>}
         {tab===6&&<ScoresTab/>}
+        {tab===7&&<ElectrolyteTab/>}
         <div style={{marginTop:24,padding:"12px 16px",background:"#08111f",border:"1px solid #1a2a4f",borderRadius:10,fontSize:11,color:"#2a4a7f",lineHeight:1.7}}>
           ⚠️ Herramienta de apoyo clínico. Verificar siempre con protocolos institucionales y criterio médico.
         </div>
