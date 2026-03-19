@@ -485,84 +485,177 @@ function GlasgowTab() {
 
 function SedacionTab({ weight }) {
   const [subTab, setSubTab] = useState(0);
-  const w=weight, valid=w>0;
-  const FP_F=[0.6,1.2,1.8,1.8,2.4,2.4,3.0,3.0,3.6,3.6,3.6,3.6];
-  const FP_P=[null,null,null,0.5,0.5,1,1,1.5,1.5,2,2.5,3];
-  const FD_F=[0.3,0.6,1.2,1.2,1.2,1.2,1.8,1.8,1.8,2.4,2.4,2.4];
-  const FD_D=[null,null,null,0.2,0.4,0.6,0.6,0.8,1.0,1.0,1.2,1.5];
-  const FM_F=[0.6,1.2,1.8,1.8,2.4,2.4,3.0,3.0,3.6,3.6,3.6,3.6];
-  const FM_M=[0,0,0,0.015,0.015,0.03,0.03,0.045,0.045,0.06,0.075,0.09];
-  const ACT_F=[0.6,1.2,1.8,2.4,3.0,3.6];
-  const DEX=[0.2,0.5,0.8,1.0,1.2,1.5];
-  const PROP=[0.5,1.0,1.5,2.0,2.5,3.0];
-  function fe(base,w,d=1){ return valid?`${fmt(base*w,0)} (${fmt(base,d)})`:fmt(base,d); }
+  const [selEscalon, setSelEscalon] = useState({});
+  const [proto, setProto] = useState('original');
+  const w = weight;
+  const valid = w > 0;
+
+  const DILUCIONES = [
+    {nombre:'Fentanilo', prep:'1 mg (1000 mcg) en 100 mL SF', conc:'10 mcg/mL', color:'#22d3ee'},
+    {nombre:'Propofol', prep:'200 mg en 20 mL (sin diluir)', conc:'10 mg/mL', color:'#a78bfa'},
+    {nombre:'Dexmedetomidina', prep:'200 mcg en 50 mL SF', conc:'4 mcg/mL', color:'#f59e0b'},
+    {nombre:'Midazolam', prep:'100 mg en 100 mL SF', conc:'1 mg/mL', color:'#34d399'},
+  ];
+
+  const BNM = [
+    {nombre:'Cisatracurio', color:'#f472b6', preferido:true, nota:'Eliminación de Hofmann — independiente de función renal y hepática. 1ª opción.',
+     bolo:{dosis:'0.1–0.2 mg/kg', lo:0.1, hi:0.2, conc:2},
+     bic:{lo:1, hi:3, unidad:'mcg/kg/min', prep:'100 mg en 100 mL SF → 1000 mcg/mL', conc:1000}},
+    {nombre:'Vecuronio', color:'#22d3ee', preferido:false, nota:'2ª opción. Metabolismo hepático parcial. Acumulación en IR/IH.',
+     bolo:{dosis:'0.1 mg/kg', lo:0.1, hi:null, conc:2},
+     bic:{lo:0.8, hi:1.7, unidad:'mcg/kg/min', prep:'10 mg en 100 mL SF → 100 mcg/mL', conc:100}},
+    {nombre:'Rocuronio', color:'#34d399', preferido:false, nota:'3ª opción. Reversible con Sugammadex. Mayor dosis requerida en BIC.',
+     bolo:{dosis:'0.6–1 mg/kg', lo:0.6, hi:1.0, conc:10},
+     bic:{lo:5, hi:12, unidad:'mcg/kg/min', prep:'200 mg en 200 mL SF → 1000 mcg/mL', conc:1000}},
+  ];
+
+  const ORIG = [
+    {nombre:'Fentanilo / Propofol', color:'#4a9eff',
+     esc:[{n:1,f:0.6,s:null},{n:2,f:1.2,s:null},{n:3,f:1.8,s:0.5,i:true},{n:4,f:1.8,s:0.5},{n:5,f:2.4,s:1.0},{n:6,f:2.4,s:1.0},{n:7,f:3.0,s:1.5},{n:8,f:3.0,s:1.5},{n:9,f:3.6,s:2.0},{n:10,f:3.6,s:2.5},{n:11,f:3.6,s:2.5},{n:12,f:3.6,s:3.0}],
+     unidadS:'mg/kg/h', farmacoS:'Propofol', concF:10, concS:10, unidadF:'µg/kg/h'},
+    {nombre:'Fentanilo / Dexmedetomidina', color:'#f59e0b',
+     esc:[{n:1,f:0.3,s:null},{n:2,f:0.6,s:null},{n:3,f:1.2,s:null},{n:4,f:1.2,s:0.2,i:true},{n:5,f:1.2,s:0.4},{n:6,f:1.2,s:0.6},{n:7,f:1.8,s:0.6},{n:8,f:1.8,s:0.8},{n:9,f:1.8,s:1.0},{n:10,f:2.4,s:1.0},{n:11,f:2.4,s:1.2},{n:12,f:2.4,s:1.5}],
+     unidadS:'µg/kg/h', farmacoS:'Dexmedetomidina', concF:10, concS:4, unidadF:'µg/kg/h'},
+    {nombre:'Fentanilo / Midazolam', color:'#ef4444',
+     esc:[{n:1,f:0.6,s:0},{n:2,f:1.2,s:0},{n:3,f:1.8,s:0,i:true},{n:4,f:1.8,s:0.015},{n:5,f:2.4,s:0.015},{n:6,f:2.4,s:0.030},{n:7,f:3.0,s:0.030},{n:8,f:3.0,s:0.045},{n:9,f:3.6,s:0.045},{n:10,f:3.6,s:0.060},{n:11,f:3.6,s:0.075},{n:12,f:3.6,s:0.090}],
+     unidadS:'mg/kg/h', farmacoS:'Midazolam', concF:10, concS:1, unidadF:'µg/kg/h'},
+  ];
+
+  const ACT_FENT = [{n:1,d:0.6,ini:'sup'},{n:2,d:1.2,ini:'prof'},{n:3,d:1.8},{n:4,d:2.4},{n:5,d:3.0},{n:6,d:3.6}];
+  const ACT_DEX  = [{n:1,d:0.2},{n:2,d:0.5},{n:3,d:0.8,ini:true},{n:4,d:1.0},{n:5,d:1.2},{n:6,d:1.5}];
+  const ACT_PROP = [{n:1,d:0.5},{n:2,d:1.0},{n:3,d:1.5,ini:true},{n:4,d:2.0},{n:5,d:2.5},{n:6,d:3.0}];
+
+  function mlh(dosis, conc) {
+    if(!valid) return '—';
+    return ((dosis * w) / conc).toFixed(2);
+  }
+  function dosisTotal(dosis) {
+    if(!valid) return '—';
+    return (dosis * w).toFixed(2);
+  }
+
+  function Detalle({farmaco, dosis, unidad, conc, concUnit, color}) {
+    return (
+      <div style={{background:"#040c1c",borderRadius:8,padding:10,borderLeft:`3px solid ${color}`,marginTop:6}}>
+        <div style={{fontSize:10,color,letterSpacing:1,marginBottom:8}}>{farmaco.toUpperCase()} — DOSIS CALCULADA</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
+          <div style={{background:"#0b1730",borderRadius:6,padding:8,textAlign:"center"}}>
+            <div style={{fontSize:10,color:"#4a6a9f",marginBottom:2}}>DOSIS/kg/h</div>
+            <div style={{fontSize:14,fontWeight:700,color}}>{dosis} {unidad}</div>
+          </div>
+          <div style={{background:"#0b1730",borderRadius:6,padding:8,textAlign:"center"}}>
+            <div style={{fontSize:10,color:"#4a6a9f",marginBottom:2}}>DOSIS TOTAL/h</div>
+            <div style={{fontSize:14,fontWeight:700,color}}>{dosisTotal(dosis)} {concUnit}</div>
+          </div>
+          <div style={{background:"#0d2a4e",borderRadius:6,padding:8,textAlign:"center",border:`1px solid ${color}44`}}>
+            <div style={{fontSize:10,color,marginBottom:2}}>VELOCIDAD</div>
+            <div style={{fontSize:18,fontWeight:800,color}}>{mlh(dosis,conc)} mL/h</div>
+          </div>
+        </div>
+        {!valid&&<div style={{marginTop:6,fontSize:11,color:"#3a5a8f",fontStyle:"italic"}}>Ingresa el peso para calcular mL/h</div>}
+      </div>
+    );
+  }
+
+  function toggleEsc(key) {
+    setSelEscalon(prev => ({...prev, [key]: prev[key] ? null : true}));
+  }
+
   const thS={background:"#06101f",padding:"6px 8px",textAlign:"center",fontWeight:700,fontSize:10,color:"#4a6a9f",border:"1px solid #1a3060"};
   const tdS={padding:"7px 8px",textAlign:"center",border:"1px solid #1a3060",color:"#e8edf5",fontSize:11};
   const tdI={...tdS,background:"#0d2a4e",color:"#22d3ee",fontWeight:700};
+
   return (
     <div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:16}}>
-        {["Protocolo original","Protocolo actualizado","Decisión","SAS / RASS"].map((t,i)=>(
+        {["📋 Protocolos","🔀 Decisión","📊 SAS/RASS","💊 Diluciones"].map((t,i)=>(
           <button key={i} onClick={()=>setSubTab(i)} style={{padding:"8px 4px",borderRadius:8,fontSize:10,fontFamily:"inherit",fontWeight:700,cursor:"pointer",textAlign:"center",border:subTab===i?"1px solid #22d3ee":"1px solid #1a3060",background:subTab===i?"#0d2a4e":"#0b1730",color:subTab===i?"#22d3ee":"#3a5a8f"}}>{t}</button>
         ))}
       </div>
+
+      {/* PROTOCOLOS */}
       {subTab===0&&(
         <div>
-          <p style={{fontSize:12,color:"#4a6a9f",marginBottom:12}}>Protocolo HCUCH pre-actualización. Inicio escalón 3. {valid&&`Calculado para ${w} kg.`}</p>
-          {[["Fentanilo / Propofol","#4a9eff",FP_F,FP_P,"Propofol mg/kg/h"],["Fentanilo / Dexmedetomidina","#f59e0b",FD_F,FD_D,"Dexmedetomidina µg/kg/h"],["Fentanilo / Midazolam","#ef4444",FM_F,FM_M,"Midazolam mg/kg/h"]].map(([title,color,fArr,sArr,secLabel])=>(
-            <div key={title} style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
-              <div style={{fontSize:11,color,letterSpacing:2,fontWeight:700,marginBottom:10}}>{title.toUpperCase()}</div>
-              <div style={{overflowX:"auto"}}>
-                <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
-                  <thead><tr><th style={thS}>Escalón</th>{[1,2,3,4,5,6,7,8,9,10,11,12].map(n=><th key={n} style={n===3?{...thS,background:"#0d2a4e",color:"#22d3ee"}:thS}>{n}{n===3&&"★"}</th>)}</tr></thead>
-                  <tbody>
-                    <tr><td style={{...tdS,textAlign:"left",fontWeight:700}}>Fentanilo µg/kg/h</td>{fArr.map((v,i)=><td key={i} style={i===2?tdI:tdS}>{fe(v,w)}</td>)}</tr>
-                    <tr><td style={{...tdS,textAlign:"left",fontWeight:700}}>{secLabel.split(" ")[0]}</td>{sArr.map((v,i)=><td key={i} style={i===2?tdI:tdS}>{v===null?"—":fe(v,w,3)}</td>)}</tr>
-                  </tbody>
-                </table>
-              </div>
+          <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+            <div style={{display:"flex",gap:8,marginBottom:10}}>
+              {[["original","Protocolo original"],["actualizado","Protocolo actualizado"]].map(([p,label])=>(
+                <button key={p} onClick={()=>{setProto(p);setSelEscalon({});}} style={{padding:"7px 14px",borderRadius:8,fontFamily:"inherit",fontSize:11,fontWeight:700,cursor:"pointer",border:proto===p?"1px solid #22d3ee":"1px solid #1a3060",background:proto===p?"#0d2a4e":"#060d1f",color:proto===p?"#22d3ee":"#4a6a9f"}}>{label}</button>
+              ))}
+            </div>
+            <div style={{fontSize:12,color:"#4a6a9f",lineHeight:1.7}}>
+              {proto==='original'?'Protocolo pre-actualización HCUCH. Inicio en escalón 3 ★. Tres asociaciones fijas.':'Protocolo actualizado HCUCH 2019. Escalones independientes. Analgesia-first. Agregar Paracetamol 1g c/8h EV como coadyuvante analgésico cuando esté disponible.'}
+            </div>
+          </div>
+
+          {proto==='original' && ORIG.map((asoc,ai)=>(
+            <div key={ai} style={{background:"#0b1730",border:`1px solid ${asoc.color}44`,borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+              <div style={{fontSize:11,color:asoc.color,letterSpacing:2,fontWeight:700,marginBottom:12}}>{asoc.nombre.toUpperCase()}</div>
+              {asoc.esc.map((esc,idx)=>{
+                const key=`o_${ai}_${idx}`;
+                const open=selEscalon[key];
+                return (
+                  <button key={idx} onClick={()=>setSelEscalon(prev=>({...prev,[key]:!prev[key]}))}
+                    style={{width:"100%",textAlign:"left",borderRadius:8,padding:"10px 12px",cursor:"pointer",fontFamily:"inherit",fontSize:12,border:open?`1px solid ${asoc.color}`:`1px solid ${esc.i?"#f59e0b44":"#1a3060"}`,background:open?asoc.color+"22":"#040c1c",color:"#e8edf5",marginBottom:6}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontWeight:700,color:esc.i?"#f59e0b":"#e8edf5"}}>Escalón {esc.n}{esc.i?" ★":""}</span>
+                      <span style={{fontSize:11,color:"#4a6a9f"}}>Fent: {esc.f} {asoc.unidadF}{esc.s!=null?" · "+asoc.farmacoS+": "+esc.s+" "+asoc.unidadS:""}</span>
+                    </div>
+                    {open&&(
+                      <div onClick={e=>e.stopPropagation()}>
+                        <Detalle farmaco="Fentanilo" dosis={esc.f} unidad={asoc.unidadF} conc={asoc.concF} concUnit="mcg" color={asoc.color}/>
+                        {esc.s!=null&&esc.s>0&&<Detalle farmaco={asoc.farmacoS} dosis={esc.s} unidad={asoc.unidadS} conc={asoc.concS} concUnit={asoc.unidadS==='mg/kg/h'?"mg":"mcg"} color="#34d399"/>}
+                        {esc.s===0&&<div style={{background:"#040c1c",borderRadius:8,padding:8,marginTop:4,fontSize:11,color:"#4a6a9f"}}>{asoc.farmacoS} no iniciado en este escalón</div>}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           ))}
-        </div>
-      )}
-      {subTab===1&&(
-        <div>
-          <p style={{fontSize:12,color:"#4a6a9f",marginBottom:12}}>Protocolo actualizado HCUCH 2019. Escalones independientes. Paracetamol 1g/8h cuando disponible.</p>
-          <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-              <div style={{width:22,height:22,borderRadius:"50%",background:"#0d2a4e",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#22d3ee"}}>1</div>
-              <div style={{fontSize:11,color:"#22d3ee",letterSpacing:2,fontWeight:700}}>ESCALÓN ANALGESIA — FENTANILO (µg/kg/h)</div>
-            </div>
-            <div style={{fontSize:11,color:"#4a6a9f",marginBottom:8}}>Inicio escalón 1 → sedación superficial · Inicio escalón 2 → sedación profunda</div>
-            <div style={{overflowX:"auto"}}>
-              <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
-                <thead><tr><th style={thS}>Escalón</th>{[1,2,3,4,5,6].map(n=><th key={n} style={thS}>{n}</th>)}</tr></thead>
-                <tbody><tr><td style={{...tdS,textAlign:"left",fontWeight:700}}>Fentanilo µg/kg/h</td>{ACT_F.map((v,i)=><td key={i} style={tdS}>{fe(v,w)}</td>)}</tr></tbody>
-              </table>
-            </div>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            {[["Sedación Superficial — Meta SAS 3–4","#22c55e","Dexmedetomidina µg/kg/h · Inicio escalón 3",DEX],["Sedación Profunda — Meta SAS 1–2","#ef4444","Propofol mg/kg/h · Inicio escalón 3",PROP]].map(([title,color,sub,arr])=>(
-              <div key={title} style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px"}}>
-                <div style={{fontSize:10,color,letterSpacing:1,fontWeight:700,marginBottom:4}}>{title}</div>
-                <div style={{fontSize:10,color:"#4a6a9f",marginBottom:8}}>{sub}</div>
-                <div style={{overflowX:"auto"}}>
-                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
-                    <thead><tr>{[1,2,3,4,5,6].map(n=><th key={n} style={n===3?{...thS,background:"#0d2a4e",color:"#22d3ee"}:thS}>{n}{n===3&&"★"}</th>)}</tr></thead>
-                    <tbody><tr>{arr.map((v,i)=><td key={i} style={i===2?tdI:tdS}>{fe(v,w)}</td>)}</tr></tbody>
-                  </table>
+
+          {proto==='actualizado'&&(
+            <div>
+              {[
+                {titulo:"PASO 1 — ANALGESIA: FENTANILO (µg/kg/h)", sub:"Inicio escalón 1 ★ → sedación superficial · Inicio escalón 2 ★ → sedación profunda", color:"#22d3ee", datos:ACT_FENT, conc:10, unidad:"µg/kg/h", concUnit:"mcg", key:"f"},
+                {titulo:"SEDACIÓN SUPERFICIAL — DEXMEDETOMIDINA (µg/kg/h)", sub:"Meta SAS 3–4 · Inicio escalón 3 ★", color:"#f59e0b", datos:ACT_DEX, conc:4, unidad:"µg/kg/h", concUnit:"mcg", key:"d"},
+                {titulo:"SEDACIÓN PROFUNDA — PROPOFOL (mg/kg/h)", sub:"Meta SAS 1–2 · Inicio escalón 3 ★", color:"#ef4444", datos:ACT_PROP, conc:10, unidad:"mg/kg/h", concUnit:"mg", key:"p"},
+              ].map((cfg,ci)=>(
+                <div key={ci} style={{background:"#0b1730",border:`1px solid ${cfg.color}44`,borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+                  <div style={{fontSize:11,color:cfg.color,letterSpacing:2,fontWeight:700,marginBottom:4}}>{cfg.titulo}</div>
+                  <div style={{fontSize:11,color:"#4a6a9f",marginBottom:10}}>{cfg.sub}</div>
+                  {cfg.datos.map((esc,idx)=>{
+                    const esInicio=esc.ini==='sup'||esc.ini==='prof'||esc.ini===true;
+                    const key=`a_${ci}_${idx}`;
+                    const open=selEscalon[key];
+                    return (
+                      <button key={idx} onClick={()=>setSelEscalon(prev=>({...prev,[key]:!prev[key]}))}
+                        style={{width:"100%",textAlign:"left",borderRadius:8,padding:"10px 12px",cursor:"pointer",fontFamily:"inherit",fontSize:12,border:open?`1px solid ${cfg.color}`:`1px solid ${esInicio?"#f59e0b44":"#1a3060"}`,background:open?cfg.color+"22":"#040c1c",color:"#e8edf5",marginBottom:6}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <span style={{fontWeight:700,color:esInicio?"#f59e0b":"#e8edf5"}}>Escalón {esc.n}{esc.ini==='sup'?" ★ (inicio superficial)":esc.ini==='prof'?" ★ (inicio profunda)":esc.ini?" ★":""}</span>
+                          <span style={{fontSize:11,color:cfg.color}}>{esc.d} {cfg.unidad}</span>
+                        </div>
+                        {open&&(
+                          <div onClick={e=>e.stopPropagation()}>
+                            <Detalle farmaco={ci===0?"Fentanilo":ci===1?"Dexmedetomidina":"Propofol"} dosis={esc.d} unidad={cfg.unidad} conc={cfg.conc} concUnit={cfg.concUnit} color={cfg.color}/>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
-      {subTab===2&&(
+
+      {/* DECISIÓN */}
+      {subTab===1&&(
         <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"16px"}}>
           <div style={{textAlign:"center",fontSize:13,fontWeight:700,marginBottom:12}}>Paciente ≥18 años con necesidad de VM &gt;48h</div>
           <div style={{background:"#040c1c",borderRadius:10,padding:"12px 14px",marginBottom:10}}>
             <div style={{fontSize:12,fontWeight:700,color:"#e8edf5",marginBottom:6}}>¿El paciente presenta alguna de estas condiciones?</div>
-            <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.9}}>1. Insuf. respiratoria aguda/crónica descompensada moderada-severa (PaO₂/FiO₂ &lt;150)<br/>2. Shock severo (NA &gt;0.3 µg/min y/o Lactato &gt;4.0 mmol/L)<br/>3. Hipertensión intracraneana<br/>4. Estatus convulsivo<br/>5. Síndrome compartimental del abdomen</div>
+            <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.9}}>1. Insuf. respiratoria aguda/crónica descompensada (PaO₂/FiO₂ &lt;150)<br/>2. Shock severo (NA &gt;0.3 µg/min y/o Lactato &gt;4.0 mmol/L)<br/>3. Hipertensión intracraneana<br/>4. Estatus convulsivo<br/>5. Síndrome compartimental del abdomen</div>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:10}}>
             {[["NO","#22c55e","Sedación superficial","Meta SAS 3–4","Escalón 1 Fentanilo + Escalón 3 Dexmedetomidina"],["NO SEGURO","#f59e0b","Evaluar con equipo","Iniciar superficial","Reevaluar c/6h"],["SÍ","#ef4444","Sedación profunda","Meta SAS 1–2","Escalón 2 Fentanilo + Escalón 3 Propofol"]].map(([tag,color,t1,t2,t3])=>(
@@ -580,7 +673,9 @@ function SedacionTab({ weight }) {
           </div>
         </div>
       )}
-      {subTab===3&&(
+
+      {/* SAS/RASS */}
+      {subTab===2&&(
         <div>
           <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"16px",marginBottom:12}}>
             <div style={{fontSize:11,color:"#22d3ee",letterSpacing:2,fontWeight:700,marginBottom:10}}>SEDATION-AGITATION SCALE (SAS)</div>
@@ -594,7 +689,7 @@ function SedacionTab({ weight }) {
           </div>
           <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"16px"}}>
             <div style={{fontSize:11,color:"#a78bfa",letterSpacing:2,fontWeight:700,marginBottom:10}}>RICHMOND AGITATION-SEDATION SCALE (RASS)</div>
-            <div style={{fontSize:11,color:"#4a6a9f",marginBottom:10}}>Meta UCI: –2 a 0 · Sedación profunda: –3 a –5 · Agitación: +1 a +4</div>
+            <div style={{fontSize:11,color:"#4a6a9f",marginBottom:10}}>Meta UCI: –2 a 0 · Sedación profunda: –3 a –5</div>
             {[["+4","Combativo","Violento, peligro inmediato","#ef4444"],["+3","Muy agitado","Agresivo, intenta retirar tubos","#ef4444"],["+2","Agitado","Movimientos frecuentes, lucha con VM","#f59e0b"],["+1","Inquieto","Ansioso, movimientos no agresivos","#f59e0b"],["0","Alerta y calmado","Estado normal","#22c55e"],["-1","Somnoliento","Se mantiene despierto >10 seg con voz","#22c55e"],["-2","Sedación leve","Despierta brevemente con voz, contacto visual","#22d3ee"],["-3","Sedación moderada","Movimiento a la voz. Sin contacto visual","#22d3ee"],["-4","Sedación profunda","Sin respuesta a voz. Responde a estímulo físico","#ef4444"],["-5","No despertable","Sin respuesta a voz ni estímulo físico","#ef4444"]].map(([n,term,desc,color])=>(
               <div key={n} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"7px 0",borderBottom:"1px solid #1a3060"}}>
                 <div style={{minWidth:34,height:28,borderRadius:8,background:color+"22",border:`1px solid ${color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,color}}>{n}</div>
@@ -602,6 +697,72 @@ function SedacionTab({ weight }) {
               </div>
             ))}
             <div style={{marginTop:10,padding:"10px 12px",background:"#040c1c",borderRadius:8,fontSize:11,color:"#7aa2d4"}}><strong style={{color:"#e8edf5"}}>Equivalencia SAS/RASS:</strong> SAS 1–2 ≈ RASS –4/–5 · SAS 3 ≈ RASS –2/–3 · SAS 4 ≈ RASS 0/–1 · SAS 5–7 ≈ RASS +1/+4</div>
+          </div>
+        </div>
+      )}
+
+      {/* DILUCIONES */}
+      {subTab===3&&(
+        <div>
+          <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+            <div style={{fontSize:10,color:"#34d399",letterSpacing:2,marginBottom:12}}>💊 DILUCIONES ESTÁNDAR — SEDACIÓN UCI</div>
+            {DILUCIONES.map((d,i)=>(
+              <div key={i} style={{background:"#040c1c",borderRadius:10,padding:12,marginBottom:8,borderLeft:`3px solid ${d.color}`}}>
+                <div style={{fontSize:13,fontWeight:700,color:d.color,marginBottom:6}}>{d.nombre}</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  <div><div style={{fontSize:10,color:"#4a6a9f",marginBottom:2}}>PREPARACIÓN</div><div style={{fontSize:12,color:"#e8edf5"}}>{d.prep}</div></div>
+                  <div><div style={{fontSize:10,color:"#4a6a9f",marginBottom:2}}>CONCENTRACIÓN</div><div style={{fontSize:14,fontWeight:700,color:d.color}}>{d.conc}</div></div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* BNM */}
+          <div style={{background:"#0b1730",border:"1px solid #f472b644",borderRadius:14,padding:"14px 16px"}}>
+            <div style={{fontSize:10,color:"#f472b6",letterSpacing:2,marginBottom:8}}>💊 BNM — BLOQUEADORES NEUROMUSCULARES EN BIC</div>
+            <div style={{background:"#2a0505",borderRadius:8,padding:10,marginBottom:12,fontSize:12,color:"#ef4444",lineHeight:1.7}}>
+              <strong>Indicación:</strong> PaO₂/FiO₂ &lt;150 en paciente IOT · SDRA grave · Asincronía severa con ventilador<br/>
+              <strong>Monitorización:</strong> TOF (Train of Four) — Objetivo <strong>1–2 respuestas de 4</strong>
+            </div>
+            {BNM.map((f,i)=>{
+              const boloRange = f.bolo.dosis.includes('–');
+              const boloLo = f.bolo.lo * (valid?w:0);
+              const boloHi = f.bolo.hi ? f.bolo.hi * (valid?w:0) : null;
+              const boloMlLo = (boloLo/f.bolo.conc).toFixed(1);
+              const boloMlHi = boloHi ? (boloHi/f.bolo.conc).toFixed(1) : null;
+              const bicLo = valid ? ((f.bic.lo*w*60)/f.bic.conc).toFixed(2) : '—';
+              const bicHi = valid ? ((f.bic.hi*w*60)/f.bic.conc).toFixed(2) : '—';
+              return (
+                <div key={i} style={{background:"#040c1c",borderRadius:10,padding:12,marginBottom:10,borderLeft:`3px solid ${f.color}`}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                    <span style={{fontSize:14,fontWeight:700,color:f.color}}>{f.nombre}{f.preferido?" ⭐":""}</span>
+                    {f.preferido&&<span style={{fontSize:10,background:f.color+"22",color:f.color,borderRadius:20,padding:"2px 8px"}}>1ª opción</span>}
+                  </div>
+                  <div style={{fontSize:11,color:"#4a6a9f",marginBottom:10}}>{f.nota}</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+                    <div style={{background:"#0b1730",borderRadius:8,padding:10}}>
+                      <div style={{fontSize:10,color:f.color,marginBottom:4}}>BOLO IV</div>
+                      <div style={{fontSize:13,fontWeight:700,color:"#e8edf5"}}>{f.bolo.dosis}</div>
+                      {valid&&<div style={{fontSize:12,color:f.color,marginTop:4}}>{boloHi?`${boloLo.toFixed(1)}–${boloHi.toFixed(1)}`:`${boloLo.toFixed(1)}`} mg → {boloMlHi?`${boloMlLo}–${boloMlHi}`:`${boloMlLo}`} mL</div>}
+                      {!valid&&<div style={{fontSize:11,color:"#3a5a8f",marginTop:4}}>Ingresa peso para calcular</div>}
+                    </div>
+                    <div style={{background:"#0b1730",borderRadius:8,padding:10}}>
+                      <div style={{fontSize:10,color:f.color,marginBottom:4}}>BIC MANTENIMIENTO</div>
+                      <div style={{fontSize:13,fontWeight:700,color:"#e8edf5"}}>{f.bic.lo}–{f.bic.hi} {f.bic.unidad}</div>
+                      <div style={{fontSize:14,fontWeight:800,color:f.color,marginTop:4}}>{bicLo}–{bicHi} mL/h</div>
+                    </div>
+                  </div>
+                  <div style={{background:"#0b1730",borderRadius:6,padding:8,fontSize:11,color:"#4a6a9f"}}>
+                    <span style={{color:"#e8edf5",fontWeight:600}}>Preparación BIC:</span> {f.bic.prep}
+                  </div>
+                </div>
+              );
+            })}
+            <div style={{marginTop:10,background:"#040c1c",borderRadius:8,padding:10,fontSize:11,color:"#7aa2d4",lineHeight:1.8}}>
+              ⚠️ Cisatracurio es el fármaco de elección por <strong style={{color:"#e8edf5"}}>eliminación de Hofmann</strong> (independiente de función renal y hepática)<br/>
+              ⚠️ Siempre asegurar sedoanalgesia adecuada antes de iniciar BNM<br/>
+              ⚠️ Controlar TOF cada 4–6h para ajustar dosis
+            </div>
           </div>
         </div>
       )}
@@ -1884,7 +2045,283 @@ function VMITab() {
     </div>
   );
 }
-const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","🧠 Glasgow","🛏️ Sedación UCI","🔧 Procedimientos","📊 Scores","🧂 Electrolitos","❤️ RCP","🫁 VMI"];
+function AirwayTab() {
+  const [subTab, setSubTab] = useState(0);
+  const [testOpen, setTestOpen] = useState({});
+  const [macocha, setMacocha] = useState(Array(7).fill(false));
+  const [heaven, setHeaven] = useState(Array(6).fill(false));
+  const [ulbt, setUlbt] = useState(null);
+
+  const TESTS = [
+    {nombre:"Mallampati (modificado)", color:"#22d3ee", desc:"Paciente sentado, boca abierta máxima, sin fonación.\nClase I: úvula, pilares, paladar blando visibles — fácil\nClase II: úvula parcialmente visible\nClase III: solo paladar blando visible — difícil\nClase IV: solo paladar duro visible — muy difícil\nMallampati 3–4 asociado a intubación difícil."},
+    {nombre:"Apertura bucal", color:"#a78bfa", desc:"Distancia interincisiva en apertura máxima.\n< 3 cm → intubación difícil.\nValorar causa: trismus, articulación temporomandibular."},
+    {nombre:"Distancia tiromentoniana (Patil)", color:"#22c55e", desc:"Distancia del mentón al cartílago tiroideo con cuello en extensión máxima.\n> 6.5 cm → normal\n6–6.5 cm → posible dificultad\n< 6 cm → intubación probable difícil (laríngea anterior)."},
+    {nombre:"Distancia esternomentoniana", color:"#34d399", desc:"Distancia del esternón al mentón con cuello en extensión máxima.\n> 12.5 cm → normal\n12–12.5 cm → limitado\n< 12 cm → extensión cervical muy limitada."},
+    {nombre:"Upper Lip Bite Test (ULBT)", color:"#f59e0b", desc:"El de mayor precisión diagnóstica individual (DAS 2025).\nClase I: incisivos inferiores muerden bermellón del labio superior → normal\nClase II: llegan solo al borde del bermellón → posible dificultad\nClase III: no pueden morder el labio superior → dificultad probable"},
+    {nombre:"Extensión atlanto-occipital", color:"#f472b6", desc:"Extensión normal del cuello: ~35°.\nReducción >1/3 → dificultad para alinear ejes.\nValorar en: artritis reumatoide, espondilitis anquilosante, lesión cervical."},
+    {nombre:"SAHOS / Ronquido", color:"#ef4444", desc:"DAS 2025: predictor más confiable junto a historia previa de VAD.\nSolicitar polisomnografía si no se tiene diagnóstico.\nAsociado a ventilación difícil con mascarilla e intubación difícil."},
+  ];
+
+  const MACOCHA_ITEMS = [
+    {label:"Mallampati 3 o 4", pts:5},
+    {label:"SAHOS (síndrome apnea-hipopnea)", pts:2},
+    {label:"Reducción de la movilidad cervical", pts:1},
+    {label:"Apertura bucal limitada (<3.5 cm)", pts:1},
+    {label:"Coma (GCS <13)", pts:1},
+    {label:"Hipoxemia grave (SpO₂ <80% pre-intubación)", pts:1},
+    {label:"Operador no anestesiólogo", pts:1},
+  ];
+
+  const HEAVEN_ITEMS = [
+    {label:"H — Hypoxemia (SpO₂ <93% pese a O₂)"},
+    {label:"E — Extremes of size (obesidad mórbida o <8 años)"},
+    {label:"A — Anatomic challenge (cuello corto, macroglosia, apertura limitada)"},
+    {label:"V — Vomit / blood / disruption (vómito, sangre o lesión en vía aérea)"},
+    {label:"E — Exsanguination (shock hemorrágico con alteración conciencia)"},
+    {label:"N — Neck mobility issues (inmovilización cervical, rigidez)"},
+  ];
+
+  const EFONA_STEPS = [
+    "Posicionarse a la izquierda del paciente (si diestro). Extensión máxima del cuello.",
+    "Palpar anatomía laríngea con mano no dominante. Localizar línea media.",
+    "Aplicar tensión a la piel y estabilizar la laringe con mano no dominante.",
+    "Realizar incisión vertical en piel de hasta 8 cm, de caudal a cefálico (de abajo hacia arriba).",
+    "Disección roma con dedos de ambas manos para separar tejidos. Identificar y estabilizar laringe.",
+    "Con dedo índice de mano no dominante, identificar la membrana cricotiroidea.",
+    "Con bisturí en mano dominante, realizar incisión transversal a través de la membrana cricotiroidea (filo hacia el operador).",
+    "Mantener bisturí perpendicular a la piel y girarlo 90° para que el filo apunte hacia caudal (pies).",
+    "Cambiar el bisturí a mano no dominante. Mantener tracción lateral suave hacia el operador.",
+    "Con mano dominante, tomar el bougie.",
+    "Deslizar la punta coudé del bougie por el lado del bisturí hacia la tráquea.",
+    "Rotar y alinear el bougie con la tráquea. Avanzar suavemente 10–15 cm.",
+    "Retirar el bisturí.",
+    "Estabilizar la tráquea. Tomar el TET 6.0 mm con mano dominante.",
+    "Deslizar el TET sobre el bougie con rotación hasta la tráquea.",
+    "Retirar el bougie.",
+    "Inflar el cuff. Ventilar con FiO₂ 100%. Confirmar con capnografía de onda.",
+    "Fijar el tubo.",
+  ];
+
+  const macTotal = MACOCHA_ITEMS.reduce((s,item,i)=>macocha[i]?s+item.pts:s, 0);
+  const macColor = macTotal===0?"#22c55e":macTotal<=2?"#f59e0b":"#ef4444";
+  const macLabel = macTotal===0?"Riesgo bajo":macTotal<=2?"Riesgo moderado":"Riesgo alto (score ≥3)";
+  const macRec = macTotal===0?"Proceder con plan estándar":macTotal<=2?"Preparar videolaringoscopio · Tener SAD disponible":"Considerar intubación vigil · Experto presente · Plan A→D preparado";
+
+  const heavTotal = heaven.filter(Boolean).length;
+  const heavColor = heavTotal===0?"#22c55e":heavTotal<=1?"#f59e0b":heavTotal<=3?"#f59e0b":"#ef4444";
+  const heavLabel = heavTotal===0?"Sin criterios":heavTotal===1?"Riesgo leve":heavTotal<=3?"Riesgo moderado-alto":"Riesgo muy alto";
+  const heavRec = heavTotal===0?"Vía aérea sin factores de riesgo evidentes":heavTotal===1?"Preparar videolaringoscopio · Considerar plan alternativo":heavTotal<=3?"Videolaringoscopio · SAD disponible · Operador experto":"Considerar intubación vigil · Plan A→D completo · eFONA preparado";
+
+  const inp = {background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",fontSize:14,padding:"8px 12px",outline:"none",fontFamily:"inherit",width:"100%",boxSizing:"border-box"};
+
+  return (
+    <div>
+      <div style={{background:"#0d2a4e",border:"1px solid #22d3ee44",borderRadius:12,padding:"12px 14px",marginBottom:14}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#22d3ee",marginBottom:2}}>🪸 Vía Aérea Difícil</div>
+        <div style={{fontSize:12,color:"#22d3ee"}}>Basado en guías DAS 2025 · Algoritmo Plan A→B→C→D</div>
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:14}}>
+        {["🔍 Evaluación","📊 Scores","📋 Algoritmo","⚔️ eFONA"].map((t,i)=>(
+          <button key={i} onClick={()=>setSubTab(i)} style={{padding:"8px 4px",borderRadius:8,fontSize:10,fontFamily:"inherit",fontWeight:700,cursor:"pointer",textAlign:"center",border:subTab===i?"1px solid #22d3ee":"1px solid #1a3060",background:subTab===i?"#0d2a4e":"#0b1730",color:subTab===i?"#22d3ee":"#3a5a8f"}}>{t}</button>
+        ))}
+      </div>
+
+      {/* EVALUACIÓN */}
+      {subTab===0&&(
+        <div>
+          <div style={{background:"#2a1a00",border:"1px solid #f59e0b44",borderRadius:12,padding:"12px 14px",marginBottom:10}}>
+            <div style={{fontSize:11,color:"#f59e0b",fontWeight:700,marginBottom:4}}>⚠️ SIEMPRE LLAMAR A AYUDA ANTE CUALQUIER DIFICULTAD</div>
+            <div style={{fontSize:12,color:"#f59e0b",lineHeight:1.8}}>La evaluación preoperatoria permite formular una <strong>estrategia de vía aérea individualizada</strong> (Plan A→D).<br/>El predictor más confiable de dificultad es la <strong>historia previa de vía aérea difícil</strong>.</div>
+          </div>
+
+          <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+            <div style={{fontSize:11,color:"#22d3ee",letterSpacing:2,fontWeight:700,marginBottom:8}}>TESTS DE CABECERA</div>
+            <div style={{fontSize:11,color:"#4a6a9f",marginBottom:10}}>Ninguno es suficiente solo. Combinar múltiples tests mejora la sensibilidad.</div>
+            {TESTS.map((t,i)=>(
+              <div key={i} style={{marginBottom:6}}>
+                <button onClick={()=>setTestOpen(p=>({...p,[i]:!p[i]}))} style={{width:"100%",textAlign:"left",background:testOpen[i]?t.color+"22":"#040c1c",border:`1px solid ${testOpen[i]?t.color:"#1a3060"}`,borderRadius:8,padding:"10px 12px",cursor:"pointer",fontFamily:"inherit",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span style={{fontSize:13,fontWeight:700,color:t.color}}>{t.nombre}</span>
+                  <span style={{color:"#4a6a9f",fontSize:14}}>{testOpen[i]?"▲":"▼"}</span>
+                </button>
+                {testOpen[i]&&(
+                  <div style={{background:"#0b1730",borderRadius:"0 0 8px 8px",padding:"10px 12px",fontSize:12,color:"#7aa2d4",lineHeight:1.8,whiteSpace:"pre-line",border:`1px solid ${t.color}44`,borderTop:"none"}}>
+                    {t.desc}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+            <div style={{fontSize:11,color:"#a78bfa",letterSpacing:2,fontWeight:700,marginBottom:10}}>FACTORES DE RIESGO</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+              <div style={{background:"#040c1c",borderRadius:8,padding:10}}>
+                <div style={{fontSize:11,color:"#a78bfa",fontWeight:700,marginBottom:6}}>Ventilación difícil</div>
+                <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.8}}>• SAHOS / ronquido<br/>• Barba<br/>• Obesidad (IMC &gt;35)<br/>• Mallampati 3–4<br/>• Edentado · Cuello grueso</div>
+              </div>
+              <div style={{background:"#040c1c",borderRadius:8,padding:10}}>
+                <div style={{fontSize:11,color:"#ef4444",fontWeight:700,marginBottom:6}}>Intubación difícil</div>
+                <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.8}}>• Historia previa VAD<br/>• Mallampati 3–4<br/>• Apertura bucal &lt;3 cm<br/>• Cuello corto/rígido<br/>• Retrognatia · Radioterapia</div>
+              </div>
+            </div>
+            <div style={{background:"#040c1c",borderRadius:8,padding:10,fontSize:12,color:"#7aa2d4",lineHeight:1.7}}>
+              <strong style={{color:"#e8edf5"}}>Membrana cricotiroidea:</strong> Identificar por palpación o ecografía <strong>antes</strong> de la inducción con cuello en extensión máxima. Documentar si es palpable — guía la técnica eFONA.
+            </div>
+          </div>
+
+          <div style={{background:"#0b1730",border:"1px solid #22c55e44",borderRadius:14,padding:"14px 16px"}}>
+            <div style={{fontSize:11,color:"#22c55e",letterSpacing:2,fontWeight:700,marginBottom:8}}>💨 PEROXYGENACIÓN — DAS 2025</div>
+            <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.9}}>
+              • <strong style={{color:"#e8edf5"}}>Preoxigenación:</strong> Posición cabeza elevada ≥30° · Técnica presión positiva (mascarilla+PEEP, VNI o CNAF)<br/>
+              • <strong style={{color:"#e8edf5"}}>Apnoeic oxygenation:</strong> Cánula nasal 15 L/min o CNAF durante laringoscopia<br/>
+              • <strong style={{color:"#e8edf5"}}>Objetivo:</strong> EtO₂ ≥0.9 antes de inducción · Continuar O₂ en todo momento<br/>
+              • CNAF especialmente útil en vía aérea fisiológicamente difícil
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SCORES */}
+      {subTab===1&&(
+        <div>
+          {/* MACOCHA */}
+          <div style={{background:"#0b1730",border:"1px solid #22d3ee44",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+            <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>MACOCHA Score</div>
+            <div style={{fontSize:12,color:"#4a6a9f",marginBottom:12}}>Predictor de intubación difícil en paciente crítico. Score ≥3 → alto riesgo.</div>
+            {MACOCHA_ITEMS.map((item,i)=>(
+              <div key={i} onClick={()=>setMacocha(p=>{const n=[...p];n[i]=!n[i];return n;})} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid #1a3060",cursor:"pointer"}}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{width:18,height:18,borderRadius:4,border:`1px solid ${macocha[i]?"#22d3ee":"#1a3060"}`,background:macocha[i]?"#22d3ee":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#040c1c",flexShrink:0}}>{macocha[i]&&"✓"}</div>
+                  <span style={{fontSize:13,color:macocha[i]?"#e8edf5":"#7aa2d4"}}>{item.label}</span>
+                </div>
+                <span style={{fontSize:12,color:"#4a6a9f",minWidth:32,textAlign:"right"}}>+{item.pts}</span>
+              </div>
+            ))}
+            <div style={{marginTop:12,background:macColor+"15",border:`1px solid ${macColor}44`,borderRadius:10,padding:"12px 14px",display:"flex",alignItems:"center",gap:16}}>
+              <div style={{fontSize:36,fontWeight:800,color:macColor,minWidth:48,textAlign:"center"}}>{macTotal}</div>
+              <div><div style={{fontSize:13,fontWeight:700,color:macColor}}>{macLabel}</div><div style={{fontSize:12,color:macColor,marginTop:2}}>{macRec}</div></div>
+            </div>
+            <button onClick={()=>setMacocha(Array(7).fill(false))} style={{marginTop:10,background:"transparent",border:"1px solid #1a3060",color:"#4a6a9f",borderRadius:8,padding:"5px 14px",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Reiniciar</button>
+          </div>
+
+          {/* HEAVEN */}
+          <div style={{background:"#0b1730",border:"1px solid #f59e0b44",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+            <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>HEAVEN Criteria</div>
+            <div style={{fontSize:12,color:"#4a6a9f",marginBottom:12}}>Predictor de dificultad en intubación prehospitalaria y urgencias.</div>
+            {HEAVEN_ITEMS.map((item,i)=>(
+              <div key={i} onClick={()=>setHeaven(p=>{const n=[...p];n[i]=!n[i];return n;})} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid #1a3060",cursor:"pointer"}}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{width:18,height:18,borderRadius:4,border:`1px solid ${heaven[i]?"#22d3ee":"#1a3060"}`,background:heaven[i]?"#22d3ee":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#040c1c",flexShrink:0}}>{heaven[i]&&"✓"}</div>
+                  <span style={{fontSize:12,color:heaven[i]?"#e8edf5":"#7aa2d4"}}>{item.label}</span>
+                </div>
+                <span style={{fontSize:12,color:"#4a6a9f",minWidth:24,textAlign:"right"}}>+1</span>
+              </div>
+            ))}
+            <div style={{marginTop:12,background:heavColor+"15",border:`1px solid ${heavColor}44`,borderRadius:10,padding:"12px 14px",display:"flex",alignItems:"center",gap:16}}>
+              <div style={{fontSize:36,fontWeight:800,color:heavColor,minWidth:48,textAlign:"center"}}>{heavTotal}</div>
+              <div><div style={{fontSize:13,fontWeight:700,color:heavColor}}>{heavLabel}</div><div style={{fontSize:12,color:heavColor,marginTop:2}}>{heavRec}</div></div>
+            </div>
+            <button onClick={()=>setHeaven(Array(6).fill(false))} style={{marginTop:10,background:"transparent",border:"1px solid #1a3060",color:"#4a6a9f",borderRadius:8,padding:"5px 14px",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Reiniciar</button>
+          </div>
+
+          {/* ULBT */}
+          <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 16px"}}>
+            <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>Upper Lip Bite Test (ULBT)</div>
+            <div style={{fontSize:12,color:"#4a6a9f",marginBottom:12}}>Mayor precisión diagnóstica individual entre los tests de cabecera (DAS 2025).</div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}>
+              {[[1,"Clase I","Incisivos inferiores muerden el bermellón del labio superior (por encima del rojo del labio)","#22c55e","#052a10"],[2,"Clase II","Incisivos inferiores llegan solo al borde del bermellón","#f59e0b","#2a1a00"],[3,"Clase III","Incisivos inferiores NO pueden morder el labio superior","#ef4444","#2a0505"]].map(([cls,label,desc,color,bg])=>(
+                <button key={cls} onClick={()=>setUlbt(cls)} style={{flex:1,minWidth:100,padding:"10px 8px",borderRadius:8,fontFamily:"inherit",cursor:"pointer",border:`1px solid ${ulbt===cls?color:color+"44"}`,background:ulbt===cls?bg:"#040c1c",textAlign:"center"}}>
+                  <div style={{fontSize:13,fontWeight:700,color}}>{label}</div>
+                  <div style={{fontSize:11,color:"#7aa2d4",marginTop:4,lineHeight:1.5}}>{desc}</div>
+                </button>
+              ))}
+            </div>
+            {ulbt&&(
+              <div style={{background:ulbt===1?"#052a10":ulbt===2?"#2a1a00":"#2a0505",border:`1px solid ${ulbt===1?"#22c55e":ulbt===2?"#f59e0b":"#ef4444"}44`,borderRadius:10,padding:12,fontSize:12,color:ulbt===1?"#22c55e":ulbt===2?"#f59e0b":"#ef4444"}}>
+                {ulbt===1?"Clase I — Sin restricción de subluxación mandibular · Laringoscopia probable sin dificultad":ulbt===2?"Clase II — Subluxación mandibular limitada · Posible dificultad · Preparar videolaringoscopio":"Clase III — Sin subluxación mandibular · Predictor de intubación difícil · Considerar plan alternativo"}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ALGORITMO DAS */}
+      {subTab===2&&(
+        <div style={{background:"#0b1730",border:"1px solid #ef444444",borderRadius:14,padding:"14px 16px"}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#ef4444",marginBottom:14}}>⚠️ SI HAY DIFICULTAD — LLAMAR A AYUDA INMEDIATAMENTE</div>
+          {[
+            {plan:"PLAN A",color:"#22d3ee",bg:"#0d2a4e",titulo:"Intubación traqueal — máx 3+1 intentos",
+             body:"• Usar videolaringoscopio de primera línea siempre que sea posible\n• Asegurar BNM adecuado antes de intentar\n• Confirmar con capnografía de onda + visualización del tubo\n• Hoja hiperangulada → bougie o estilete obligatorio",
+             ok:"✓ Éxito → Check de 2 puntos: capnografía + visualización",
+             fail:"✗ Fallo → Declarar intubación fallida · Asegurar kit eFONA accesible · Pasar a Plan B"},
+            {plan:"PLAN B",color:"#22c55e",bg:"#052a10",titulo:"Dispositivo supraglótico (SAD) — máx 3 intentos",
+             body:"• Usar SAD de 2ª generación (mayor sello, canal de drenaje)\n• Confirmar ventilación con capnografía\n• Asegurar BNM completo",
+             ok:"✓ Ventilación lograda → STOP · PENSAR · COMUNICAR\nDecisión default: despertar al paciente",
+             fail:"✗ Fallo → Declarar fallo SAD · Abrir kit eFONA · Pasar a Plan C"},
+            {plan:"PLAN C",color:"#f59e0b",bg:"#2a1a00",titulo:"Último intento ventilación con mascarilla facial",
+             body:"• BNM completo asegurado · Posición óptima\n• Cánula orofaríngea y/o nasofaríngea\n• Técnica a 4 manos (dos personas)",
+             ok:"✓ Ventilación lograda → STOP · PENSAR · COMUNICAR con experto\nConsiderar: revertir BNM + despertar · FONA electiva",
+             fail:'✗ Fallo → Declarar "NO PUEDO INTUBAR, NO PUEDO OXIGENAR" (CICO) → PLAN D'},
+            {plan:"PLAN D",color:"#ef4444",bg:"#2a0505",titulo:"🚨 eFONA — Vía Aérea Frontal de Emergencia",
+             body:"• Escenario CICO → riesgo vital inminente\n• Equipamiento: bisturí #10 · bougie · TET 6.0 mm\n• Extensión máxima del cuello · BNM completo",
+             ok:"Ver pestaña eFONA para técnica paso a paso →",
+             fail:null},
+          ].map((p,i)=>(
+            <div key={i}>
+              <div style={{display:"flex",gap:12,marginBottom:10,alignItems:"flex-start"}}>
+                <div style={{minWidth:60,height:36,borderRadius:8,background:p.bg,border:`1px solid ${p.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:13,color:p.color,flexShrink:0}}>{p.plan}</div>
+                <div style={{flex:1,background:p.bg,borderRadius:10,padding:12,border:`1px solid ${p.color}44`}}>
+                  <div style={{fontSize:13,fontWeight:700,color:p.color,marginBottom:6}}>{p.titulo}</div>
+                  <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.8,marginBottom:8}}>{p.body.split('\n').map((l,j)=><span key={j}>{l}<br/></span>)}</div>
+                  <div style={{padding:"6px 10px",background:"#040c1c",borderRadius:6,fontSize:11,color:p.color,marginBottom:p.fail?6:0,lineHeight:1.6}}>{p.ok.split('\n').map((l,j)=><span key={j}>{l}<br/></span>)}</div>
+                  {p.fail&&<div style={{padding:"6px 10px",background:"#2a0505",borderRadius:6,fontSize:11,color:"#ef4444"}}>{p.fail}</div>}
+                </div>
+              </div>
+              {i<3&&<div style={{textAlign:"center",fontSize:20,color:"#1a3060",margin:"4px 0"}}>↓</div>}
+            </div>
+          ))}
+          <div style={{marginTop:14,background:"#040c1c",borderRadius:10,padding:12,fontSize:12,color:"#7aa2d4",lineHeight:1.9}}>
+            <strong style={{color:"#e8edf5"}}>PRIMING (DAS 2025):</strong> Desde el fallo del Plan A, el asistente debe asegurar que el kit eFONA esté accesible e identificar quién realizará el procedimiento.<br/>
+            <strong style={{color:"#e8edf5"}}>TRANSITIONING:</strong> Reconocer el fallo de un plan y avanzar al siguiente sin demora — el retraso por fijación en la técnica que falla es causa frecuente de complicaciones.
+          </div>
+        </div>
+      )}
+
+      {/* eFONA */}
+      {subTab===3&&(
+        <div style={{background:"#0b1730",border:"1px solid #ef444444",borderRadius:14,padding:"14px 16px"}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#ef4444",marginBottom:8}}>🚨 eFONA — Indicación: escenario CICO</div>
+          <div style={{background:"#2a0505",borderRadius:8,padding:10,marginBottom:12,fontSize:12,color:"#ef4444",lineHeight:1.7}}>
+            Sin intervención inmediata → daño cerebral hipóxico o muerte.<br/>
+            <strong>Equipamiento: bisturí hoja nº10 · bougie · TET 6.0 mm con cuff · aspiración</strong>
+          </div>
+          <div style={{background:"#040c1c",borderRadius:8,padding:10,marginBottom:12}}>
+            <div style={{fontSize:11,color:"#f59e0b",fontWeight:700,marginBottom:6}}>PREPARACIÓN INMEDIATA</div>
+            <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.8}}>
+              • Asignar roles: operador · asistente · persona que entrega O₂ por vía superior<br/>
+              • <strong style={{color:"#e8edf5"}}>Extensión máxima del cuello</strong> — almohada bajo hombros<br/>
+              • BNM completo obligatorio<br/>
+              • Continuar O₂ por vía superior: mascarilla, SAD o cánula nasal
+            </div>
+          </div>
+          <div style={{fontSize:11,color:"#ef4444",letterSpacing:2,fontWeight:700,marginBottom:10}}>TÉCNICA — INCISIÓN VERTICAL (DAS 2025)</div>
+          {EFONA_STEPS.map((step,i)=>(
+            <div key={i} style={{display:"flex",gap:10,padding:"10px 0",borderBottom:"1px solid #1a3060",alignItems:"flex-start"}}>
+              <div style={{minWidth:28,height:28,borderRadius:"50%",background:"#2a0505",border:"1px solid #ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,color:"#ef4444",flexShrink:0}}>{i+1}</div>
+              <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.6}}>{step}</div>
+            </div>
+          ))}
+          <div style={{marginTop:12,background:"#040c1c",borderRadius:8,padding:10,fontSize:12,color:"#7aa2d4",lineHeight:1.8}}>
+            <strong style={{color:"#e8edf5"}}>Si el intento falla:</strong> Extender la incisión · Mayor disección roma · Cambiar posición u operador · Tubo más pequeño<br/>
+            <strong style={{color:"#e8edf5"}}>Post-eFONA:</strong> Excluir intubación bronquial y neumotórax · Revisión quirúrgica para manejo definitivo
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","🧠 Glasgow","🛏️ Sedación UCI","🔧 Procedimientos","📊 Scores","🧂 Electrolitos","❤️ RCP","🫁 VMI","🪸 Vía Aérea"];
 
 export default function App() {
   const [weight, setWeight] = useState("");
@@ -1926,7 +2363,8 @@ export default function App() {
         {tab===6&&<ScoresTab/>}
         {tab===7&&<ElectrolyteTab/>}
         {tab===8&&<RCPTab/>}
-        {tab===9&&<VMITab/>} 
+        {tab===9&&<VMITab/>}
+        {tab===10&&<AirwayTab/>} 
         <div style={{marginTop:24,padding:"12px 16px",background:"#08111f",border:"1px solid #1a2a4f",borderRadius:10,fontSize:11,color:"#2a4a7f",lineHeight:1.7}}>
           ⚠️ Herramienta de apoyo clínico. Verificar siempre con protocolos institucionales y criterio médico.
         </div>
