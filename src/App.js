@@ -1265,17 +1265,41 @@ function ElectrolyteTab() {
             {defHiper!==null&&(
               <div style={{background:"#040c1c",borderRadius:10,padding:14}}>
                 <div style={{fontSize:10,color:"#f59e0b",letterSpacing:2,marginBottom:10}}>RESULTADO — Hipernatremia · Déficit de agua libre</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
-                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>DÉFICIT AGUA LIBRE</div><div style={{fontSize:22,fontWeight:700,color:"#f59e0b"}}>{defHiper.toFixed(1)}</div><div style={{fontSize:11,color:"#4a6a9f"}}>litros</div></div>
-                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>TIEMPO ESTIMADO</div><div style={{fontSize:22,fontWeight:700,color:"#f59e0b"}}>{horasHiper}h</div><div style={{fontSize:11,color:"#4a6a9f"}}>a 0.5 mEq/h</div></div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
+                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>DÉFICIT TOTAL</div><div style={{fontSize:22,fontWeight:700,color:"#f59e0b"}}>{defHiper.toFixed(1)}</div><div style={{fontSize:11,color:"#4a6a9f"}}>litros</div></div>
+                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>VELOCIDAD 24h</div><div style={{fontSize:22,fontWeight:700,color:"#f59e0b"}}>{(defHiper*1000/24).toFixed(0)}</div><div style={{fontSize:11,color:"#4a6a9f"}}>mL/hr</div></div>
+                  <div style={{background:"#0b1730",borderRadius:8,padding:10,textAlign:"center"}}><div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>TIEMPO SEGURO</div><div style={{fontSize:22,fontWeight:700,color:"#f59e0b"}}>{Math.ceil((na-obj)/0.5)}h</div><div style={{fontSize:11,color:"#4a6a9f"}}>a 0.5 mEq/h</div></div>
+                </div>
+                <div style={{background:"#0b1730",borderRadius:8,padding:12,marginBottom:8}}>
+                  <div style={{fontSize:11,fontWeight:700,color:"#e8edf5",marginBottom:8}}>Velocidades de corrección</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                    <div style={{background:"#2a1a00",borderRadius:8,padding:10}}>
+                      <div style={{fontSize:10,color:"#f59e0b",marginBottom:4}}>VELOCIDAD SEGURA — 0.5 mEq/h</div>
+                      <div style={{fontSize:16,fontWeight:700,color:"#f59e0b"}}>{(defHiper*1000/Math.ceil((na-obj)/0.5)).toFixed(0)} mL/hr</div>
+                      <div style={{fontSize:11,color:"#f59e0b",marginTop:2}}>Tiempo: {Math.ceil((na-obj)/0.5)}h · Recomendado siempre</div>
+                    </div>
+                    <div style={{background:"#2a0505",borderRadius:8,padding:10}}>
+                      <div style={{fontSize:10,color:"#ef4444",marginBottom:4}}>VELOCIDAD AGUDA — 1 mEq/h</div>
+                      <div style={{fontSize:16,fontWeight:700,color:"#ef4444"}}>{(defHiper*1000/Math.ceil((na-obj)/1)).toFixed(0)} mL/hr</div>
+                      <div style={{fontSize:11,color:"#ef4444",marginTop:2}}>Tiempo: {Math.ceil((na-obj)/1)}h · Solo si aguda confirmada</div>
+                    </div>
+                  </div>
                 </div>
                 <div style={{background:"#2a1a00",borderRadius:8,padding:10,fontSize:12,color:"#f59e0b",lineHeight:1.9,marginBottom:8}}>
-                  <strong>{via==='oral'?'Agua destilada oral/SNG':via==='sg5'?'SG 5% IV':'SF 0.45% IV'}:</strong><br/>
-                  → Déficit total: <strong>{(defHiper*1000).toFixed(0)} mL</strong><br/>
-                  → Velocidad segura: <strong>{velHiper.toFixed(0)} mL/hr</strong> por {horasHiper}h<br/>
-                  → Agregar pérdidas insensibles en curso: +30–50 mL/hr según contexto
+                  <strong>Plan 24h ({via==='oral'?'Agua destilada oral/SNG':via==='sg5'?'SG 5% IV':'SF 0.45% IV'}):</strong><br/>
+                  → Pasar <strong>{(defHiper*1000/24).toFixed(0)} mL/hr</strong> durante 24h<br/>
+                  → Objetivo: bajar Na máx {Math.min(na-obj,10).toFixed(0)} mEq/L en 24h (aguda) o máx 8 mEq/L (crónica)<br/>
+                  → Agregar pérdidas insensibles: +30–50 mL/hr según contexto clínico
                 </div>
-                <div style={{padding:"8px 10px",background:"#2a0505",borderRadius:8,fontSize:11,color:"#ef4444"}}>⚠️ Controlar Na c/4–6h · Corrección rápida → edema cerebral</div>
+                <div style={{background:"#0d2a4e",borderRadius:8,padding:10,fontSize:12,color:"#22d3ee",lineHeight:1.8,marginBottom:8}}>
+                  <strong>📋 Control de exámenes:</strong><br/>
+                  → ELP + creatinina a las <strong>6h</strong> de inicio<br/>
+                  → ELP a las <strong>12h</strong> — ajustar velocidad según respuesta<br/>
+                  → ELP a las <strong>24h</strong> — evaluar necesidad de continuar
+                </div>
+                <div style={{padding:"8px 10px",background:"#2a0505",borderRadius:8,fontSize:11,color:"#ef4444"}}>
+                  ⚠️ Corrección rápida → edema cerebral · Si crónica o desconocida: máx 8 mEq/L en 24h · 1 mEq/h solo si aguda confirmada
+                </div>
               </div>
             )}
           </div>
