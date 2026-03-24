@@ -2586,6 +2586,7 @@ function AirwayTab() {
 }
 
 function GasesCalculator() {
+  const [step, setStep] = useState(1);
   const [sampleType, setSampleType] = useState("venoso");
   const [values, setValues] = useState({
     ph: "",
@@ -2770,15 +2771,607 @@ function GasesCalculator() {
     clearance = ((lactato - lactato2) / lactato) * 100;
   }
 
+  const steps = ["Muestra", "Datos", "Ácido-base", "Oxigenación", "Perfusión", "Referencias"];
+
+  function resetAll() {
+    setStep(1);
+    setSampleType("venoso");
+    setValues({
+      ph: "",
+      pco2: "",
+      hco3: "",
+      na: "",
+      cl: "",
+      alb: "",
+      po2: "",
+      fio2: "",
+      pco2a: "",
+      pco2v: "",
+      lactato: "",
+      lactato2: "",
+    });
+  }
+
   return (
     <div>
       <div style={card}>
-        <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>TIPO DE MUESTRA</div>
+        <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>FLUJO GUIADO</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {steps.map((s, i) => (
+            <div
+              key={s}
+              style={{
+                padding:"8px 10px",
+                borderRadius:999,
+                border:`1px solid ${i + 1 < step ? "#22c55e" : i + 1 === step ? "#22d3ee" : "#1a3060"}`,
+                color:i + 1 < step ? "#22c55e" : i + 1 === step ? "#22d3ee" : "#4a6a9f",
+                background:i + 1 < step ? "#052a10" : i + 1 === step ? "#0d2a4e" : "#060d1f",
+                fontSize:12
+              }}
+            >
+              {i + 1}. {s}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {step === 1 && (
+        <div style={card}>
+          <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>PASO 1</div>
+          <div style={{fontSize:16,fontWeight:800,marginBottom:10}}>Tipo de muestra</div>
+          <div style={{display:"flex",gap:8}}>
+            {["venoso","arterial"].map(t=>(
+              <button
+                key={t}
+                onClick={()=>setSampleType(t)}
+                style={{
+                  flex:1,
+                  padding:"10px 12px",
+                  borderRadius:8,
+                  fontFamily:"inherit",
+                  fontSize:12,
+                  fontWeight:700,
+                  cursor:"pointer",
+                  border:sampleType===t?"1px solid #22d3ee":"1px solid #1a3060",
+                  background:sampleType===t?"#0d2a4e":"#060d1f",
+                  color:sampleType===t?"#22d3ee":"#4a6a9f"
+                }}
+              >
+                {t === "venoso" ? "Venoso" : "Arterial"}
+              </button>
+            ))}
+          </div>
+          <div style={{...small, marginTop:10}}>
+            Para interpretación ácido-base en urgencias, venoso y arterial suelen ser clínicamente comparables.
+            Usa arterial cuando necesites evaluar oxigenación, PAFI o gradiente A-a.
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}>
+            <span />
+            <button onClick={()=>setStep(2)} style={{padding:"10px 12px"}}>Siguiente</button>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div style={card}>
+          <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>PASO 2</div>
+          <div style={{fontSize:16,fontWeight:800,marginBottom:10}}>Datos básicos</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+            <div>
+              <div style={label}>pH</div>
+              <input style={input} type="number" step="0.01" value={values.ph} onChange={e=>setField("ph", e.target.value)} />
+            </div>
+            <div>
+              <div style={label}>{sampleType === "venoso" ? "PvCO₂" : "PaCO₂"} (mmHg)</div>
+              <input style={input} type="number" step="0.1" value={values.pco2} onChange={e=>setField("pco2", e.target.value)} />
+            </div>
+            <div>
+              <div style={label}>HCO₃⁻ (mEq/L)</div>
+              <input style={input} type="number" step="0.1" value={values.hco3} onChange={e=>setField("hco3", e.target.value)} />
+            </div>
+            <div>
+              <div style={label}>Na (mEq/L)</div>
+              <input style={input} type="number" step="0.1" value={values.na} onChange={e=>setField("na", e.target.value)} />
+            </div>
+            <div>
+              <div style={label}>Cl (mEq/L)</div>
+              <input style={input} type="number" step="0.1" value={values.cl} onChange={e=>setField("cl", e.target.value)} />
+            </div>
+            <div>
+              <div style={label}>Albúmina (g/dL)</div>
+              <input style={input} type="number" step="0.1" value={values.alb} onChange={e=>setField("alb", e.target.value)} />
+            </div>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}>
+            <button onClick={()=>setStep(1)} style={{padding:"10px 12px"}}>Atrás</button>
+            <button onClick={()=>setStep(3)} style={{padding:"10px 12px"}}>Siguiente</button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div style={card}>
+          <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>PASO 3</div>
+          <div style={{fontSize:16,fontWeight:800,marginBottom:10}}>Interpretación ácido-base</div>
+
+          {(!ph || !pco2 || !hco3) ? (
+            <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px"}}>
+              <div style={{fontSize:12,color:"#7aa2d4"}}>Completa al menos pH, PCO₂ y HCO₃⁻ para interpretar.</div>
+            </div>
+          ) : (
+            <>
+              {phState && (
+                <div style={{background:phState.color+"18", border:`1px solid ${phState.color}44`, borderRadius:10, padding:"10px 12px", marginBottom:8}}>
+                  <div style={{fontSize:12,fontWeight:700,color:phState.color}}>Estado del pH</div>
+                  <div style={{fontSize:13,color:phState.color,marginTop:2}}>{phState.label}</div>
+                </div>
+              )}
+
+              {primary && (
+                <div style={{background:primary.color+"18", border:`1px solid ${primary.color}44`, borderRadius:10, padding:"10px 12px", marginBottom:8}}>
+                  <div style={{fontSize:12,fontWeight:700,color:primary.color}}>Trastorno primario</div>
+                  <div style={{fontSize:13,color:primary.color,marginTop:2}}>{primary.label}</div>
+                </div>
+              )}
+
+              {compensation && (
+                <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px", marginBottom:8}}>
+                  <div style={{fontSize:12,fontWeight:700,color:compensation.color}}>{compensation.title}</div>
+                  <div style={{fontSize:12,color:"#7aa2d4",marginTop:4}}>{compensation.text}</div>
+                  {sampleType === "venoso" && (
+                    <div style={{fontSize:11,color:"#4a6a9f",marginTop:6}}>
+                      En gas venoso se estima PaCO₂ restando aprox. 5 mmHg para esta orientación rápida.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {agCorr !== null && (
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:8}}>
+                  <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px", textAlign:"center"}}>
+                    <div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>Anion gap</div>
+                    <div style={{fontSize:22,fontWeight:800,color: agCorr > 12 ? "#ef4444" : "#22c55e"}}>{fmt(agCorr)}</div>
+                  </div>
+                  <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px", textAlign:"center"}}>
+                    <div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>Δ gap / Δ HCO₃</div>
+                    <div style={{fontSize:22,fontWeight:800,color:"#22d3ee"}}>
+                      {deltaGap !== null && deltaHco3 !== null ? `${fmt(deltaGap)} / ${fmt(deltaHco3)}` : "—"}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {deltaNote && (
+                <div style={{background:deltaNote.color+"18", border:`1px solid ${deltaNote.color}44`, borderRadius:10, padding:"10px 12px", marginBottom:8}}>
+                  <div style={{fontSize:12,color:deltaNote.color,fontWeight:700}}>{deltaNote.text}</div>
+                </div>
+              )}
+
+              {chlorideNote && (
+                <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px", marginBottom:8}}>
+                  <div style={{fontSize:12,color:"#7aa2d4"}}>{chlorideNote.text}</div>
+                </div>
+              )}
+            </>
+          )}
+
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}>
+            <button onClick={()=>setStep(2)} style={{padding:"10px 12px"}}>Atrás</button>
+            <button onClick={()=>setStep(4)} style={{padding:"10px 12px"}}>Siguiente</button>
+          </div>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div style={card}>
+          <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>PASO 4</div>
+          <div style={{fontSize:16,fontWeight:800,marginBottom:10}}>Oxigenación</div>
+
+          {sampleType === "venoso" ? (
+            <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px"}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#f59e0b",marginBottom:4}}>Muestra venosa seleccionada</div>
+              <div style={{fontSize:12,color:"#7aa2d4"}}>La evaluación de oxigenación, PAFI y gradiente A-a requiere gas arterial.</div>
+            </div>
+          ) : (
+            <>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <div>
+                  <div style={label}>PaO₂ (mmHg)</div>
+                  <input style={input} type="number" step="0.1" value={values.po2} onChange={e=>setField("po2", e.target.value)} />
+                </div>
+                <div>
+                  <div style={label}>FiO₂ (%)</div>
+                  <input style={input} type="number" step="0.1" value={values.fio2} onChange={e=>setField("fio2", e.target.value)} />
+                </div>
+              </div>
+
+              {(po2 !== null && fio2 !== null && effectivePco2 !== null) ? (
+                <div style={{marginTop:10}}>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                    <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px", textAlign:"center"}}>
+                      <div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>PAFI</div>
+                      <div style={{fontSize:24,fontWeight:800,color: pf < 300 ? "#ef4444" : "#22c55e"}}>{fmt(pf,0)}</div>
+                    </div>
+                    <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px", textAlign:"center"}}>
+                      <div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>Gradiente A-a</div>
+                      <div style={{fontSize:24,fontWeight:800,color: aa > 20 ? "#f59e0b" : "#22c55e"}}>{fmt(aa,0)}</div>
+                    </div>
+                  </div>
+
+                  {sdra && (
+                    <div style={{gridColumn:"1 / -1", background:sdra.color+"18", border:`1px solid ${sdra.color}44`, borderRadius:10, padding:"10px 12px", marginTop:8}}>
+                      <div style={{fontSize:12,fontWeight:700,color:sdra.color}}>{sdra.text}</div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px", marginTop:10}}>
+                  <div style={{fontSize:12,color:"#7aa2d4"}}>Completa PaO₂, FiO₂ y PCO₂ para calcular PAFI y gradiente A-a.</div>
+                </div>
+              )}
+            </>
+          )}
+
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}>
+            <button onClick={()=>setStep(3)} style={{padding:"10px 12px"}}>Atrás</button>
+            <button onClick={()=>setStep(5)} style={{padding:"10px 12px"}}>Siguiente</button>
+          </div>
+        </div>
+      )}
+
+      {step === 5 && (
+        <div style={card}>
+          <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>PASO 5</div>
+          <div style={{fontSize:16,fontWeight:800,marginBottom:10}}>Perfusión</div>
+
+          <div style={{background:"#040c1c", borderRadius:10, padding:"12px 14px", marginBottom:10}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:6}}>ΔPCO₂</div>
+            <div style={{...small, marginBottom:10}}>
+              Requiere sangre arterial y sangre venosa central. La muestra venosa ideal es desde CVC con punta en VCS / unión cavoauricular.
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div>
+                <div style={label}>PaCO₂ arterial</div>
+                <input style={input} type="number" step="0.1" value={values.pco2a} onChange={e=>setField("pco2a", e.target.value)} />
+              </div>
+              <div>
+                <div style={label}>PvCO₂ venosa central</div>
+                <input style={input} type="number" step="0.1" value={values.pco2v} onChange={e=>setField("pco2v", e.target.value)} />
+              </div>
+            </div>
+
+            {deltaPco2 !== null && (
+              <div style={{marginTop:10, background:deltaPco2 <= 6 ? "#052a10" : "#2a0505", border:`1px solid ${deltaPco2 <= 6 ? "#22c55e44" : "#ef444444"}`, borderRadius:10, padding:"12px 14px"}}>
+                <div style={{fontSize:24,fontWeight:800,color: deltaPco2 <= 6 ? "#22c55e" : "#ef4444"}}>{fmt(deltaPco2)}</div>
+                <div style={{fontSize:12,color: deltaPco2 <= 6 ? "#22c55e" : "#ef4444"}}>
+                  {deltaPco2 <= 6 ? "ΔPCO₂ normal: flujo suficiente" : "ΔPCO₂ elevado: bajo flujo / hipoperfusión persistente"}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{background:"#040c1c", borderRadius:10, padding:"12px 14px"}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#ef4444",marginBottom:6}}>Lactato</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div>
+                <div style={label}>Lactato inicial (mmol/L)</div>
+                <input style={input} type="number" step="0.1" value={values.lactato} onChange={e=>setField("lactato", e.target.value)} />
+              </div>
+              <div>
+                <div style={label}>Lactato control 2h (mmol/L)</div>
+                <input style={input} type="number" step="0.1" value={values.lactato2} onChange={e=>setField("lactato2", e.target.value)} />
+              </div>
+            </div>
+
+            {lactatoMsg && (
+              <div style={{marginTop:10, background:lactatoMsg.color+"18", border:`1px solid ${lactatoMsg.color}44`, borderRadius:10, padding:"10px 12px"}}>
+                <div style={{fontSize:12,fontWeight:700,color:lactatoMsg.color}}>{lactatoMsg.text}</div>
+              </div>
+            )}
+
+            {clearance !== null && (
+              <div style={{marginTop:10, background:clearance >= 30 ? "#052a10" : clearance >= 10 ? "#2a1a00" : "#2a0505", borderRadius:10, padding:"12px 14px"}}>
+                <div style={{fontSize:24,fontWeight:800,color: clearance >= 30 ? "#22c55e" : clearance >= 10 ? "#f59e0b" : "#ef4444"}}>
+                  {fmt(clearance)}%
+                </div>
+                <div style={{fontSize:12,color: clearance >= 30 ? "#22c55e" : clearance >= 10 ? "#f59e0b" : "#ef4444"}}>
+                  {clearance >= 30 ? "Buen clearance" : clearance >= 10 ? "Clearance parcial" : "Sin clearance adecuado"}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}>
+            <button onClick={()=>setStep(4)} style={{padding:"10px 12px"}}>Atrás</button>
+            <button onClick={()=>setStep(6)} style={{padding:"10px 12px"}}>Siguiente</button>
+          </div>
+        </div>
+      )}
+
+      {step === 6 && (
+        <div style={card}>
+          <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>PASO 6</div>
+          <div style={{fontSize:16,fontWeight:800,marginBottom:10}}>Referencias venosas</div>
+
+          <div style={{background:"#040c1c", borderRadius:10, padding:"12px 14px", marginBottom:10}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:6}}>Utilidad gas venoso</div>
+            <div style={small}>
+              Útil para evaluación ácido-base, seguimiento seriado y correlación con gas arterial.<br/>
+              No reemplaza al arterial cuando necesitas evaluar oxigenación o calcular PAFI.
+            </div>
+          </div>
+
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+            <div style={{background:"#040c1c", borderRadius:10, padding:"12px 14px"}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:6}}>Correlación venoso-arterial</div>
+              <div style={small}>
+                pH venoso ≈ 0.03–0.04 menor<br/>
+                PCO₂ venoso ≈ 3–8 mmHg mayor<br/>
+                HCO₃⁻ venoso ≈ 2–3 mEq/L mayor
+              </div>
+            </div>
+            <div style={{background:"#040c1c", borderRadius:10, padding:"12px 14px"}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:6}}>Cuándo no usarlo solo</div>
+              <div style={small}>
+                Hipoxemia / SDRA<br/>
+                Necesidad de PAFI<br/>
+                Gradiente A-a<br/>
+                Evaluación precisa de oxigenación
+              </div>
+            </div>
+          </div>
+
+          <div style={{background:"#040c1c", borderRadius:10, padding:"12px 14px"}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:6}}>SvCO₂ / ScvO₂</div>
+            <div style={small}>
+              ScvO₂: 70–80%<br/>
+              SvO₂: 65–75%<br/>
+              Baja → bajo DO₂ o alto VO₂<br/>
+              Alta inapropiada → alteración extracción / sepsis / shunt
+            </div>
+          </div>
+
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}>
+            <button onClick={()=>setStep(5)} style={{padding:"10px 12px"}}>Atrás</button>
+            <button onClick={resetAll} style={{padding:"10px 12px"}}>Reiniciar</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+function ArritmiasTab() {
+  const [rhythmType, setRhythmType] = useState("taqui");
+  const [stability, setStability] = useState("estable");
+  const [qrs, setQrs] = useState("angosto");
+  const [regularity, setRegularity] = useState("regular");
+  const [hr, setHr] = useState("");
+  const [bradyHr, setBradyHr] = useState("");
+
+  const card = {
+    background:"#0b1730",
+    border:"1px solid #1a3060",
+    borderRadius:14,
+    padding:"14px 16px",
+    marginBottom:12
+  };
+
+  const input = {
+    width:"100%",
+    background:"#040c1c",
+    border:"1px solid #1a3060",
+    borderRadius:8,
+    color:"#e8edf5",
+    fontSize:15,
+    padding:"8px 12px",
+    outline:"none",
+    fontFamily:"inherit",
+    boxSizing:"border-box"
+  };
+
+  const label = { fontSize:11, color:"#4a6a9f", marginBottom:4 };
+  const small = { fontSize:12, color:"#7aa2d4", lineHeight:1.7 };
+
+  function actionCard(title, body, tone="cyan") {
+    const bg =
+      tone === "red" ? "#2a0505" :
+      tone === "yellow" ? "#2a1a00" :
+      tone === "green" ? "#052a10" :
+      "#062534";
+
+    const border =
+      tone === "red" ? "#ef444444" :
+      tone === "yellow" ? "#f59e0b44" :
+      tone === "green" ? "#22c55e44" :
+      "#22d3ee44";
+
+    const color =
+      tone === "red" ? "#ef4444" :
+      tone === "yellow" ? "#f59e0b" :
+      tone === "green" ? "#22c55e" :
+      "#22d3ee";
+
+    return (
+      <div style={{background:bg,border:`1px solid ${border}`,borderRadius:10,padding:"12px 14px"}}>
+        <div style={{fontSize:12,fontWeight:700,color,marginBottom:6}}>{title}</div>
+        <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.7}}>{body}</div>
+      </div>
+    );
+  }
+
+  function sectionTitle(text, color="#22d3ee") {
+    return (
+      <div style={{fontSize:10,color,letterSpacing:2,marginBottom:10,fontWeight:700}}>
+        {text}
+      </div>
+    );
+  }
+
+  let taquiTitle = "TSV probable";
+  let taquiTitleColor = "#22d3ee";
+  let taquiSummary = "Taquicardia regular de QRS angosto en paciente estable: considerar maniobras vagales y adenosina si no hay contraindicación.";
+  let taquiActions = [];
+
+  if (stability === "inestable") {
+    taquiTitle = "Taquiarritmia inestable";
+    taquiTitleColor = "#ef4444";
+    taquiSummary = "Prioriza cardioversión sincronizada si hay pulso. Si no hay pulso, manejo como paro según ritmo.";
+    taquiActions = [
+      actionCard("Tratamiento eléctrico", "Cardioversión sincronizada inmediata. Sedar si el tiempo y la condición lo permiten, sin retrasar la descarga.", "red"),
+      actionCard("Antes / durante", "Monitor, desfibrilador listo, acceso venoso, oxígeno si precisa y búsqueda rápida de causa reversible.", "yellow"),
+      actionCard("Si QRS ancho", "Asume TV hasta demostrar lo contrario, sobre todo si es regular.", "yellow"),
+      actionCard("No retrasar por ECG fino", "La inestabilidad manda la conducta. El detalle electrocardiográfico puede afinarse después del rescate inicial.", "cyan"),
+    ];
+  } else if (qrs === "angosto" && regularity === "regular") {
+    taquiTitle = "TSV probable";
+    taquiTitleColor = "#22d3ee";
+    taquiSummary = "Taquicardia regular de QRS angosto en paciente estable: TSV es lo más probable.";
+    taquiActions = [
+      actionCard("Primer paso", "Maniobras vagales si el paciente colabora y no hay contraindicación.", "cyan"),
+      actionCard("Fármaco", "Adenosina 6 mg IV en bolo rápido + flush. Si no revierte: 12 mg, luego 12 mg.", "green"),
+      actionCard("Si no revierte", "Revalorar diagnóstico, ECG de 12 derivaciones y considerar flutter 2:1 u otra TSV.", "yellow"),
+      actionCard("Advertencia", "Evitar adenosina si sospechas FA preexcitada o taquicardia irregular de QRS ancho.", "red"),
+    ];
+  } else if (qrs === "angosto" && regularity === "irregular") {
+    taquiTitle = "FA / Flutter variable probable";
+    taquiTitleColor = "#f59e0b";
+    taquiSummary = "Taquicardia irregular de QRS angosto en paciente estable: pensar primero en FA o flutter con conducción variable.";
+    taquiActions = [
+      actionCard("Control de frecuencia", "Según contexto: beta bloqueador o diltiazem si no hay contraindicación ni inestabilidad.", "cyan"),
+      actionCard("Cardioversión", "Considerarla según tiempo de evolución, síntomas, riesgo tromboembólico y estrategia global.", "yellow"),
+      actionCard("Buscar gatillantes", "Sepsis, hipovolemia, hipoxia, dolor, tirotoxicosis, alcohol, postoperatorio.", "green"),
+      actionCard("No adenosina como tratamiento de FA", "Puede ayudar a desenmascarar flutter, pero no trata la FA.", "red"),
+    ];
+  } else if (qrs === "ancho" && regularity === "regular") {
+    taquiTitle = "TV monomorfa hasta demostrar lo contrario";
+    taquiTitleColor = "#ef4444";
+    taquiSummary = "Taquicardia regular de QRS ancho en estable: asumir TV hasta demostrar lo contrario.";
+    taquiActions = [
+      actionCard("Diagnóstico operativo", "Trata como TV si hay duda. Es la conducta más segura.", "red"),
+      actionCard("Fármacos", "Amiodarona 150 mg IV en 10 min. Luego infusión si responde o mientras preparas siguiente estrategia.", "cyan"),
+      actionCard("Revalorar permanente", "Si empeora o aparece inestabilidad, cardioversión sincronizada inmediata.", "yellow"),
+      actionCard("Corregir factores", "K, Mg, isquemia, hipoxia, acidosis, fármacos proarrítmicos.", "green"),
+    ];
+  } else {
+    taquiTitle = "Taquicardia irregular de QRS ancho";
+    taquiTitleColor = "#ef4444";
+    taquiSummary = "Escenario de alto riesgo: pensar en FA preexcitada, TV polimorfa u otras arritmias complejas.";
+    taquiActions = [
+      actionCard("Prioridad", "Monitor estricto y preparación para cardioversión / desfibrilación según evolución.", "red"),
+      actionCard("Evitar", "No bloqueadores del nodo AV si sospechas FA preexcitada: evitar adenosina, verapamilo, diltiazem, digoxina.", "red"),
+      actionCard("Si torsades", "Magnesio 2 g IV y corregir QT largo, hipokalemia e hipomagnesemia.", "cyan"),
+      actionCard("Si inestabiliza", "Tratamiento eléctrico inmediato.", "yellow"),
+    ];
+  }
+
+  const taquiEnergyCards = [
+    actionCard(
+      "⚡ Cardioversión / Desfibrilación",
+      <>
+        TSV regular angosto: <strong>50–100 J sincronizado</strong><br/>
+        FA / Flutter: <strong>120–200 J bifásico</strong><br/>
+        TV monomorfa con pulso: <strong>100 J sincronizado</strong> → escalar<br/><br/>
+        FV / TV sin pulso: <strong>200 J bifásico</strong>
+      </>,
+      "red"
+    ),
+    actionCard(
+      "🧪 Magnesio",
+      <>
+        Torsades / QT largo: <strong>2 g IV</strong> en <strong>5–15 min</strong><br/>
+        Puede repetirse si persiste<br/>
+        Infusión posterior: <strong>1–2 g/h</strong><br/><br/>
+        Preparación práctica:<br/>
+        <strong>2 g = 4 mL</strong> de sulfato de magnesio al 50%<br/>
+        Diluir en <strong>10–20 mL</strong> si bolo lento<br/>
+        O en <strong>50–100 mL</strong> para infusión corta
+      </>,
+      "cyan"
+    ),
+    actionCard(
+      "💊 Amiodarona",
+      <>
+        Carga: <strong>150 mg IV en 10 min</strong><br/><br/>
+        Infusión:<br/>
+        <strong>1 mg/min por 6 h</strong><br/>
+        luego <strong>0.5 mg/min</strong><br/><br/>
+        Dosis máxima 24 h: <strong>2.2 g</strong>
+      </>,
+      "cyan"
+    ),
+    actionCard(
+      "🧰 Perlas rápidas",
+      <>
+        En inestabilidad no retrasar el tratamiento eléctrico por definir el ritmo fino.<br/>
+        Si es irregular y ancho: evita bloqueadores del nodo AV si sospechas preexcitación.
+      </>,
+      "yellow"
+    )
+  ];
+
+  const bradiActions =
+    stability === "inestable"
+      ? [
+          actionCard("Primera línea", "Atropina 1 mg IV, repetir cada 3–5 min hasta 3 mg.", "cyan"),
+          actionCard("Si falla o alto grado", "Marcapasos transcutáneo mientras preparas vía definitiva.", "red"),
+          actionCard("Puente vasoactivo", "Epinefrina o dopamina mientras resuelves la causa o consigues pacing.", "yellow"),
+          actionCard("Buscar causa reversible", "Hipoxia, IAM, hiperkalemia, beta bloqueador, calcioantagonista, digoxina, hipotermia.", "green"),
+        ]
+      : [
+          actionCard("Observación y ECG", "Confirmar ritmo, QRS, PR y presencia de BAV o pausas.", "cyan"),
+          actionCard("Revisar fármacos", "Beta bloqueadores, calcioantagonistas, amiodarona, digoxina, sedantes.", "green"),
+          actionCard("Laboratorio", "Electrolitos, troponina según contexto, gases, TSH si aplica.", "yellow"),
+          actionCard("Escalar si cambia", "Si aparece inestabilidad, tratar como bradicardia inestable.", "red"),
+        ];
+
+  const bradiDrugCards = [
+    actionCard(
+      "💊 Isoproterenol",
+      <>
+        <strong>2–10 mcg/min IV</strong><br/><br/>
+        Útil en BAV alto grado o escape lento como puente.<br/>
+        ⚠️ Puede inducir arritmias
+      </>,
+      "cyan"
+    ),
+    actionCard(
+      "💊 Dopamina",
+      <>
+        <strong>5–20 mcg/kg/min</strong><br/><br/>
+        Opción de puente en bradicardia inestable si no hay pacing inmediato.
+      </>,
+      "yellow"
+    ),
+    actionCard(
+      "💊 Epinefrina",
+      <>
+        <strong>2–10 mcg/min IV</strong><br/><br/>
+        Alternativa a dopamina en bradicardia severa o shock asociado.
+      </>,
+      "red"
+    ),
+    actionCard(
+      "💊 Dobutamina",
+      <>
+        <strong>2–20 mcg/kg/min</strong><br/><br/>
+        Útil si predomina bajo gasto cardíaco. No es cronotrópico puro.
+      </>,
+      "cyan"
+    )
+  ];
+
+  return (
+    <div>
+      <div style={card}>
+        {sectionTitle("TIPO DE ARRITMIA")}
         <div style={{display:"flex",gap:8}}>
-          {["venoso","arterial"].map(t=>(
+          {[
+            { key:"taqui", label:"Taquiarritmia" },
+            { key:"bradi", label:"Bradiarritmia" }
+          ].map(item=>(
             <button
-              key={t}
-              onClick={()=>setSampleType(t)}
+              key={item.key}
+              onClick={()=>setRhythmType(item.key)}
               style={{
                 flex:1,
                 padding:"10px 12px",
@@ -2787,244 +3380,221 @@ function GasesCalculator() {
                 fontSize:12,
                 fontWeight:700,
                 cursor:"pointer",
-                border:sampleType===t?"1px solid #22d3ee":"1px solid #1a3060",
-                background:sampleType===t?"#0d2a4e":"#060d1f",
-                color:sampleType===t?"#22d3ee":"#4a6a9f"
+                border:rhythmType===item.key?"1px solid #22d3ee":"1px solid #1a3060",
+                background:rhythmType===item.key?"#0d2a4e":"#060d1f",
+                color:rhythmType===item.key?"#22d3ee":"#4a6a9f"
               }}
             >
-              {t === "venoso" ? "Venoso" : "Arterial"}
+              {item.label}
             </button>
           ))}
         </div>
-        <div style={{...small, marginTop:10}}>
-          Para interpretación ácido-base en urgencias, venoso y arterial suelen ser clínicamente comparables.
-          Usa arterial cuando necesites evaluar oxigenación, PAFI o gradiente A-a.
-        </div>
       </div>
 
       <div style={card}>
-        <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>GASOMETRÍA</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-          <div>
-            <div style={label}>pH</div>
-            <input style={input} type="number" step="0.01" value={values.ph} onChange={e=>setField("ph", e.target.value)} />
-          </div>
-          <div>
-            <div style={label}>{sampleType === "venoso" ? "PvCO₂" : "PaCO₂"} (mmHg)</div>
-            <input style={input} type="number" step="0.1" value={values.pco2} onChange={e=>setField("pco2", e.target.value)} />
-          </div>
-          <div>
-            <div style={label}>HCO₃⁻ (mEq/L)</div>
-            <input style={input} type="number" step="0.1" value={values.hco3} onChange={e=>setField("hco3", e.target.value)} />
-          </div>
-          <div>
-            <div style={label}>Na (mEq/L)</div>
-            <input style={input} type="number" step="0.1" value={values.na} onChange={e=>setField("na", e.target.value)} />
-          </div>
-          <div>
-            <div style={label}>Cl (mEq/L)</div>
-            <input style={input} type="number" step="0.1" value={values.cl} onChange={e=>setField("cl", e.target.value)} />
-          </div>
-          <div>
-            <div style={label}>Albúmina (g/dL)</div>
-            <input style={input} type="number" step="0.1" value={values.alb} onChange={e=>setField("alb", e.target.value)} />
-          </div>
+        {sectionTitle("INESTABILIDAD")}
+        <div style={{display:"flex",gap:8}}>
+          {[
+            { key:"estable", label:"Paciente estable" },
+            { key:"inestable", label:"Paciente inestable" }
+          ].map(item=>(
+            <button
+              key={item.key}
+              onClick={()=>setStability(item.key)}
+              style={{
+                flex:1,
+                padding:"10px 12px",
+                borderRadius:8,
+                fontFamily:"inherit",
+                fontSize:12,
+                fontWeight:700,
+                cursor:"pointer",
+                border:stability===item.key?"1px solid #22d3ee":"1px solid #1a3060",
+                background:stability===item.key?"#0d2a4e":"#060d1f",
+                color:stability===item.key?"#22d3ee":"#4a6a9f"
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
 
-        {sampleType === "arterial" && (
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:10}}>
-            <div>
-              <div style={label}>PaO₂ (mmHg)</div>
-              <input style={input} type="number" step="0.1" value={values.po2} onChange={e=>setField("po2", e.target.value)} />
-            </div>
-            <div>
-              <div style={label}>FiO₂ (%)</div>
-              <input style={input} type="number" step="0.1" value={values.fio2} onChange={e=>setField("fio2", e.target.value)} />
+        {stability === "inestable" && (
+          <div style={{marginTop:12,background:"#2a0505",border:"1px solid #ef444444",borderRadius:10,padding:"12px 14px"}}>
+            <div style={{fontSize:14,fontWeight:800,color:"#ef4444",marginBottom:8}}>Signos de inestabilidad</div>
+            <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.8}}>
+              • Hipotensión: PAS &lt; 90 mmHg o mala perfusión asociada<br/>
+              • Alteración del sensorio: confusión, síncope, compromiso neurológico<br/>
+              • Shock / hipoperfusión: piel fría, oliguria, lactato alto<br/>
+              • Dolor torácico isquémico<br/>
+              • Insuficiencia cardiaca aguda / edema pulmonar
             </div>
           </div>
         )}
       </div>
 
-      {(phState || primary || compensation || agCorr !== null || chlorideNote || pf !== null) && (
-        <div style={card}>
-          <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>INTERPRETACIÓN</div>
-
-          {phState && (
-            <div style={{background:phState.color+"18", border:`1px solid ${phState.color}44`, borderRadius:10, padding:"10px 12px", marginBottom:8}}>
-              <div style={{fontSize:12,fontWeight:700,color:phState.color}}>Estado del pH</div>
-              <div style={{fontSize:13,color:phState.color,marginTop:2}}>{phState.label}</div>
-            </div>
-          )}
-
-          {primary && (
-            <div style={{background:primary.color+"18", border:`1px solid ${primary.color}44`, borderRadius:10, padding:"10px 12px", marginBottom:8}}>
-              <div style={{fontSize:12,fontWeight:700,color:primary.color}}>Trastorno primario</div>
-              <div style={{fontSize:13,color:primary.color,marginTop:2}}>{primary.label}</div>
-            </div>
-          )}
-
-          {compensation && (
-            <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px", marginBottom:8}}>
-              <div style={{fontSize:12,fontWeight:700,color:compensation.color}}>{compensation.title}</div>
-              <div style={{fontSize:12,color:"#7aa2d4",marginTop:4}}>{compensation.text}</div>
-              {sampleType === "venoso" && (
-                <div style={{fontSize:11,color:"#4a6a9f",marginTop:6}}>
-                  En gas venoso se estima PaCO₂ restando aprox. 5 mmHg para esta orientación rápida.
-                </div>
-              )}
-            </div>
-          )}
-
-          {agCorr !== null && (
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:8}}>
-              <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px", textAlign:"center"}}>
-                <div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>Anion gap</div>
-                <div style={{fontSize:22,fontWeight:800,color: agCorr > 12 ? "#ef4444" : "#22c55e"}}>{fmt(agCorr)}</div>
-              </div>
-              <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px", textAlign:"center"}}>
-                <div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>Δ gap / Δ HCO₃</div>
-                <div style={{fontSize:22,fontWeight:800,color:"#22d3ee"}}>
-                  {deltaGap !== null && deltaHco3 !== null ? `${fmt(deltaGap)} / ${fmt(deltaHco3)}` : "—"}
+      {rhythmType === "taqui" && (
+        <>
+          <div style={card}>
+            {sectionTitle("CARACTERÍSTICAS DE LA TAQUICARDIA")}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+              <div style={{background:"#040c1c",borderRadius:10,padding:"12px 14px"}}>
+                <div style={{...label, marginBottom:6}}>QRS</div>
+                <div style={{display:"flex",gap:6}}>
+                  {["angosto","ancho"].map(item=>(
+                    <button
+                      key={item}
+                      onClick={()=>setQrs(item)}
+                      style={{
+                        flex:1,
+                        padding:"7px 10px",
+                        borderRadius:6,
+                        fontFamily:"inherit",
+                        fontSize:11,
+                        fontWeight:700,
+                        cursor:"pointer",
+                        border:qrs===item?"1px solid #22d3ee":"1px solid #1a3060",
+                        background:qrs===item?"#0d2a4e":"#060d1f",
+                        color:qrs===item?"#22d3ee":"#4a6a9f"
+                      }}
+                    >
+                      {item === "angosto" ? "Angosto" : "Ancho"}
+                    </button>
+                  ))}
                 </div>
               </div>
-            </div>
-          )}
 
-          {deltaNote && (
-            <div style={{background:deltaNote.color+"18", border:`1px solid ${deltaNote.color}44`, borderRadius:10, padding:"10px 12px", marginBottom:8}}>
-              <div style={{fontSize:12,color:deltaNote.color,fontWeight:700}}>{deltaNote.text}</div>
-            </div>
-          )}
+              <div style={{background:"#040c1c",borderRadius:10,padding:"12px 14px"}}>
+                <div style={{...label, marginBottom:6}}>Ritmo</div>
+                <div style={{display:"flex",gap:6}}>
+                  {["regular","irregular"].map(item=>(
+                    <button
+                      key={item}
+                      onClick={()=>setRegularity(item)}
+                      style={{
+                        flex:1,
+                        padding:"7px 10px",
+                        borderRadius:6,
+                        fontFamily:"inherit",
+                        fontSize:11,
+                        fontWeight:700,
+                        cursor:"pointer",
+                        border:regularity===item?"1px solid #22d3ee":"1px solid #1a3060",
+                        background:regularity===item?"#0d2a4e":"#060d1f",
+                        color:regularity===item?"#22d3ee":"#4a6a9f"
+                      }}
+                    >
+                      {item === "regular" ? "Regular" : "Irregular"}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          {chlorideNote && (
-            <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px", marginBottom:8}}>
-              <div style={{fontSize:12,color:"#7aa2d4"}}>{chlorideNote.text}</div>
+              <div style={{background:"#040c1c",borderRadius:10,padding:"12px 14px"}}>
+                <div style={label}>FC aproximada</div>
+                <input
+                  style={input}
+                  type="number"
+                  value={hr}
+                  onChange={e=>setHr(e.target.value)}
+                  placeholder="Ej: 180"
+                />
+              </div>
             </div>
-          )}
+          </div>
 
-          {sampleType === "arterial" && pf !== null && (
+          <div style={card}>
+            {sectionTitle("ORIENTACIÓN CLÍNICA")}
+            <div style={{
+              background:taquiTitleColor === "#ef4444" ? "#2a0505" : taquiTitleColor === "#f59e0b" ? "#2a1a00" : "#062534",
+              border:`1px solid ${taquiTitleColor}44`,
+              borderRadius:10,
+              padding:"12px 14px"
+            }}>
+              <div style={{fontSize:18,fontWeight:800,color:taquiTitleColor,marginBottom:6}}>{taquiTitle}</div>
+              <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.7}}>{taquiSummary}</div>
+            </div>
+          </div>
+
+          <div style={card}>
+            {sectionTitle("CONDUCTA INMEDIATA")}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-              <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px", textAlign:"center"}}>
-                <div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>PAFI</div>
-                <div style={{fontSize:24,fontWeight:800,color: pf < 300 ? "#ef4444" : "#22c55e"}}>{fmt(pf,0)}</div>
-              </div>
-              <div style={{background:"#040c1c", borderRadius:10, padding:"10px 12px", textAlign:"center"}}>
-                <div style={{fontSize:10,color:"#4a6a9f",marginBottom:4}}>Gradiente A-a</div>
-                <div style={{fontSize:24,fontWeight:800,color: aa > 20 ? "#f59e0b" : "#22c55e"}}>{fmt(aa,0)}</div>
-              </div>
-              {sdra && (
-                <div style={{gridColumn:"1 / -1", background:sdra.color+"18", border:`1px solid ${sdra.color}44`, borderRadius:10, padding:"10px 12px"}}>
-                  <div style={{fontSize:12,fontWeight:700,color:sdra.color}}>{sdra.text}</div>
-                </div>
-              )}
+              {taquiActions}
             </div>
-          )}
-        </div>
+          </div>
+
+          <div style={card}>
+            {sectionTitle("ENERGÍA Y FÁRMACOS CLAVE")}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              {taquiEnergyCards}
+            </div>
+          </div>
+        </>
       )}
 
-      <div style={card}>
-        <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>DELTA PCO₂</div>
-        <div style={{...small, marginBottom:10}}>
-          Requiere sangre arterial y sangre venosa central. La muestra venosa ideal es desde CVC con punta en VCS / unión cavoauricular.
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          <div>
-            <div style={label}>PaCO₂ arterial</div>
-            <input style={input} type="number" step="0.1" value={values.pco2a} onChange={e=>setField("pco2a", e.target.value)} />
-          </div>
-          <div>
-            <div style={label}>PvCO₂ venosa central</div>
-            <input style={input} type="number" step="0.1" value={values.pco2v} onChange={e=>setField("pco2v", e.target.value)} />
-          </div>
-        </div>
-
-        {deltaPco2 !== null && (
-          <div style={{marginTop:10, background:deltaPco2 <= 6 ? "#052a10" : "#2a0505", border:`1px solid ${deltaPco2 <= 6 ? "#22c55e44" : "#ef444444"}`, borderRadius:10, padding:"12px 14px"}}>
-            <div style={{fontSize:24,fontWeight:800,color: deltaPco2 <= 6 ? "#22c55e" : "#ef4444"}}>{fmt(deltaPco2)}</div>
-            <div style={{fontSize:12,color: deltaPco2 <= 6 ? "#22c55e" : "#ef4444"}}>
-              {deltaPco2 <= 6 ? "ΔPCO₂ normal: flujo suficiente" : "ΔPCO₂ elevado: bajo flujo / hipoperfusión persistente"}
+      {rhythmType === "bradi" && (
+        <>
+          <div style={card}>
+            {sectionTitle("BRADIARRITMIA")}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div style={{background:"#040c1c",borderRadius:10,padding:"12px 14px"}}>
+                <div style={label}>Frecuencia cardíaca</div>
+                <input
+                  style={input}
+                  type="number"
+                  value={bradyHr}
+                  onChange={e=>setBradyHr(e.target.value)}
+                  placeholder="Ej: 32"
+                />
+              </div>
+              <div style={{background:"#040c1c",borderRadius:10,padding:"12px 14px"}}>
+                <div style={{...label, marginBottom:6}}>Contexto</div>
+                <div style={small}>
+                  Pensar en BAV alto grado, nodo enfermo, fármacos, hiperkalemia, IAM inferior, hipoxia y otras causas reversibles.
+                </div>
+              </div>
             </div>
           </div>
-        )}
-      </div>
 
-      <div style={card}>
-        <div style={{fontSize:10,color:"#ef4444",letterSpacing:2,marginBottom:10}}>LACTATO</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          <div>
-            <div style={label}>Lactato inicial (mmol/L)</div>
-            <input style={input} type="number" step="0.1" value={values.lactato} onChange={e=>setField("lactato", e.target.value)} />
-          </div>
-          <div>
-            <div style={label}>Lactato control 2h (mmol/L)</div>
-            <input style={input} type="number" step="0.1" value={values.lactato2} onChange={e=>setField("lactato2", e.target.value)} />
-          </div>
-        </div>
-
-        {lactatoMsg && (
-          <div style={{marginTop:10, background:lactatoMsg.color+"18", border:`1px solid ${lactatoMsg.color}44`, borderRadius:10, padding:"10px 12px"}}>
-            <div style={{fontSize:12,fontWeight:700,color:lactatoMsg.color}}>{lactatoMsg.text}</div>
-          </div>
-        )}
-
-        {clearance !== null && (
-          <div style={{marginTop:10, background:clearance >= 30 ? "#052a10" : clearance >= 10 ? "#2a1a00" : "#2a0505", borderRadius:10, padding:"12px 14px"}}>
-            <div style={{fontSize:24,fontWeight:800,color: clearance >= 30 ? "#22c55e" : clearance >= 10 ? "#f59e0b" : "#ef4444"}}>
-              {fmt(clearance)}%
-            </div>
-            <div style={{fontSize:12,color: clearance >= 30 ? "#22c55e" : clearance >= 10 ? "#f59e0b" : "#ef4444"}}>
-              {clearance >= 30 ? "Buen clearance" : clearance >= 10 ? "Clearance parcial" : "Sin clearance adecuado"}
+          <div style={card}>
+            {sectionTitle("ORIENTACIÓN CLÍNICA")}
+            <div style={{
+              background:stability === "inestable" ? "#2a0505" : "#2a1a00",
+              border:`1px solid ${stability === "inestable" ? "#ef444444" : "#f59e0b44"}`,
+              borderRadius:10,
+              padding:"12px 14px"
+            }}>
+              <div style={{fontSize:18,fontWeight:800,color:stability === "inestable" ? "#ef4444" : "#f59e0b",marginBottom:6}}>
+                {stability === "inestable" ? "Bradicardia inestable" : "Bradicardia estable"}
+              </div>
+              <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.7}}>
+                {stability === "inestable"
+                  ? "Si la bradicardia explica la clínica, iniciar tratamiento inmediato y no retrasar soporte por espera diagnóstica."
+                  : "Si está perfundiendo bien, monitoriza, busca causa y decide necesidad de observación, ajuste farmacológico o marcapasos según ECG."}
+              </div>
             </div>
           </div>
-        )}
-      </div>
 
-      <div style={card}>
-        <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>REFERENCIAS VENOSAS</div>
-
-        <div style={{background:"#040c1c", borderRadius:10, padding:"12px 14px", marginBottom:10}}>
-          <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:6}}>Utilidad gas venoso</div>
-          <div style={small}>
-            Útil para evaluación ácido-base, seguimiento seriado y correlación con gas arterial.<br/>
-            No reemplaza al arterial cuando necesitas evaluar oxigenación o calcular PAFI.
-          </div>
-        </div>
-
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-          <div style={{background:"#040c1c", borderRadius:10, padding:"12px 14px"}}>
-            <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:6}}>Correlación venoso-arterial</div>
-            <div style={small}>
-              pH venoso ≈ 0.03–0.04 menor<br/>
-              PCO₂ venoso ≈ 3–8 mmHg mayor<br/>
-              HCO₃⁻ venoso ≈ 2–3 mEq/L mayor
+          <div style={card}>
+            {sectionTitle("CONDUCTA INMEDIATA")}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              {bradiActions}
             </div>
           </div>
-          <div style={{background:"#040c1c", borderRadius:10, padding:"12px 14px"}}>
-            <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:6}}>Cuándo no usarlo solo</div>
-            <div style={small}>
-              Hipoxemia / SDRA<br/>
-              Necesidad de PAFI<br/>
-              Gradiente A-a<br/>
-              Evaluación precisa de oxigenación
+
+          <div style={card}>
+            {sectionTitle("FÁRMACOS EN BRADIARRITMIA")}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              {bradiDrugCards}
             </div>
           </div>
-        </div>
-
-        <div style={{background:"#040c1c", borderRadius:10, padding:"12px 14px"}}>
-          <div style={{fontSize:12,fontWeight:700,color:"#22d3ee",marginBottom:6}}>SvCO₂ / ScvO₂</div>
-          <div style={small}>
-            ScvO₂: 70–80%<br/>
-            SvO₂: 65–75%<br/>
-            Baja → bajo DO₂ o alto VO₂<br/>
-            Alta inapropiada → alteración extracción / sepsis / shunt
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
 
-const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","🧠 Glasgow","🛏️ Sedación UCI","🔧 Procedimientos","📊 Scores","🧂 Electrolitos","❤️ RCP","🫁 VMI","🪸 Vía Aérea", "🧪Gases"];
+const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","🧠 Glasgow","🛏️ Sedación UCI","🔧 Procedimientos","📊 Scores","🧂 Electrolitos","❤️ RCP","🫁 VMI","🪸 Vía Aérea", "🧪Gases","💕Arritmias"];
 
 export default function App() {
   const [weight, setWeight] = useState("");
@@ -3068,7 +3638,8 @@ export default function App() {
         {tab===8&&<RCPTab/>}
         {tab===9&&<VMITab/>}
         {tab===10&&<AirwayTab/>}
-        {tab===11&&<GasesCalculator/>} 
+        {tab===11&&<GasesCalculator/>}
+        {tab===12&&<ArritmiasTab/>} 
         <div style={{marginTop:24,padding:"12px 16px",background:"#08111f",border:"1px solid #1a2a4f",borderRadius:10,fontSize:11,color:"#2a4a7f",lineHeight:1.7}}>
           ⚠️ Herramienta de apoyo clínico. Verificar siempre con protocolos institucionales y criterio médico.
         </div>
