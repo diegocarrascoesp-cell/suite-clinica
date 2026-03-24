@@ -2847,7 +2847,17 @@ function GasesCalculator() {
           </div>
           <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}>
             <span />
-            <button onClick={()=>setStep(2)} style={{padding:"10px 12px"}}>Siguiente</button>
+            <button onClick={()=>setStep(2)} style={{
+  padding:"10px 12px",
+  borderRadius:8,
+  fontFamily:"inherit",
+  fontSize:12,
+  fontWeight:700,
+  cursor:"pointer",
+  border:"1px solid #22d3ee",
+  background:"#0d2a4e",
+  color:"#22d3ee"
+}}>Siguiente</button>
           </div>
         </div>
       )}
@@ -2883,8 +2893,28 @@ function GasesCalculator() {
             </div>
           </div>
           <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}>
-            <button onClick={()=>setStep(1)} style={{padding:"10px 12px"}}>Atrás</button>
-            <button onClick={()=>setStep(3)} style={{padding:"10px 12px"}}>Siguiente</button>
+            <button onClick={()=>setStep(1)} style={{
+  padding:"10px 12px",
+  borderRadius:8,
+  fontFamily:"inherit",
+  fontSize:12,
+  fontWeight:700,
+  cursor:"pointer",
+  border:"1px solid #1a3060",
+  background:"#060d1f",
+  color:"#4a6a9f"
+}}>Atrás</button>
+            <button onClick={()=>setStep(3)} style={{
+  padding:"10px 12px",
+  borderRadius:8,
+  fontFamily:"inherit",
+  fontSize:12,
+  fontWeight:700,
+  cursor:"pointer",
+  border:"1px solid #22d3ee",
+  background:"#0d2a4e",
+  color:"#22d3ee"
+}}>Siguiente</button>
           </div>
         </div>
       )}
@@ -2956,8 +2986,28 @@ function GasesCalculator() {
           )}
 
           <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}>
-            <button onClick={()=>setStep(2)} style={{padding:"10px 12px"}}>Atrás</button>
-            <button onClick={()=>setStep(4)} style={{padding:"10px 12px"}}>Siguiente</button>
+            <button onClick={()=>setStep(2)} style={{
+  padding:"10px 12px",
+  borderRadius:8,
+  fontFamily:"inherit",
+  fontSize:12,
+  fontWeight:700,
+  cursor:"pointer",
+  border:"1px solid #1a3060",
+  background:"#060d1f",
+  color:"#4a6a9f"
+}}>Atrás</button>
+            <button onClick={()=>setStep(4)} style={{
+  padding:"10px 12px",
+  borderRadius:8,
+  fontFamily:"inherit",
+  fontSize:12,
+  fontWeight:700,
+  cursor:"pointer",
+  border:"1px solid #22d3ee",
+  background:"#0d2a4e",
+  color:"#22d3ee"
+}}>Siguiente</button>
           </div>
         </div>
       )}
@@ -3013,8 +3063,28 @@ function GasesCalculator() {
           )}
 
           <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}>
-            <button onClick={()=>setStep(3)} style={{padding:"10px 12px"}}>Atrás</button>
-            <button onClick={()=>setStep(5)} style={{padding:"10px 12px"}}>Siguiente</button>
+            <button onClick={()=>setStep(3)} style={{
+  padding:"10px 12px",
+  borderRadius:8,
+  fontFamily:"inherit",
+  fontSize:12,
+  fontWeight:700,
+  cursor:"pointer",
+  border:"1px solid #1a3060",
+  background:"#060d1f",
+  color:"#4a6a9f"
+}}>Atrás</button>
+            <button onClick={()=>setStep(5)} style={{
+  padding:"10px 12px",
+  borderRadius:8,
+  fontFamily:"inherit",
+  fontSize:12,
+  fontWeight:700,
+  cursor:"pointer",
+  border:"1px solid #22d3ee",
+  background:"#0d2a4e",
+  color:"#22d3ee"
+}}>Siguiente</button>
           </div>
         </div>
       )}
@@ -3082,8 +3152,28 @@ function GasesCalculator() {
           </div>
 
           <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}>
-            <button onClick={()=>setStep(4)} style={{padding:"10px 12px"}}>Atrás</button>
-            <button onClick={()=>setStep(6)} style={{padding:"10px 12px"}}>Siguiente</button>
+            <button onClick={()=>setStep(4)} style={{
+  padding:"10px 12px",
+  borderRadius:8,
+  fontFamily:"inherit",
+  fontSize:12,
+  fontWeight:700,
+  cursor:"pointer",
+  border:"1px solid #1a3060",
+  background:"#060d1f",
+  color:"#4a6a9f"
+}}>Atrás</button>
+            <button onClick={()=>setStep(6)} style={{
+  padding:"10px 12px",
+  borderRadius:8,
+  fontFamily:"inherit",
+  fontSize:12,
+  fontWeight:700,
+  cursor:"pointer",
+  border:"1px solid #22d3ee",
+  background:"#0d2a4e",
+  color:"#22d3ee"
+}}>Siguiente</button>
           </div>
         </div>
       )}
@@ -3132,8 +3222,28 @@ function GasesCalculator() {
           </div>
 
           <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}>
-            <button onClick={()=>setStep(5)} style={{padding:"10px 12px"}}>Atrás</button>
-            <button onClick={resetAll} style={{padding:"10px 12px"}}>Reiniciar</button>
+            <button onClick={()=>setStep(5)} style={{
+  padding:"10px 12px",
+  borderRadius:8,
+  fontFamily:"inherit",
+  fontSize:12,
+  fontWeight:700,
+  cursor:"pointer",
+  border:"1px solid #1a3060",
+  background:"#060d1f",
+  color:"#4a6a9f"
+}}>Atrás</button>
+            <button onClick={resetAll} style={{
+  padding:"10px 12px",
+  borderRadius:8,
+  fontFamily:"inherit",
+  fontSize:12,
+  fontWeight:700,
+  cursor:"pointer",
+  border:"1px solid #1a3060",
+  background:"#060d1f",
+  color:"#4a6a9f"
+}}>Reiniciar</button>
           </div>
         </div>
       )}
@@ -3490,10 +3600,10 @@ function ArritmiasTab() {
                 </div>
               </div>
 
-              <div style={{background:"#040c1c",borderRadius:10,padding:"12px 14px"}}>
+              <div style={{background:"#040c1c",borderRadius:10,padding:"12px 14px", minWidth:0}}>
                 <div style={label}>FC aproximada</div>
                 <input
-                  style={input}
+                  style={{...input, width:"100%", minWidth:0}}
                   type="number"
                   value={hr}
                   onChange={e=>setHr(e.target.value)}
