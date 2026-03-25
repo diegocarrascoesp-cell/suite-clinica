@@ -3438,9 +3438,9 @@ function ArritmiasTab() {
   const [qrs, setQrs] = useState("angosto");
   const [regularity, setRegularity] = useState("regular");
   const [bradyHr, setBradyHr] = useState("");
- 
+
   // ── Estilos base ──────────────────────────────────────────────────
- 
+
   const card = {
     background: "#0b1730",
     border: "1px solid #1a3060",
@@ -3448,7 +3448,7 @@ function ArritmiasTab() {
     padding: "14px 16px",
     marginBottom: 12,
   };
- 
+
   const inp = {
     background: "#040c1c",
     border: "1px solid #1a3060",
@@ -3461,15 +3461,15 @@ function ArritmiasTab() {
     width: "100%",
     boxSizing: "border-box",
   };
- 
+
   const grid2 = {
     display: "grid",
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: 10,
   };
- 
+
   // ── Helpers de UI ─────────────────────────────────────────────────
- 
+
   function sectionTitle(text) {
     return (
       <div style={{ fontSize: 11, color: "#22d3ee", letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>
@@ -3477,7 +3477,7 @@ function ArritmiasTab() {
       </div>
     );
   }
- 
+
   function segButton(label, active, onClick) {
     return (
       <button
@@ -3499,7 +3499,7 @@ function ArritmiasTab() {
       </button>
     );
   }
- 
+
   function actionCard(title, body, tone = "cyan") {
     const bg =
       tone === "red" ? "#2a0505" :
@@ -3523,7 +3523,7 @@ function ArritmiasTab() {
       </div>
     );
   }
- 
+
   function heroCard(title, summary, titleColor) {
     const bg =
       titleColor === "#ef4444" ? "#2a0505" :
@@ -3540,11 +3540,11 @@ function ArritmiasTab() {
       </div>
     );
   }
- 
+
   // ── Lógica taquiarritmia ──────────────────────────────────────────
- 
+
   let taquiTitle, taquiTitleColor, taquiSummary, taquiActions;
- 
+
   if (stability === "inestable") {
     taquiTitle = "Taquiarritmia inestable";
     taquiTitleColor = "#ef4444";
@@ -3596,7 +3596,21 @@ function ArritmiasTab() {
       actionCard("Si inestabiliza", "Tratamiento eléctrico inmediato.", "yellow"),
     ];
   }
- 
+const faFreqCards = [
+  actionCard("Metoprolol", <>IV: <strong>2,5–5 mg</strong> en 2 min, repetir c/5 min hasta 3 dosis<br/>VO: <strong>25–50 mg</strong> c/6–12 h</>, "cyan"),
+  actionCard("Propranolol", <>IV: <strong>1 mg</strong> en 1 min, repetir c/2 min hasta 5 mg<br/>VO: <strong>10–40 mg</strong> c/6–8 h</>, "cyan"),
+  actionCard("Diltiazem", <>IV: <strong>0,25 mg/kg</strong> en 2 min · repetir 0,35 mg/kg a los 15 min<br/>Infusión: <strong>5–15 mg/h</strong><br/>VO: <strong>30–60 mg</strong> c/6–8 h</>, "cyan"),
+  actionCard("Verapamilo", <>IV: <strong>2,5–5 mg</strong> en 2 min · repetir 5–10 mg c/15–30 min (máx 20 mg)<br/>VO: <strong>40–120 mg</strong> c/8 h</>, "cyan"),
+  actionCard("Sotalol", <>VO: <strong>80–160 mg</strong> c/12 h<br/>Precaución: prolonga QT · contraindicado si QTc largo o insuficiencia renal severa</>, "yellow"),
+  actionCard("Lanatósido C (Cedilanid)", <>IV: <strong>0,4–0,8 mg</strong> dosis de carga lenta<br/>Repetir <strong>0,2 mg</strong> c/2–4 h según respuesta (máx 1,6 mg/24 h)<br/>Inicio lento (30–60 min) · útil en FA con IC o hipotensión relativa</>, "green"),
+];
+
+const faRhythmCards = [
+  actionCard("Procainamida", <>IV: <strong>15–17 mg/kg</strong> en 30–60 min<br/>Infusión: <strong>1–4 mg/min</strong><br/>Vigilar QRS: detener si se ensancha &gt;50%</>, "cyan"),
+  actionCard("Flecainida", <>VO: <strong>200–300 mg</strong> dosis única (pill-in-pocket)<br/>IV: <strong>1,5–2 mg/kg</strong> en 10 min<br/>Solo en FA sin cardiopatía estructural</>, "cyan"),
+  actionCard("Propafenona", <>VO: <strong>450–600 mg</strong> dosis única (pill-in-pocket)<br/>IV: <strong>1,5–2 mg/kg</strong> en 10 min<br/>Solo en FA sin cardiopatía estructural</>, "cyan"),
+  actionCard("Amiodarona", <>IV: <strong>150 mg</strong> en 10 min · luego <strong>1 mg/min × 6 h</strong><br/>Luego <strong>0,5 mg/min</strong> · máx 2,2 g/24 h<br/>Opción en FA con cardiopatía estructural o IC</>, "yellow"),
+];
   const taquiEnergyCards = [
     actionCard(
       "Cardioversión / Desfibrilación",
@@ -3636,15 +3650,15 @@ function ArritmiasTab() {
       "yellow"
     ),
   ];
- 
+
   // ── Lógica bradiarritmia ──────────────────────────────────────────
- 
+
   const bradiTitleColor = stability === "inestable" ? "#ef4444" : "#f59e0b";
   const bradiTitle = stability === "inestable" ? "Bradicardia inestable" : "Bradicardia estable";
   const bradiSummary = stability === "inestable"
     ? "Si la bradicardia explica la clínica, iniciar tratamiento inmediato sin retrasar soporte por espera diagnóstica."
     : "Si está perfundiendo bien, monitoriza, busca causa y decide necesidad de observación, ajuste farmacológico o marcapasos según ECG.";
- 
+
   const bradiActions = stability === "inestable"
     ? [
         actionCard("Primera línea", "Atropina 1 mg IV, repetir cada 3–5 min hasta 3 mg.", "cyan"),
@@ -3658,7 +3672,7 @@ function ArritmiasTab() {
         actionCard("Laboratorio", "Electrolitos, troponina según contexto, gases, TSH si aplica.", "yellow"),
         actionCard("Escalar si cambia", "Si aparece inestabilidad, tratar como bradicardia inestable.", "red"),
       ];
- 
+
   const bradiDrugCards = [
     actionCard(
       "Isoproterenol",
@@ -3681,9 +3695,9 @@ function ArritmiasTab() {
       "cyan"
     ),
   ];
- 
+
   // ── Render ────────────────────────────────────────────────────────
- 
+
   return (
     <div>
       {/* Header */}
@@ -3691,7 +3705,7 @@ function ArritmiasTab() {
         <div style={{ fontSize: 13, fontWeight: 700, color: "#22d3ee", marginBottom: 2 }}>Arritmias</div>
         <div style={{ fontSize: 12, color: "#22d3ee" }}>Taquiarritmia · Bradiarritmia · Fármacos</div>
       </div>
- 
+
       {/* Tipo de arritmia */}
       <div style={card}>
         {sectionTitle("TIPO DE ARRITMIA")}
@@ -3700,7 +3714,7 @@ function ArritmiasTab() {
           {segButton("Bradiarritmia", rhythmType === "bradi", () => setRhythmType("bradi"))}
         </div>
       </div>
- 
+
       {/* Inestabilidad */}
       <div style={card}>
         {sectionTitle("INESTABILIDAD")}
@@ -3721,7 +3735,7 @@ function ArritmiasTab() {
           </div>
         )}
       </div>
- 
+
       {/* ── TAQUIARRITMIA ── */}
       {rhythmType === "taqui" && (
         <>
@@ -3745,19 +3759,32 @@ function ArritmiasTab() {
               </div>
             </div>
           </div>
- 
+
           {/* Orientación clínica */}
           <div style={card}>
             {sectionTitle("ORIENTACIÓN CLÍNICA")}
             {heroCard(taquiTitle, taquiSummary, taquiTitleColor)}
           </div>
- 
+
           {/* Conducta inmediata */}
           <div style={card}>
             {sectionTitle("CONDUCTA INMEDIATA")}
             <div style={grid2}>{taquiActions}</div>
           </div>
- 
+
+          <div style={card}>
+            {sectionTitle("CONTROL DE FRECUENCIA")}
+            <div style={grid2}>{faFreqCards}</div>
+          </div>
+
+          <div style={card}>
+            {sectionTitle("CONTROL DE RITMO")}
+            <div style={{ fontSize: 11, color: "#4a6a9f", marginBottom: 10 }}>
+              Considerar solo si tiempo de evolución &lt;48 h o con anticoagulación adecuada. Confirmar ausencia de cardiopatía estructural antes de usar flecainida o propafenona.
+            </div>
+            <div style={grid2}>{faRhythmCards}</div>
+          </div>
+
           {/* Energía y fármacos */}
           <div style={card}>
             {sectionTitle("ENERGÍA Y FÁRMACOS CLAVE")}
@@ -3765,7 +3792,7 @@ function ArritmiasTab() {
           </div>
         </>
       )}
- 
+
       {/* ── BRADIARRITMIA ── */}
       {rhythmType === "bradi" && (
         <>
@@ -3790,17 +3817,17 @@ function ArritmiasTab() {
               </div>
             </div>
           </div>
- 
+
           <div style={card}>
             {sectionTitle("ORIENTACIÓN CLÍNICA")}
             {heroCard(bradiTitle, bradiSummary, bradiTitleColor)}
           </div>
- 
+
           <div style={card}>
             {sectionTitle("CONDUCTA INMEDIATA")}
             <div style={grid2}>{bradiActions}</div>
           </div>
- 
+
           <div style={card}>
             {sectionTitle("FÁRMACOS EN BRADIARRITMIA")}
             <div style={grid2}>{bradiDrugCards}</div>
