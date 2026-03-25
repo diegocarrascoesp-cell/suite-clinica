@@ -984,7 +984,7 @@ function ScoresTab() {
     );
   }
   
-    function TobinCard() {
+  function TobinCard() {
     const [fr,setFr]=useState('');
     const [vt,setVt]=useState('');
 
@@ -1070,7 +1070,100 @@ function ScoresTab() {
       </div>
     );
   }
+  function ShockIndexCard() {
+  const [hr,setHr]=useState('');
+  const [sbp,setSbp]=useState('');
+  const [hr2,setHr2]=useState('');
+  const [sbp2,setSbp2]=useState('');
 
+  const h=parseFloat(hr), s=parseFloat(sbp);
+  const h2=parseFloat(hr2), s2=parseFloat(sbp2);
+
+  let si=null, si2=null, delta=null;
+
+  if(h>0 && s>0) si = h/s;
+  if(h2>0 && s2>0) si2 = h2/s2;
+  if(si!==null && si2!==null) delta = si2 - si;
+
+  const getColor = (v)=>{
+    if(v===null) return "#4a6a9f";
+    if(v>=1) return "#ef4444";
+    if(v>=0.9) return "#f59e0b";
+    return "#22c55e";
+  };
+
+  const getInterpretation = (v)=>{
+    if(v===null) return "Ingresa valores";
+    if(v>=1.3) return "Shock significativo probable";
+    if(v>=1) return "Alto riesgo de shock";
+    if(v>=0.9) return "Compromiso hemodinámico";
+    return "Bajo riesgo";
+  };
+
+  return (
+    <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px",marginBottom:12}}>
+
+      <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>SHOCK INDEX</div>
+      <div style={{fontSize:11,color:"#4a6a9f",marginBottom:10}}>
+        SI = FC / PAS · Útil para evaluación rápida y seguimiento
+      </div>
+
+      {/* INPUTS */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+        <div>
+          <div style={{fontSize:10,color:"#4a6a9f"}}>FC inicial</div>
+          <input type="number" value={hr} onChange={e=>setHr(e.target.value)} style={{width:"100%",background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",padding:"6px"}}/>
+        </div>
+        <div>
+          <div style={{fontSize:10,color:"#4a6a9f"}}>PAS inicial</div>
+          <input type="number" value={sbp} onChange={e=>setSbp(e.target.value)} style={{width:"100%",background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",padding:"6px"}}/>
+        </div>
+
+        <div>
+          <div style={{fontSize:10,color:"#4a6a9f"}}>FC control</div>
+          <input type="number" value={hr2} onChange={e=>setHr2(e.target.value)} style={{width:"100%",background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",padding:"6px"}}/>
+        </div>
+        <div>
+          <div style={{fontSize:10,color:"#4a6a9f"}}>PAS control</div>
+          <input type="number" value={sbp2} onChange={e=>setSbp2(e.target.value)} style={{width:"100%",background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",padding:"6px"}}/>
+        </div>
+      </div>
+
+      {/* RESULTADO */}
+      {si!==null && (
+        <div style={{background:getColor(si)+"15",border:`1px solid ${getColor(si)}44`,borderRadius:10,padding:"10px",marginBottom:8}}>
+          <div style={{fontSize:22,fontWeight:800,color:getColor(si)}}>{si.toFixed(2)}</div>
+          <div style={{fontSize:11,color:getColor(si)}}>{getInterpretation(si)}</div>
+        </div>
+      )}
+
+      {/* DELTA */}
+      {delta!==null && (
+        <div style={{background:"#040c1c",borderRadius:10,padding:"10px",marginBottom:8}}>
+          <div style={{fontSize:11,color:"#4a6a9f"}}>Δ Shock Index</div>
+          <div style={{fontSize:18,fontWeight:700,color: delta<0?"#22c55e":"#ef4444"}}>
+            {delta.toFixed(2)}
+          </div>
+          <div style={{fontSize:11,color:"#7aa2d4"}}>
+            {delta<0 ? "Mejoría hemodinámica" : "Sin mejoría o deterioro"}
+          </div>
+        </div>
+      )}
+
+      {/* BLOQUE CLÍNICO */}
+      <div style={{background:"#040c1c",borderRadius:10,padding:"10px"}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#22d3ee",marginBottom:4}}>
+          A considerar
+        </div>
+        <div style={{fontSize:11,color:"#7aa2d4",lineHeight:1.6}}>
+          En contexto de hemorragia, un SI elevado sugiere sangrado significativo y mayor probabilidad de requerir reanimación intensiva.<br/>
+          No indica transfusión por sí solo; integrar con Hb, sangrado activo, lactato y respuesta clínica.
+        </div>
+      </div>
+
+    </div>
+  );
+}
   return (
     <div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginBottom:16}}>
@@ -1084,6 +1177,7 @@ function ScoresTab() {
         <ScoreCard title="MEWS" sub="Deterioro clínico en sala. Score ≥5 → considerar UCI." items={["FC <40 o ≥130","PAS <70 mmHg","PAS 71–80 mmHg","FR <9 o ≥30","Temperatura <35°C o ≥38.5°C","AVPU: responde al dolor","AVPU: sin respuesta"]} scores={[2,3,2,2,2,2,3]} levels={[{min:0,label:"Bajo riesgo",rec:"Control habitual",color:"#22c55e"},{min:3,label:"Riesgo intermedio",rec:"Aumentar frecuencia de controles",color:"#f59e0b"},{min:5,label:"Alto riesgo",rec:"Evaluación médica urgente / UCI",color:"#ef4444"}]}/>
         <IROXCard/>
         <TobinCard/>
+        <ShockIndexCard/>
         <SDRACard/>
       </>}
 
@@ -3716,8 +3810,372 @@ function ArritmiasTab() {
     </div>
   );
 }
+function ShockTab() {
+  const [vals, setVals] = useState({
+    map: "",
+    hr: "",
+    lactate: "",
+    dco2: "",
+    scvo2: "",
+    uop: "",
+    crt: "",
+    skin: "",
+    jvp: "",
+    ivc: "",
+    hepatic: "",
+    portal: "",
+    renal: "",
+  });
 
-const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","🧠 Glasgow","🛏️ Sedación UCI","🔧 Procedimientos","📊 Scores","🧂 Electrolitos","❤️ RCP","🫁 VMI","🪸 Vía Aérea", "🧪Gases","💕Arritmias"];
+  const card = { background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"14px 16px", marginBottom:12 };
+  const mini = { background:"#040c1c", borderRadius:10, padding:"12px 14px", minWidth:0 };
+  const input = { width:"100%", background:"#040c1c", border:"1px solid #1a3060", borderRadius:8, color:"#e8edf5", fontSize:14, padding:"8px 10px", outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
+  const select = input;
+  const muted = { color:"#4a6a9f", fontSize:11 };
+  const soft = { color:"#7aa2d4", fontSize:12, lineHeight:1.5 };
+
+  function setField(key, value) {
+    setVals(prev => ({ ...prev, [key]: value }));
+  }
+
+  function num(v) {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function toneColor(tone) {
+    if (tone === "purple") return "#a78bfa";
+    if (tone === "red") return "#ef4444";
+    if (tone === "yellow") return "#f59e0b";
+    if (tone === "green") return "#22c55e";
+    return "#22d3ee";
+  }
+
+  function ResultCard({ title, body, tone="cyan" }) {
+    const bg =
+      tone === "red" ? "#2a0505" :
+      tone === "yellow" ? "#2a1a00" :
+      tone === "green" ? "#052a10" :
+      tone === "purple" ? "#1f1637" :
+      "#062534";
+
+    const border =
+      tone === "red" ? "#ef444444" :
+      tone === "yellow" ? "#f59e0b44" :
+      tone === "green" ? "#22c55e44" :
+      tone === "purple" ? "#a78bfa44" :
+      "#22d3ee44";
+
+    return (
+      <div style={{ background:bg, border:`1px solid ${border}`, borderRadius:10, padding:"12px 14px" }}>
+        <div style={{ fontSize:12, fontWeight:700, color:toneColor(tone), marginBottom:6 }}>{title}</div>
+        <div style={soft}>{body}</div>
+      </div>
+    );
+  }
+
+  function getVexusGrade(ivc, hepatic, portal, renal) {
+    if (ivc !== "large") return { grade:0, label:"VExUS no congestionado o no interpretable", tone:"green" };
+    const severeCount = [hepatic, portal, renal].filter(x => x === "severe").length;
+    const anyAbnormal = [hepatic, portal, renal].some(x => x === "mild" || x === "severe");
+
+    if (severeCount >= 2) return { grade:3, label:"Congestión venosa severa", tone:"purple" };
+    if (severeCount === 1 || (anyAbnormal && severeCount === 0)) return { grade:2, label:"Congestión venosa significativa", tone:"yellow" };
+    return { grade:1, label:"VCI dilatada sin Doppler grave", tone:"yellow" };
+  }
+
+  const MAP = num(vals.map);
+  const HR = num(vals.hr);
+  const lact = num(vals.lactate);
+  const dco2 = num(vals.dco2);
+  const scv = num(vals.scvo2);
+  const uop = num(vals.uop);
+  const crt = num(vals.crt);
+  const skin = vals.skin;
+  const jvp = vals.jvp;
+  const ivc = vals.ivc;
+  const hepatic = vals.hepatic;
+  const portal = vals.portal;
+  const renal = vals.renal;
+
+  const dsi = MAP && HR ? HR / MAP : null;
+  const vex = getVexusGrade(ivc, hepatic, portal, renal);
+
+  let lowFlow = 0;
+  if (lact !== null && lact >= 2) lowFlow++;
+  if (dco2 !== null && dco2 > 6) lowFlow++;
+  if (scv !== null && scv < 70) lowFlow++;
+  if (uop !== null && uop < 0.5) lowFlow++;
+  if (crt !== null && crt > 3) lowFlow++;
+  if (skin === "cold") lowFlow++;
+
+  let vasoplegia = 0;
+  if (skin === "warm") vasoplegia++;
+  if (dsi !== null && dsi >= 1.5) vasoplegia++;
+  if (MAP !== null && MAP < 65) vasoplegia++;
+  if (scv !== null && scv >= 70 && dco2 !== null && dco2 <= 6) vasoplegia++;
+
+  let congestion = 0;
+  if (jvp === "high") congestion++;
+  if (vex.grade >= 2) congestion += 2;
+  else if (vex.grade === 1) congestion++;
+
+  let hypovolemia = 0;
+  if (jvp === "low") hypovolemia++;
+  if (ivc === "small") hypovolemia++;
+  if (skin === "cold" && congestion === 0) hypovolemia++;
+  if (uop !== null && uop < 0.5) hypovolemia++;
+
+  let mainTone = "cyan";
+  let mainTitle = "Fenotipo no definido";
+  let mainText = "Integra ecografía, respuesta a fluidos, signos clínicos y evolución seriada.";
+
+  const tags = [];
+  if (congestion >= 2) tags.push("Congestión venosa");
+  if (lowFlow >= 3) tags.push("Bajo flujo");
+  if (vasoplegia >= 2) tags.push("Vasoplejia / distributivo");
+  if (hypovolemia >= 2 && congestion === 0) tags.push("Hipovolemia probable");
+
+  if (congestion >= 2 && lowFlow >= 3) {
+    mainTone = "purple";
+    mainTitle = "Shock congestivo con bajo flujo";
+    mainText = "Piensa en componente cardiogénico, sobrecarga venosa o fracaso del VD. Evita fluidos ciegos y reevalúa necesidad de diuresis, vasopresor o inotrópico según contexto.";
+  } else if (vasoplegia >= 2 && lowFlow <= 2 && congestion === 0) {
+    mainTone = "yellow";
+    mainTitle = "Fenotipo distributivo / vasopléjico";
+    mainText = "PAM baja con perfil relativamente cálido. Prioriza vasopresor y control de la causa; fluidos solo si hay evidencia de respuesta.";
+  } else if (hypovolemia >= 2 && congestion === 0) {
+    mainTone = "red";
+    mainTitle = "Hipovolemia / precarga baja probable";
+    mainText = "Perfil compatible con déficit de precarga. Considera expansión guiada por respuesta y reevaluación ecográfica seriada.";
+  } else if (lowFlow >= 3 && congestion === 0) {
+    mainTone = "red";
+    mainTitle = "Bajo flujo / shock frío probable";
+    mainText = "La perfusión está comprometida. Busca disfunción de bomba u obstrucción antes de seguir dando volumen.";
+  } else if (congestion >= 2 && lowFlow <= 2) {
+    mainTone = "purple";
+    mainTitle = "Congestión predominante";
+    mainText = "La carga venosa parece relevante. El problema puede ser más de congestión que de hipovolemia; evita fluidos sin objetivo claro.";
+  }
+
+  let second = "Si dudas entre hipovolemia y cardiogénico, usa eco focal y reevalúa respuesta a pequeños cambios terapéuticos.";
+  if (mainTitle.includes("Hipovolemia")) {
+    second = "Considera fluidos guiados por respuesta, con reevaluación de PAM, TRC, diuresis y congestión. Si aparece VExUS alto, frena volumen.";
+  } else if (mainTitle.includes("distributivo")) {
+    second = "Prioriza noradrenalina y control etiológico. Fluidos solo si hay datos de respondedor y sin congestión relevante.";
+  } else if (mainTitle.includes("congestivo") || mainTitle.includes("Congestión")) {
+    second = "Evita bolos ciegos. Piensa en diuresis/descongestión, soporte de VD/VI y corrección de presiones de llenado según contexto.";
+  } else if (mainTitle.includes("Bajo flujo")) {
+    second = "Busca causa de bomba u obstrucción. Considera inotrópico / vasopresor según presión y ecografía clínica.";
+  }
+
+  return (
+    <div>
+      <div style={card}>
+        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>SHOCK / PERFUSIÓN + VEXUS</div>
+        <div style={soft}>
+          Módulo de orientación integrando perfusión global, marcadores de bajo flujo y congestión venosa.
+          VExUS se usa solo con las variables medidas, para orientar el fenotipo de shock y la conducta inicial.
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>HEMODINAMIA Y PERFUSIÓN</div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+          <div style={mini}>
+            <div style={{...muted, marginBottom:4}}>PAM (mmHg)</div>
+            <input style={input} type="number" placeholder="Ej: 58" value={vals.map} onChange={e=>setField("map", e.target.value)} />
+          </div>
+          <div style={mini}>
+            <div style={{...muted, marginBottom:4}}>FC (lpm)</div>
+            <input style={input} type="number" placeholder="Ej: 122" value={vals.hr} onChange={e=>setField("hr", e.target.value)} />
+          </div>
+          <div style={mini}>
+            <div style={{...muted, marginBottom:4}}>Lactato (mmol/L)</div>
+            <input style={input} type="number" step="0.1" placeholder="Ej: 4.2" value={vals.lactate} onChange={e=>setField("lactate", e.target.value)} />
+          </div>
+          <div style={mini}>
+            <div style={{...muted, marginBottom:4}}>ΔPCO₂ (mmHg)</div>
+            <input style={input} type="number" step="0.1" placeholder="Ej: 8" value={vals.dco2} onChange={e=>setField("dco2", e.target.value)} />
+          </div>
+          <div style={mini}>
+            <div style={{...muted, marginBottom:4}}>ScvO₂ (%)</div>
+            <input style={input} type="number" step="0.1" placeholder="Ej: 62" value={vals.scvo2} onChange={e=>setField("scvo2", e.target.value)} />
+          </div>
+          <div style={mini}>
+            <div style={{...muted, marginBottom:4}}>Diuresis (mL/kg/h)</div>
+            <input style={input} type="number" step="0.1" placeholder="Ej: 0.3" value={vals.uop} onChange={e=>setField("uop", e.target.value)} />
+          </div>
+          <div style={mini}>
+            <div style={{...muted, marginBottom:4}}>TRC (seg)</div>
+            <input style={input} type="number" step="0.1" placeholder="Ej: 4" value={vals.crt} onChange={e=>setField("crt", e.target.value)} />
+          </div>
+          <div style={mini}>
+            <div style={{...muted, marginBottom:4}}>Piel</div>
+            <select style={select} value={vals.skin} onChange={e=>setField("skin", e.target.value)}>
+              <option value="">Seleccionar</option>
+              <option value="warm">Caliente / vasodilatada</option>
+              <option value="cold">Fría / moteada</option>
+              <option value="normal">Sin hallazgos evidentes</option>
+            </select>
+          </div>
+          <div style={mini}>
+            <div style={{...muted, marginBottom:4}}>PVC / VCS yugular</div>
+            <select style={select} value={vals.jvp} onChange={e=>setField("jvp", e.target.value)}>
+              <option value="">Seleccionar</option>
+              <option value="low">Baja / colapsada</option>
+              <option value="normal">No concluyente</option>
+              <option value="high">Alta / ingurgitada</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>VEXUS — SOLO VARIABLES MEDIDAS</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+          <div style={mini}>
+            <div style={{...muted, marginBottom:4}}>VCI</div>
+            <select style={select} value={vals.ivc} onChange={e=>setField("ivc", e.target.value)}>
+              <option value="">Seleccionar</option>
+              <option value="small">Pequeña / colapsable</option>
+              <option value="mid">Intermedia / no concluyente</option>
+              <option value="large">Dilata ≥ 2 cm o poco colapsable</option>
+            </select>
+          </div>
+          <div style={mini}>
+            <div style={{...muted, marginBottom:4}}>Vena hepática Doppler</div>
+            <select style={select} value={vals.hepatic} onChange={e=>setField("hepatic", e.target.value)}>
+              <option value="">Seleccionar</option>
+              <option value="normal">Normal (onda S dominante)</option>
+              <option value="mild">Anormal leve (S &lt; D)</option>
+              <option value="severe">Anormal grave (reversión S)</option>
+            </select>
+          </div>
+          <div style={mini}>
+            <div style={{...muted, marginBottom:4}}>Vena porta</div>
+            <select style={select} value={vals.portal} onChange={e=>setField("portal", e.target.value)}>
+              <option value="">Seleccionar</option>
+              <option value="normal">Pulsatilidad &lt; 30%</option>
+              <option value="mild">Pulsatilidad 30–49%</option>
+              <option value="severe">Pulsatilidad ≥ 50%</option>
+            </select>
+          </div>
+          <div style={mini}>
+            <div style={{...muted, marginBottom:4}}>Vena intrarrenal</div>
+            <select style={select} value={vals.renal} onChange={e=>setField("renal", e.target.value)}>
+              <option value="">Seleccionar</option>
+              <option value="normal">Continuo normal</option>
+              <option value="mild">Discontinuo bifásico</option>
+              <option value="severe">Monofásico severo</option>
+            </select>
+          </div>
+        </div>
+        <div style={{...soft, marginTop:10}}>
+          VExUS orienta congestión venosa sistémica. No usar en aislamiento: integrar con perfusión, clínica y contexto ecográfico.
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>SALIDA INTEGRADA</div>
+        <div style={{
+          background:
+            mainTone === "red" ? "#2a0505" :
+            mainTone === "yellow" ? "#2a1a00" :
+            mainTone === "green" ? "#052a10" :
+            mainTone === "purple" ? "#1f1637" :
+            "#062534",
+          border:`1px solid ${
+            mainTone === "red" ? "#ef444444" :
+            mainTone === "yellow" ? "#f59e0b44" :
+            mainTone === "green" ? "#22c55e44" :
+            mainTone === "purple" ? "#a78bfa44" :
+            "#22d3ee44"
+          }`,
+          borderRadius:10,
+          padding:"12px 14px"
+        }}>
+          <div style={{ fontSize:24, fontWeight:800, color:toneColor(mainTone), marginBottom:4 }}>{mainTitle}</div>
+          <div style={soft}>{mainText}</div>
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>INTERPRETACIÓN POR EJES</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+          <ResultCard
+            title="Perfusión global"
+            tone={lowFlow >= 3 ? "red" : "green"}
+            body={
+              <>
+                Lactato: <strong>{lact ?? "—"}</strong> · ΔPCO₂: <strong>{dco2 ?? "—"}</strong> · ScvO₂: <strong>{scv ?? "—"}</strong><br/>
+                {lowFlow >= 3 ? "Múltiples marcadores sugieren hipoperfusión / bajo flujo." : "Sin señal fuerte de bajo flujo o datos insuficientes."}
+              </>
+            }
+          />
+          <ResultCard
+            title="Presión / vasoplejia"
+            tone={vasoplegia >= 2 ? "yellow" : "cyan"}
+            body={
+              <>
+                PAM: <strong>{MAP ?? "—"}</strong> · FC: <strong>{HR ?? "—"}</strong> · DSI: <strong>{dsi !== null ? dsi.toFixed(2) : "—"}</strong><br/>
+                {vasoplegia >= 2 ? "Perfil compatible con vasodilatación / distributivo." : "Sin patrón vasoplégico dominante."}
+              </>
+            }
+          />
+          <ResultCard
+            title="Congestión venosa"
+            tone={congestion >= 2 ? "purple" : "green"}
+            body={
+              <>
+                PVC/Jugular: <strong>{jvp || "—"}</strong> · VExUS: <strong>{vex.label}</strong><br/>
+                {congestion >= 2 ? "La congestión venosa sistémica probablemente es clínicamente relevante." : "Sin evidencia fuerte de congestión dominante."}
+              </>
+            }
+          />
+          <ResultCard
+            title="Riñón / microperfusión"
+            tone={((uop !== null && uop < 0.5) || (crt !== null && crt > 3)) ? "red" : "green"}
+            body={
+              <>
+                Diuresis: <strong>{uop ?? "—"}</strong> mL/kg/h · TRC: <strong>{crt ?? "—"}</strong> s<br/>
+                {((uop !== null && uop < 0.5) || (crt !== null && crt > 3))
+                  ? "Compromiso de perfusión periférica/renal."
+                  : "Sin señal fuerte de hipoperfusión periférica/renal."}
+              </>
+            }
+          />
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>CONDUCTA INICIAL ORIENTATIVA</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+          <ResultCard title="1) Define el eje predominante" tone="cyan" body={<>Bajo flujo, vasoplejia o congestión. El módulo orienta la prioridad: <strong>{mainTitle}</strong>.</>} />
+          <ResultCard title="2) Ajusta la terapia" tone={mainTone} body={second} />
+          <ResultCard title="3) Reevaluación seriada" tone="green" body="Repite lactato, ΔPCO₂, ScvO₂, diuresis, TRC y VExUS según evolución. La tendencia suele ser más útil que una medición aislada." />
+          <ResultCard title="4) A considerar" tone="yellow" body="VExUS alto no significa siempre “no dar nada”; significa que la congestión debe entrar explícitamente en la decisión. La perfusión y la congestión pueden coexistir." />
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>FENOTIPOS SUGERIDOS</div>
+        <div>
+          {tags.length ? tags.map((t, i) => (
+            <span key={i} style={{ display:"inline-block", padding:"3px 10px", borderRadius:999, border:"1px solid #1a3060", color:"#7aa2d4", fontSize:11, marginRight:6, marginTop:6, background:"#040c1c" }}>
+              {t}
+            </span>
+          )) : (
+            <span style={{ display:"inline-block", padding:"3px 10px", borderRadius:999, border:"1px solid #1a3060", color:"#7aa2d4", fontSize:11, background:"#040c1c" }}>
+              Sin fenotipo dominante todavía
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","🧠 Glasgow","🛏️ Sedación UCI","🔧 Procedimientos","📊 Scores","🧂 Electrolitos","❤️ RCP","🫁 VMI","👃 Vía Aérea", "🧪Gases","💕Arritmias","💀Shock"];
 
 export default function App() {
   const [weight, setWeight] = useState("");
@@ -3762,7 +4220,8 @@ export default function App() {
         {tab===9&&<VMITab/>}
         {tab===10&&<AirwayTab/>}
         {tab===11&&<GasesCalculator/>}
-        {tab===12&&<ArritmiasTab/>} 
+        {tab===12&&<ArritmiasTab/>}
+        {tab===13&&<ShockTab/>} 
         <div style={{marginTop:24,padding:"12px 16px",background:"#08111f",border:"1px solid #1a2a4f",borderRadius:10,fontSize:11,color:"#2a4a7f",lineHeight:1.7}}>
           ⚠️ Herramienta de apoyo clínico. Verificar siempre con protocolos institucionales y criterio médico.
         </div>
