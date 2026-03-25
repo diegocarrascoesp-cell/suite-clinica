@@ -983,6 +983,53 @@ function ScoresTab() {
       </div>
     );
   }
+  
+  function TobinCard() {
+  const [fr,setFr]=useState('');
+  const [vt,setVt]=useState('');
+
+  const f=parseFloat(fr), v=parseFloat(vt);
+  let rsbi=null, color="#4a6a9f", interp="Ingresa valores", rec="";
+
+  if(f>0 && v>0){
+    rsbi = f / (v/1000);
+    color = rsbi < 105 ? "#22c55e" : "#ef4444";
+    interp = rsbi < 105 ? "Favorable para destete" : "Alto riesgo de fracaso";
+    rec = rsbi < 105 
+      ? "Considerar prueba de ventilación espontánea"
+      : "Optimizar antes de intentar destete";
+  }
+
+  return (
+    <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"16px",marginBottom:12}}>
+      <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>TOBIN / RSBI</div>
+      <div style={{fontSize:12,color:"#4a6a9f",marginBottom:12}}>
+        Índice de respiración rápida superficial. RSBI = FR / Vt (L). Corte: 105.
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+        <div>
+          <div style={{fontSize:11,color:"#4a6a9f",marginBottom:4}}>FR (rpm)</div>
+          <input type="number" value={fr} onChange={e=>setFr(e.target.value)} placeholder="22"
+            style={{width:"100%",background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",padding:"8px"}}/>
+        </div>
+        <div>
+          <div style={{fontSize:11,color:"#4a6a9f",marginBottom:4}}>Vt (mL)</div>
+          <input type="number" value={vt} onChange={e=>setVt(e.target.value)} placeholder="450"
+            style={{width:"100%",background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",padding:"8px"}}/>
+        </div>
+      </div>
+
+      {rsbi!==null&&(
+        <div style={{background:color+"15",border:`1px solid ${color}44`,borderRadius:10,padding:"12px 14px"}}>
+          <div style={{fontSize:36,fontWeight:800,color}}>{rsbi.toFixed(1)}</div>
+          <div style={{fontSize:13,fontWeight:700,color}}>{interp}</div>
+          <div style={{fontSize:12,color,marginTop:2}}>{rec}</div>
+        </div>
+      )}
+    </div>
+  );
+}
 
   return (
     <div>
@@ -996,6 +1043,7 @@ function ScoresTab() {
         <NewsCard/>
         <ScoreCard title="MEWS" sub="Deterioro clínico en sala. Score ≥5 → considerar UCI." items={["FC <40 o ≥130","PAS <70 mmHg","PAS 71–80 mmHg","FR <9 o ≥30","Temperatura <35°C o ≥38.5°C","AVPU: responde al dolor","AVPU: sin respuesta"]} scores={[2,3,2,2,2,2,3]} levels={[{min:0,label:"Bajo riesgo",rec:"Control habitual",color:"#22c55e"},{min:3,label:"Riesgo intermedio",rec:"Aumentar frecuencia de controles",color:"#f59e0b"},{min:5,label:"Alto riesgo",rec:"Evaluación médica urgente / UCI",color:"#ef4444"}]}/>
         <IROXCard/>
+        <TobinCard/>
         <SDRACard/>
       </>}
 
