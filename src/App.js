@@ -984,52 +984,92 @@ function ScoresTab() {
     );
   }
   
-  function TobinCard() {
-  const [fr,setFr]=useState('');
-  const [vt,setVt]=useState('');
+    function TobinCard() {
+    const [fr,setFr]=useState('');
+    const [vt,setVt]=useState('');
 
-  const f=parseFloat(fr), v=parseFloat(vt);
-  let rsbi=null, color="#4a6a9f", interp="Ingresa valores", rec="";
+    const f=parseFloat(fr), v=parseFloat(vt);
+    let rsbi=null, color="#4a6a9f", interp="Ingresa valores", rec="";
 
-  if(f>0 && v>0){
-    rsbi = f / (v/1000);
-    color = rsbi < 105 ? "#22c55e" : "#ef4444";
-    interp = rsbi < 105 ? "Favorable para destete" : "Alto riesgo de fracaso";
-    rec = rsbi < 105 
-      ? "Considerar prueba de ventilación espontánea"
-      : "Optimizar antes de intentar destete";
+    if(f>0 && v>0){
+      rsbi = f / (v/1000);
+      color = rsbi < 105 ? "#22c55e" : "#ef4444";
+      interp = rsbi < 105 ? "Favorable para destete" : "Alto riesgo de fracaso";
+      rec = rsbi < 105 
+        ? "Considerar prueba de ventilación espontánea"
+        : "Optimizar antes de intentar destete";
+    }
+
+    const inputStyle = {
+      width:"100%",
+      background:"#040c1c",
+      border:"1px solid #1a3060",
+      borderRadius:8,
+      color:"#e8edf5",
+      fontSize:13,
+      padding:"7px 8px",
+      outline:"none",
+      fontFamily:"inherit",
+      boxSizing:"border-box"
+    };
+
+    return (
+      <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"14px 14px",marginBottom:12}}>
+        
+        <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>TOBIN / RSBI</div>
+        <div style={{fontSize:11,color:"#4a6a9f",marginBottom:10}}>
+          RSBI = FR / Vt (L) · Punto de corte: 105
+        </div>
+
+        {/* 🔽 Inputs más compactos */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:10,color:"#4a6a9f",marginBottom:3}}>FR (rpm)</div>
+            <input
+              type="number"
+              value={fr}
+              onChange={e=>setFr(e.target.value)}
+              placeholder="22"
+              style={inputStyle}
+            />
+          </div>
+
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:10,color:"#4a6a9f",marginBottom:3}}>Vt (mL)</div>
+            <input
+              type="number"
+              value={vt}
+              onChange={e=>setVt(e.target.value)}
+              placeholder="450"
+              style={inputStyle}
+            />
+          </div>
+        </div>
+
+        {/* 🔽 Resultado */}
+        {rsbi!==null&&(
+          <div style={{background:color+"15",border:`1px solid ${color}44`,borderRadius:10,padding:"10px 12px",marginBottom:8}}>
+            <div style={{fontSize:26,fontWeight:800,color}}>{rsbi.toFixed(1)}</div>
+            <div style={{fontSize:12,fontWeight:700,color}}>{interp}</div>
+            <div style={{fontSize:11,color,marginTop:2}}>{rec}</div>
+          </div>
+        )}
+
+        {/* 🔽 BLOQUE CLÍNICO (lo que querías) */}
+        <div style={{background:"#040c1c",borderRadius:10,padding:"10px 12px"}}>
+          <div style={{fontSize:11,fontWeight:700,color:"#22d3ee",marginBottom:4}}>
+            A considerar
+          </div>
+          <div style={{fontSize:11,color:"#7aa2d4",lineHeight:1.6}}>
+            No usar de forma aislada.<br/>
+            Integrar con estado neurológico, estabilidad hemodinámica,
+            oxigenación, fuerza respiratoria y manejo de secreciones.
+          </div>
+        </div>
+
+      </div>
+    );
   }
-
-  return (
-    <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"16px",marginBottom:12}}>
-      <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>TOBIN / RSBI</div>
-      <div style={{fontSize:12,color:"#4a6a9f",marginBottom:12}}>
-        Índice de respiración rápida superficial. RSBI = FR / Vt (L). Corte: 105.
-      </div>
-
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
-        <div>
-          <div style={{fontSize:11,color:"#4a6a9f",marginBottom:4}}>FR (rpm)</div>
-          <input type="number" value={fr} onChange={e=>setFr(e.target.value)} placeholder="22"
-            style={{width:"100%",background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",padding:"8px"}}/>
-        </div>
-        <div>
-          <div style={{fontSize:11,color:"#4a6a9f",marginBottom:4}}>Vt (mL)</div>
-          <input type="number" value={vt} onChange={e=>setVt(e.target.value)} placeholder="450"
-            style={{width:"100%",background:"#040c1c",border:"1px solid #1a3060",borderRadius:8,color:"#e8edf5",padding:"8px"}}/>
-        </div>
-      </div>
-
-      {rsbi!==null&&(
-        <div style={{background:color+"15",border:`1px solid ${color}44`,borderRadius:10,padding:"12px 14px"}}>
-          <div style={{fontSize:36,fontWeight:800,color}}>{rsbi.toFixed(1)}</div>
-          <div style={{fontSize:13,fontWeight:700,color}}>{interp}</div>
-          <div style={{fontSize:12,color,marginTop:2}}>{rec}</div>
-        </div>
-      )}
-    </div>
-  );
-}
 
   return (
     <div>
@@ -3306,69 +3346,105 @@ function ArritmiasTab() {
   const [hr, setHr] = useState("");
   const [bradyHr, setBradyHr] = useState("");
 
+  // ── Estilos base ──────────────────────────────────────────────────
+
   const card = {
-    background:"#0b1730",
-    border:"1px solid #1a3060",
-    borderRadius:14,
-    padding:"14px 16px",
-    marginBottom:12
+    background: "#0b1730",
+    border: "1px solid #1a3060",
+    borderRadius: 14,
+    padding: "14px 16px",
+    marginBottom: 12,
   };
 
-  const input = {
-    width:"100%",
-    background:"#040c1c",
-    border:"1px solid #1a3060",
-    borderRadius:8,
-    color:"#e8edf5",
-    fontSize:15,
-    padding:"8px 12px",
-    outline:"none",
-    fontFamily:"inherit",
-    boxSizing:"border-box"
+  const inp = {
+    background: "#040c1c",
+    border: "1px solid #1a3060",
+    borderRadius: 8,
+    color: "#e8edf5",
+    fontSize: 14,
+    padding: "8px 12px",
+    outline: "none",
+    fontFamily: "inherit",
+    width: "100%",
+    boxSizing: "border-box",
   };
 
-  const label = { fontSize:11, color:"#4a6a9f", marginBottom:4 };
-  const small = { fontSize:12, color:"#7aa2d4", lineHeight:1.7 };
+  // ── Helpers de UI ─────────────────────────────────────────────────
 
-  function actionCard(title, body, tone="cyan") {
-    const bg =
-      tone === "red" ? "#2a0505" :
-      tone === "yellow" ? "#2a1a00" :
-      tone === "green" ? "#052a10" :
-      "#062534";
-
-    const border =
-      tone === "red" ? "#ef444444" :
-      tone === "yellow" ? "#f59e0b44" :
-      tone === "green" ? "#22c55e44" :
-      "#22d3ee44";
-
-    const color =
-      tone === "red" ? "#ef4444" :
-      tone === "yellow" ? "#f59e0b" :
-      tone === "green" ? "#22c55e" :
-      "#22d3ee";
-
+  function sectionTitle(text) {
     return (
-      <div style={{background:bg,border:`1px solid ${border}`,borderRadius:10,padding:"12px 14px"}}>
-        <div style={{fontSize:12,fontWeight:700,color,marginBottom:6}}>{title}</div>
-        <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.7}}>{body}</div>
-      </div>
-    );
-  }
-
-  function sectionTitle(text, color="#22d3ee") {
-    return (
-      <div style={{fontSize:10,color,letterSpacing:2,marginBottom:10,fontWeight:700}}>
+      <div style={{ fontSize: 11, color: "#22d3ee", letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>
         {text}
       </div>
     );
   }
 
-  let taquiTitle = "TSV probable";
-  let taquiTitleColor = "#22d3ee";
-  let taquiSummary = "Taquicardia regular de QRS angosto en paciente estable: considerar maniobras vagales y adenosina si no hay contraindicación.";
-  let taquiActions = [];
+  function segButton(label, active, onClick) {
+    return (
+      <button
+        onClick={onClick}
+        style={{
+          flex: 1,
+          padding: "9px 10px",
+          borderRadius: 8,
+          fontFamily: "inherit",
+          fontSize: 12,
+          fontWeight: 700,
+          cursor: "pointer",
+          border: active ? "1px solid #22d3ee" : "1px solid #1a3060",
+          background: active ? "#0d2a4e" : "#060d1f",
+          color: active ? "#22d3ee" : "#4a6a9f",
+        }}
+      >
+        {label}
+      </button>
+    );
+  }
+
+  function actionCard(title, body, tone = "cyan") {
+    const bg =
+      tone === "red" ? "#2a0505" :
+      tone === "yellow" ? "#2a1a00" :
+      tone === "green" ? "#052a10" :
+      "#062534";
+    const border =
+      tone === "red" ? "#ef444444" :
+      tone === "yellow" ? "#f59e0b44" :
+      tone === "green" ? "#22c55e44" :
+      "#22d3ee44";
+    const color =
+      tone === "red" ? "#ef4444" :
+      tone === "yellow" ? "#f59e0b" :
+      tone === "green" ? "#22c55e" :
+      "#22d3ee";
+    return (
+      <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: "12px 14px" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color, marginBottom: 6 }}>{title}</div>
+        <div style={{ fontSize: 12, color: "#7aa2d4", lineHeight: 1.7 }}>{body}</div>
+      </div>
+    );
+  }
+
+  function heroCard(title, summary, titleColor) {
+    const bg =
+      titleColor === "#ef4444" ? "#2a0505" :
+      titleColor === "#f59e0b" ? "#2a1a00" :
+      "#062534";
+    const border =
+      titleColor === "#ef4444" ? "#ef444444" :
+      titleColor === "#f59e0b" ? "#f59e0b44" :
+      "#22d3ee44";
+    return (
+      <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: "12px 14px" }}>
+        <div style={{ fontSize: 17, fontWeight: 800, color: titleColor, marginBottom: 6 }}>{title}</div>
+        <div style={{ fontSize: 12, color: "#7aa2d4", lineHeight: 1.7 }}>{summary}</div>
+      </div>
+    );
+  }
+
+  // ── Lógica taquiarritmia ──────────────────────────────────────────
+
+  let taquiTitle, taquiTitleColor, taquiSummary, taquiActions;
 
   if (stability === "inestable") {
     taquiTitle = "Taquiarritmia inestable";
@@ -3395,7 +3471,7 @@ function ArritmiasTab() {
     taquiTitleColor = "#f59e0b";
     taquiSummary = "Taquicardia irregular de QRS angosto en paciente estable: pensar primero en FA o flutter con conducción variable.";
     taquiActions = [
-      actionCard("Control de frecuencia", "Según contexto: beta bloqueador o diltiazem si no hay contraindicación ni inestabilidad.", "cyan"),
+      actionCard("Control de frecuencia", "Betabloqueador o diltiazem según contexto si no hay contraindicación ni inestabilidad.", "cyan"),
       actionCard("Cardioversión", "Considerarla según tiempo de evolución, síntomas, riesgo tromboembólico y estrategia global.", "yellow"),
       actionCard("Buscar gatillantes", "Sepsis, hipovolemia, hipoxia, dolor, tirotoxicosis, alcohol, postoperatorio.", "green"),
       actionCard("No adenosina como tratamiento de FA", "Puede ayudar a desenmascarar flutter, pero no trata la FA.", "red"),
@@ -3416,7 +3492,7 @@ function ArritmiasTab() {
     taquiSummary = "Escenario de alto riesgo: pensar en FA preexcitada, TV polimorfa u otras arritmias complejas.";
     taquiActions = [
       actionCard("Prioridad", "Monitor estricto y preparación para cardioversión / desfibrilación según evolución.", "red"),
-      actionCard("Evitar", "No bloqueadores del nodo AV si sospechas FA preexcitada: evitar adenosina, verapamilo, diltiazem, digoxina.", "red"),
+      actionCard("Evitar", "No bloqueadores del nodo AV si sospechas FA preexcitada: adenosina, verapamilo, diltiazem, digoxina.", "red"),
       actionCard("Si torsades", "Magnesio 2 g IV y corregir QT largo, hipokalemia e hipomagnesemia.", "cyan"),
       actionCard("Si inestabiliza", "Tratamiento eléctrico inmediato.", "yellow"),
     ];
@@ -3424,325 +3500,231 @@ function ArritmiasTab() {
 
   const taquiEnergyCards = [
     actionCard(
-      "⚡ Cardioversión / Desfibrilación",
+      "Cardioversión / Desfibrilación",
       <>
         TSV regular angosto: <strong>50–100 J sincronizado</strong><br/>
         FA / Flutter: <strong>120–200 J bifásico</strong><br/>
-        TV monomorfa con pulso: <strong>100 J sincronizado</strong> → escalar<br/><br/>
+        TV monomorfa con pulso: <strong>100 J sincronizado</strong> → escalar<br/>
         FV / TV sin pulso: <strong>200 J bifásico</strong>
       </>,
       "red"
     ),
     actionCard(
-      "🧪 Magnesio",
+      "Magnesio",
       <>
         Torsades / QT largo: <strong>2 g IV</strong> en <strong>5–15 min</strong><br/>
-        Puede repetirse si persiste<br/>
-        Infusión posterior: <strong>1–2 g/h</strong><br/><br/>
-        Preparación práctica:<br/>
-        <strong>2 g = 4 mL</strong> de sulfato de magnesio al 50%<br/>
-        Diluir en <strong>10–20 mL</strong> si bolo lento<br/>
-        O en <strong>50–100 mL</strong> para infusión corta
+        Puede repetirse si persiste · Infusión posterior: <strong>1–2 g/h</strong><br/>
+        Preparación: <strong>2 g = 4 mL</strong> sulfato de magnesio al 50%<br/>
+        Diluir en <strong>10–20 mL</strong> para bolo lento
       </>,
       "cyan"
     ),
     actionCard(
-      "💊 Amiodarona",
+      "Amiodarona",
       <>
-        Carga: <strong>150 mg IV en 10 min</strong><br/><br/>
-        Infusión:<br/>
-        <strong>1 mg/min por 6 h</strong><br/>
-        luego <strong>0.5 mg/min</strong><br/><br/>
-        Dosis máxima 24 h: <strong>2.2 g</strong>
+        Carga: <strong>150 mg IV en 10 min</strong><br/>
+        Infusión: <strong>1 mg/min × 6 h</strong>, luego <strong>0,5 mg/min</strong><br/>
+        Dosis máxima 24 h: <strong>2,2 g</strong>
       </>,
       "cyan"
     ),
     actionCard(
-      "🧰 Perlas rápidas",
+      "Perlas rápidas",
       <>
         En inestabilidad no retrasar el tratamiento eléctrico por definir el ritmo fino.<br/>
         Si es irregular y ancho: evita bloqueadores del nodo AV si sospechas preexcitación.
       </>,
       "yellow"
-    )
+    ),
   ];
 
-  const bradiActions =
-    stability === "inestable"
-      ? [
-          actionCard("Primera línea", "Atropina 1 mg IV, repetir cada 3–5 min hasta 3 mg.", "cyan"),
-          actionCard("Si falla o alto grado", "Marcapasos transcutáneo mientras preparas vía definitiva.", "red"),
-          actionCard("Puente vasoactivo", "Epinefrina o dopamina mientras resuelves la causa o consigues pacing.", "yellow"),
-          actionCard("Buscar causa reversible", "Hipoxia, IAM, hiperkalemia, beta bloqueador, calcioantagonista, digoxina, hipotermia.", "green"),
-        ]
-      : [
-          actionCard("Observación y ECG", "Confirmar ritmo, QRS, PR y presencia de BAV o pausas.", "cyan"),
-          actionCard("Revisar fármacos", "Beta bloqueadores, calcioantagonistas, amiodarona, digoxina, sedantes.", "green"),
-          actionCard("Laboratorio", "Electrolitos, troponina según contexto, gases, TSH si aplica.", "yellow"),
-          actionCard("Escalar si cambia", "Si aparece inestabilidad, tratar como bradicardia inestable.", "red"),
-        ];
+  // ── Lógica bradiarritmia ──────────────────────────────────────────
+
+  const bradiTitleColor = stability === "inestable" ? "#ef4444" : "#f59e0b";
+  const bradiTitle = stability === "inestable" ? "Bradicardia inestable" : "Bradicardia estable";
+  const bradiSummary = stability === "inestable"
+    ? "Si la bradicardia explica la clínica, iniciar tratamiento inmediato sin retrasar soporte por espera diagnóstica."
+    : "Si está perfundiendo bien, monitoriza, busca causa y decide necesidad de observación, ajuste farmacológico o marcapasos según ECG.";
+
+  const bradiActions = stability === "inestable"
+    ? [
+        actionCard("Primera línea", "Atropina 1 mg IV, repetir cada 3–5 min hasta 3 mg.", "cyan"),
+        actionCard("Si falla o alto grado", "Marcapasos transcutáneo mientras preparas vía definitiva.", "red"),
+        actionCard("Puente vasoactivo", "Epinefrina o dopamina mientras resuelves la causa o consigues pacing.", "yellow"),
+        actionCard("Buscar causa reversible", "Hipoxia, IAM, hiperkalemia, betabloqueador, calcioantagonista, digoxina, hipotermia.", "green"),
+      ]
+    : [
+        actionCard("Observación y ECG", "Confirmar ritmo, QRS, PR y presencia de BAV o pausas.", "cyan"),
+        actionCard("Revisar fármacos", "Betabloqueadores, calcioantagonistas, amiodarona, digoxina, sedantes.", "green"),
+        actionCard("Laboratorio", "Electrolitos, troponina según contexto, gases, TSH si aplica.", "yellow"),
+        actionCard("Escalar si cambia", "Si aparece inestabilidad, tratar como bradicardia inestable.", "red"),
+      ];
 
   const bradiDrugCards = [
     actionCard(
-      "💊 Isoproterenol",
-      <>
-        <strong>2–10 mcg/min IV</strong><br/><br/>
-        Útil en BAV alto grado o escape lento como puente.<br/>
-        ⚠️ Puede inducir arritmias
-      </>,
+      "Isoproterenol",
+      <><strong>2–10 mcg/min IV</strong><br/>Útil en BAV alto grado o escape lento como puente.<br/>Puede inducir arritmias.</>,
       "cyan"
     ),
     actionCard(
-      "💊 Dopamina",
-      <>
-        <strong>5–20 mcg/kg/min</strong><br/><br/>
-        Opción de puente en bradicardia inestable si no hay pacing inmediato.
-      </>,
+      "Dopamina",
+      <><strong>5–20 mcg/kg/min</strong><br/>Opción de puente en bradicardia inestable si no hay pacing inmediato.</>,
       "yellow"
     ),
     actionCard(
-      "💊 Epinefrina",
-      <>
-        <strong>2–10 mcg/min IV</strong><br/><br/>
-        Alternativa a dopamina en bradicardia severa o shock asociado.
-      </>,
+      "Epinefrina",
+      <><strong>2–10 mcg/min IV</strong><br/>Alternativa a dopamina en bradicardia severa o shock asociado.</>,
       "red"
     ),
     actionCard(
-      "💊 Dobutamina",
-      <>
-        <strong>2–20 mcg/kg/min</strong><br/><br/>
-        Útil si predomina bajo gasto cardíaco. No es cronotrópico puro.
-      </>,
+      "Dobutamina",
+      <><strong>2–20 mcg/kg/min</strong><br/>Útil si predomina bajo gasto cardíaco. No es cronotrópico puro.</>,
       "cyan"
-    )
+    ),
   ];
+
+  // ── Render ────────────────────────────────────────────────────────
 
   return (
     <div>
+      {/* Header */}
+      <div style={{ background: "#0d2a4e", border: "1px solid #22d3ee44", borderRadius: 12, padding: "12px 14px", marginBottom: 14 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#22d3ee", marginBottom: 2 }}>Arritmias</div>
+        <div style={{ fontSize: 12, color: "#22d3ee" }}>Taquiarritmia · Bradiarritmia · Fármacos</div>
+      </div>
+
+      {/* Tipo de arritmia */}
       <div style={card}>
         {sectionTitle("TIPO DE ARRITMIA")}
-        <div style={{display:"flex",gap:8}}>
-          {[
-            { key:"taqui", label:"Taquiarritmia" },
-            { key:"bradi", label:"Bradiarritmia" }
-          ].map(item=>(
-            <button
-              key={item.key}
-              onClick={()=>setRhythmType(item.key)}
-              style={{
-                flex:1,
-                padding:"10px 12px",
-                borderRadius:8,
-                fontFamily:"inherit",
-                fontSize:12,
-                fontWeight:700,
-                cursor:"pointer",
-                border:rhythmType===item.key?"1px solid #22d3ee":"1px solid #1a3060",
-                background:rhythmType===item.key?"#0d2a4e":"#060d1f",
-                color:rhythmType===item.key?"#22d3ee":"#4a6a9f"
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
+        <div style={{ display: "flex", gap: 8 }}>
+          {segButton("Taquiarritmia", rhythmType === "taqui", () => setRhythmType("taqui"))}
+          {segButton("Bradiarritmia", rhythmType === "bradi", () => setRhythmType("bradi"))}
         </div>
       </div>
 
+      {/* Inestabilidad */}
       <div style={card}>
         {sectionTitle("INESTABILIDAD")}
-        <div style={{display:"flex",gap:8}}>
-          {[
-            { key:"estable", label:"Paciente estable" },
-            { key:"inestable", label:"Paciente inestable" }
-          ].map(item=>(
-            <button
-              key={item.key}
-              onClick={()=>setStability(item.key)}
-              style={{
-                flex:1,
-                padding:"10px 12px",
-                borderRadius:8,
-                fontFamily:"inherit",
-                fontSize:12,
-                fontWeight:700,
-                cursor:"pointer",
-                border:stability===item.key?"1px solid #22d3ee":"1px solid #1a3060",
-                background:stability===item.key?"#0d2a4e":"#060d1f",
-                color:stability===item.key?"#22d3ee":"#4a6a9f"
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
+        <div style={{ display: "flex", gap: 8 }}>
+          {segButton("Paciente estable",   stability === "estable",   () => setStability("estable"))}
+          {segButton("Paciente inestable", stability === "inestable", () => setStability("inestable"))}
         </div>
-
         {stability === "inestable" && (
-          <div style={{marginTop:12,background:"#2a0505",border:"1px solid #ef444444",borderRadius:10,padding:"12px 14px"}}>
-            <div style={{fontSize:14,fontWeight:800,color:"#ef4444",marginBottom:8}}>Signos de inestabilidad</div>
-            <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.8}}>
-              • Hipotensión: PAS &lt; 90 mmHg o mala perfusión asociada<br/>
-              • Alteración del sensorio: confusión, síncope, compromiso neurológico<br/>
-              • Shock / hipoperfusión: piel fría, oliguria, lactato alto<br/>
-              • Dolor torácico isquémico<br/>
-              • Insuficiencia cardiaca aguda / edema pulmonar
+          <div style={{ marginTop: 12, background: "#2a0505", border: "1px solid #ef444444", borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#ef4444", marginBottom: 7 }}>Signos de inestabilidad</div>
+            <div style={{ fontSize: 12, color: "#7aa2d4", lineHeight: 1.8 }}>
+              · Hipotensión: PAS &lt; 90 mmHg o mala perfusión asociada<br/>
+              · Alteración del sensorio: confusión, síncope, compromiso neurológico<br/>
+              · Shock / hipoperfusión: piel fría, oliguria, lactato alto<br/>
+              · Dolor torácico isquémico<br/>
+              · Insuficiencia cardiaca aguda / edema pulmonar
             </div>
           </div>
         )}
       </div>
 
+      {/* ── TAQUIARRITMIA ── */}
       {rhythmType === "taqui" && (
         <>
+          {/* Características */}
           <div style={card}>
             {sectionTitle("CARACTERÍSTICAS DE LA TAQUICARDIA")}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-              <div style={{background:"#040c1c",borderRadius:10,padding:"12px 14px"}}>
-                <div style={{...label, marginBottom:6}}>QRS</div>
-                <div style={{display:"flex",gap:6}}>
-                  {["angosto","ancho"].map(item=>(
-                    <button
-                      key={item}
-                      onClick={()=>setQrs(item)}
-                      style={{
-                        flex:1,
-                        padding:"7px 10px",
-                        borderRadius:6,
-                        fontFamily:"inherit",
-                        fontSize:11,
-                        fontWeight:700,
-                        cursor:"pointer",
-                        border:qrs===item?"1px solid #22d3ee":"1px solid #1a3060",
-                        background:qrs===item?"#0d2a4e":"#060d1f",
-                        color:qrs===item?"#22d3ee":"#4a6a9f"
-                      }}
-                    >
-                      {item === "angosto" ? "Angosto" : "Ancho"}
-                    </button>
-                  ))}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+              <div style={{ background: "#040c1c", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11, color: "#4a6a9f", marginBottom: 6 }}>QRS</div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {segButton("Angosto", qrs === "angosto", () => setQrs("angosto"))}
+                  {segButton("Ancho",   qrs === "ancho",   () => setQrs("ancho"))}
                 </div>
               </div>
-
-              <div style={{background:"#040c1c",borderRadius:10,padding:"12px 14px"}}>
-                <div style={{...label, marginBottom:6}}>Ritmo</div>
-                <div style={{display:"flex",gap:6}}>
-                  {["regular","irregular"].map(item=>(
-                    <button
-                      key={item}
-                      onClick={()=>setRegularity(item)}
-                      style={{
-                        flex:1,
-                        padding:"7px 10px",
-                        borderRadius:6,
-                        fontFamily:"inherit",
-                        fontSize:11,
-                        fontWeight:700,
-                        cursor:"pointer",
-                        border:regularity===item?"1px solid #22d3ee":"1px solid #1a3060",
-                        background:regularity===item?"#0d2a4e":"#060d1f",
-                        color:regularity===item?"#22d3ee":"#4a6a9f"
-                      }}
-                    >
-                      {item === "regular" ? "Regular" : "Irregular"}
-                    </button>
-                  ))}
+              <div style={{ background: "#040c1c", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11, color: "#4a6a9f", marginBottom: 6 }}>Ritmo</div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {segButton("Regular",   regularity === "regular",   () => setRegularity("regular"))}
+                  {segButton("Irregular", regularity === "irregular", () => setRegularity("irregular"))}
                 </div>
               </div>
-
-              <div style={{background:"#040c1c",borderRadius:10,padding:"12px 14px", minWidth:0}}>
-                <div style={label}>FC aproximada</div>
+              <div style={{ background: "#040c1c", borderRadius: 10, padding: "12px 14px", minWidth: 0 }}>
+                <div style={{ fontSize: 11, color: "#4a6a9f", marginBottom: 6 }}>FC aproximada</div>
                 <input
-                  style={{...input, width:"100%", minWidth:0}}
+                  style={{ ...inp, minWidth: 0 }}
                   type="number"
                   value={hr}
-                  onChange={e=>setHr(e.target.value)}
+                  onChange={e => setHr(e.target.value)}
                   placeholder="Ej: 180"
                 />
               </div>
             </div>
           </div>
 
+          {/* Orientación clínica */}
           <div style={card}>
             {sectionTitle("ORIENTACIÓN CLÍNICA")}
-            <div style={{
-              background:taquiTitleColor === "#ef4444" ? "#2a0505" : taquiTitleColor === "#f59e0b" ? "#2a1a00" : "#062534",
-              border:`1px solid ${taquiTitleColor}44`,
-              borderRadius:10,
-              padding:"12px 14px"
-            }}>
-              <div style={{fontSize:18,fontWeight:800,color:taquiTitleColor,marginBottom:6}}>{taquiTitle}</div>
-              <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.7}}>{taquiSummary}</div>
-            </div>
+            {heroCard(taquiTitle, taquiSummary, taquiTitleColor)}
           </div>
 
+          {/* Conducta inmediata */}
           <div style={card}>
             {sectionTitle("CONDUCTA INMEDIATA")}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {taquiActions}
             </div>
           </div>
 
+          {/* Energía y fármacos */}
           <div style={card}>
             {sectionTitle("ENERGÍA Y FÁRMACOS CLAVE")}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {taquiEnergyCards}
             </div>
           </div>
         </>
       )}
 
+      {/* ── BRADIARRITMIA ── */}
       {rhythmType === "bradi" && (
         <>
+          {/* Inputs */}
           <div style={card}>
             {sectionTitle("BRADIARRITMIA")}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-              <div style={{background:"#040c1c",borderRadius:10,padding:"12px 14px"}}>
-                <div style={label}>Frecuencia cardíaca</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div style={{ background: "#040c1c", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11, color: "#4a6a9f", marginBottom: 6 }}>Frecuencia cardíaca</div>
                 <input
-                  style={input}
+                  style={inp}
                   type="number"
                   value={bradyHr}
-                  onChange={e=>setBradyHr(e.target.value)}
+                  onChange={e => setBradyHr(e.target.value)}
                   placeholder="Ej: 32"
                 />
               </div>
-              <div style={{background:"#040c1c",borderRadius:10,padding:"12px 14px"}}>
-                <div style={{...label, marginBottom:6}}>Contexto</div>
-                <div style={small}>
+              <div style={{ background: "#040c1c", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11, color: "#4a6a9f", marginBottom: 6 }}>Contexto</div>
+                <div style={{ fontSize: 12, color: "#7aa2d4", lineHeight: 1.7 }}>
                   Pensar en BAV alto grado, nodo enfermo, fármacos, hiperkalemia, IAM inferior, hipoxia y otras causas reversibles.
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Orientación clínica */}
           <div style={card}>
             {sectionTitle("ORIENTACIÓN CLÍNICA")}
-            <div style={{
-              background:stability === "inestable" ? "#2a0505" : "#2a1a00",
-              border:`1px solid ${stability === "inestable" ? "#ef444444" : "#f59e0b44"}`,
-              borderRadius:10,
-              padding:"12px 14px"
-            }}>
-              <div style={{fontSize:18,fontWeight:800,color:stability === "inestable" ? "#ef4444" : "#f59e0b",marginBottom:6}}>
-                {stability === "inestable" ? "Bradicardia inestable" : "Bradicardia estable"}
-              </div>
-              <div style={{fontSize:12,color:"#7aa2d4",lineHeight:1.7}}>
-                {stability === "inestable"
-                  ? "Si la bradicardia explica la clínica, iniciar tratamiento inmediato y no retrasar soporte por espera diagnóstica."
-                  : "Si está perfundiendo bien, monitoriza, busca causa y decide necesidad de observación, ajuste farmacológico o marcapasos según ECG."}
-              </div>
-            </div>
+            {heroCard(bradiTitle, bradiSummary, bradiTitleColor)}
           </div>
 
+          {/* Conducta inmediata */}
           <div style={card}>
             {sectionTitle("CONDUCTA INMEDIATA")}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {bradiActions}
             </div>
           </div>
 
+          {/* Fármacos */}
           <div style={card}>
             {sectionTitle("FÁRMACOS EN BRADIARRITMIA")}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {bradiDrugCards}
             </div>
           </div>
