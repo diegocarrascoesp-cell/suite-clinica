@@ -3343,11 +3343,10 @@ function ArritmiasTab() {
   const [stability, setStability] = useState("estable");
   const [qrs, setQrs] = useState("angosto");
   const [regularity, setRegularity] = useState("regular");
-  const [hr, setHr] = useState("");
   const [bradyHr, setBradyHr] = useState("");
-
+ 
   // ── Estilos base ──────────────────────────────────────────────────
-
+ 
   const card = {
     background: "#0b1730",
     border: "1px solid #1a3060",
@@ -3355,7 +3354,7 @@ function ArritmiasTab() {
     padding: "14px 16px",
     marginBottom: 12,
   };
-
+ 
   const inp = {
     background: "#040c1c",
     border: "1px solid #1a3060",
@@ -3368,9 +3367,15 @@ function ArritmiasTab() {
     width: "100%",
     boxSizing: "border-box",
   };
-
+ 
+  const grid2 = {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 10,
+  };
+ 
   // ── Helpers de UI ─────────────────────────────────────────────────
-
+ 
   function sectionTitle(text) {
     return (
       <div style={{ fontSize: 11, color: "#22d3ee", letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>
@@ -3378,7 +3383,7 @@ function ArritmiasTab() {
       </div>
     );
   }
-
+ 
   function segButton(label, active, onClick) {
     return (
       <button
@@ -3400,7 +3405,7 @@ function ArritmiasTab() {
       </button>
     );
   }
-
+ 
   function actionCard(title, body, tone = "cyan") {
     const bg =
       tone === "red" ? "#2a0505" :
@@ -3424,7 +3429,7 @@ function ArritmiasTab() {
       </div>
     );
   }
-
+ 
   function heroCard(title, summary, titleColor) {
     const bg =
       titleColor === "#ef4444" ? "#2a0505" :
@@ -3441,11 +3446,11 @@ function ArritmiasTab() {
       </div>
     );
   }
-
+ 
   // ── Lógica taquiarritmia ──────────────────────────────────────────
-
+ 
   let taquiTitle, taquiTitleColor, taquiSummary, taquiActions;
-
+ 
   if (stability === "inestable") {
     taquiTitle = "Taquiarritmia inestable";
     taquiTitleColor = "#ef4444";
@@ -3497,7 +3502,7 @@ function ArritmiasTab() {
       actionCard("Si inestabiliza", "Tratamiento eléctrico inmediato.", "yellow"),
     ];
   }
-
+ 
   const taquiEnergyCards = [
     actionCard(
       "Cardioversión / Desfibrilación",
@@ -3513,9 +3518,9 @@ function ArritmiasTab() {
       "Magnesio",
       <>
         Torsades / QT largo: <strong>2 g IV</strong> en <strong>5–15 min</strong><br/>
-        Puede repetirse si persiste · Infusión posterior: <strong>1–2 g/h</strong><br/>
-        Preparación: <strong>2 g = 4 mL</strong> sulfato de magnesio al 50%<br/>
-        Diluir en <strong>10–20 mL</strong> para bolo lento
+        Puede repetirse · Infusión posterior: <strong>1–2 g/h</strong><br/>
+        Preparación: <strong>2 g = 4 mL</strong> sulfato de magnesio al 50%,
+        diluir en <strong>10–20 mL</strong> para bolo lento
       </>,
       "cyan"
     ),
@@ -3537,15 +3542,15 @@ function ArritmiasTab() {
       "yellow"
     ),
   ];
-
+ 
   // ── Lógica bradiarritmia ──────────────────────────────────────────
-
+ 
   const bradiTitleColor = stability === "inestable" ? "#ef4444" : "#f59e0b";
   const bradiTitle = stability === "inestable" ? "Bradicardia inestable" : "Bradicardia estable";
   const bradiSummary = stability === "inestable"
     ? "Si la bradicardia explica la clínica, iniciar tratamiento inmediato sin retrasar soporte por espera diagnóstica."
     : "Si está perfundiendo bien, monitoriza, busca causa y decide necesidad de observación, ajuste farmacológico o marcapasos según ECG.";
-
+ 
   const bradiActions = stability === "inestable"
     ? [
         actionCard("Primera línea", "Atropina 1 mg IV, repetir cada 3–5 min hasta 3 mg.", "cyan"),
@@ -3559,7 +3564,7 @@ function ArritmiasTab() {
         actionCard("Laboratorio", "Electrolitos, troponina según contexto, gases, TSH si aplica.", "yellow"),
         actionCard("Escalar si cambia", "Si aparece inestabilidad, tratar como bradicardia inestable.", "red"),
       ];
-
+ 
   const bradiDrugCards = [
     actionCard(
       "Isoproterenol",
@@ -3582,9 +3587,9 @@ function ArritmiasTab() {
       "cyan"
     ),
   ];
-
+ 
   // ── Render ────────────────────────────────────────────────────────
-
+ 
   return (
     <div>
       {/* Header */}
@@ -3592,7 +3597,7 @@ function ArritmiasTab() {
         <div style={{ fontSize: 13, fontWeight: 700, color: "#22d3ee", marginBottom: 2 }}>Arritmias</div>
         <div style={{ fontSize: 12, color: "#22d3ee" }}>Taquiarritmia · Bradiarritmia · Fármacos</div>
       </div>
-
+ 
       {/* Tipo de arritmia */}
       <div style={card}>
         {sectionTitle("TIPO DE ARRITMIA")}
@@ -3601,7 +3606,7 @@ function ArritmiasTab() {
           {segButton("Bradiarritmia", rhythmType === "bradi", () => setRhythmType("bradi"))}
         </div>
       </div>
-
+ 
       {/* Inestabilidad */}
       <div style={card}>
         {sectionTitle("INESTABILIDAD")}
@@ -3622,14 +3627,14 @@ function ArritmiasTab() {
           </div>
         )}
       </div>
-
+ 
       {/* ── TAQUIARRITMIA ── */}
       {rhythmType === "taqui" && (
         <>
-          {/* Características */}
+          {/* Características — QRS y Ritmo en 2 columnas */}
           <div style={card}>
             {sectionTitle("CARACTERÍSTICAS DE LA TAQUICARDIA")}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+            <div style={grid2}>
               <div style={{ background: "#040c1c", borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ fontSize: 11, color: "#4a6a9f", marginBottom: 6 }}>QRS</div>
                 <div style={{ display: "flex", gap: 6 }}>
@@ -3644,50 +3649,35 @@ function ArritmiasTab() {
                   {segButton("Irregular", regularity === "irregular", () => setRegularity("irregular"))}
                 </div>
               </div>
-              <div style={{ background: "#040c1c", borderRadius: 10, padding: "12px 14px", minWidth: 0 }}>
-                <div style={{ fontSize: 11, color: "#4a6a9f", marginBottom: 6 }}>FC aproximada</div>
-                <input
-                  style={{ ...inp, minWidth: 0 }}
-                  type="number"
-                  value={hr}
-                  onChange={e => setHr(e.target.value)}
-                  placeholder="Ej: 180"
-                />
-              </div>
             </div>
           </div>
-
+ 
           {/* Orientación clínica */}
           <div style={card}>
             {sectionTitle("ORIENTACIÓN CLÍNICA")}
             {heroCard(taquiTitle, taquiSummary, taquiTitleColor)}
           </div>
-
+ 
           {/* Conducta inmediata */}
           <div style={card}>
             {sectionTitle("CONDUCTA INMEDIATA")}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {taquiActions}
-            </div>
+            <div style={grid2}>{taquiActions}</div>
           </div>
-
+ 
           {/* Energía y fármacos */}
           <div style={card}>
             {sectionTitle("ENERGÍA Y FÁRMACOS CLAVE")}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {taquiEnergyCards}
-            </div>
+            <div style={grid2}>{taquiEnergyCards}</div>
           </div>
         </>
       )}
-
+ 
       {/* ── BRADIARRITMIA ── */}
       {rhythmType === "bradi" && (
         <>
-          {/* Inputs */}
           <div style={card}>
             {sectionTitle("BRADIARRITMIA")}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div style={grid2}>
               <div style={{ background: "#040c1c", borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ fontSize: 11, color: "#4a6a9f", marginBottom: 6 }}>Frecuencia cardíaca</div>
                 <input
@@ -3706,27 +3696,20 @@ function ArritmiasTab() {
               </div>
             </div>
           </div>
-
-          {/* Orientación clínica */}
+ 
           <div style={card}>
             {sectionTitle("ORIENTACIÓN CLÍNICA")}
             {heroCard(bradiTitle, bradiSummary, bradiTitleColor)}
           </div>
-
-          {/* Conducta inmediata */}
+ 
           <div style={card}>
             {sectionTitle("CONDUCTA INMEDIATA")}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {bradiActions}
-            </div>
+            <div style={grid2}>{bradiActions}</div>
           </div>
-
-          {/* Fármacos */}
+ 
           <div style={card}>
             {sectionTitle("FÁRMACOS EN BRADIARRITMIA")}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {bradiDrugCards}
-            </div>
+            <div style={grid2}>{bradiDrugCards}</div>
           </div>
         </>
       )}
