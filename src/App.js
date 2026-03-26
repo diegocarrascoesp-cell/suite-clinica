@@ -5045,51 +5045,155 @@ const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","👁 Glasgow","😴 Sedación UC
 export default function App() {
   const [weight, setWeight] = useState("");
   const [tab, setTab] = useState(0);
-  const w=parseFloat(weight);
-  const valid=w>0&&w<250;
+  const w = parseFloat(weight);
+  const valid = w > 0 && w < 250;
+
   return (
-    <div style={{minHeight:"100vh",background:"radial-gradient(ellipse at 20% 0%,#0d1f40 0%,#050d1c 60%)",color:"#e8edf5",fontFamily:"'IBM Plex Mono','Courier New',monospace",paddingBottom:60}}>
-      <div style={{background:"linear-gradient(180deg,#0a1a38 0%,#050d1c 100%)",borderBottom:"1px solid #1a3060",padding:"20px 20px 16px"}}>
-        <div style={{maxWidth:640,margin:"0 auto"}}>
-          <div style={{fontSize:10,color:"#22d3ee",letterSpacing:3,marginBottom:4}}>ANESTESIOLOGÍA · URGENCIAS · UCI</div>
-          <div style={{fontSize:22,fontWeight:800}}>💉 Suite Clínica</div>
-          <div style={{fontSize:11,color:"#3a5a8f",marginTop:2}}>SRI · DVA · CRI · Glasgow · Sedación · Procedimientos · Scores</div>
-        </div>
-      </div>
-      <div style={{maxWidth:640,margin:"0 auto",padding:"20px 16px 0"}}>
-        <div style={{background:"#0b1730",border:"1px solid #1a3060",borderRadius:14,padding:"16px 20px",marginBottom:20,display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
-          <div>
-            <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:6}}>PESO DEL PACIENTE</div>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <input type="number" value={weight} onChange={e=>setWeight(e.target.value)} placeholder="70"
-                style={{width:100,background:"#040c1c",border:"1px solid #1a4080",borderRadius:8,color:"#22d3ee",fontSize:26,fontWeight:800,padding:"6px 14px",outline:"none",fontFamily:"inherit"}}/>
-              <span style={{fontSize:18,color:"#22d3ee",fontWeight:700}}>kg</span>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "radial-gradient(ellipse at 20% 0%,#0d1f40 0%,#050d1c 60%)",
+        color: "#e8edf5",
+        fontFamily: "'IBM Plex Mono','Courier New',monospace",
+        paddingBottom: 60
+      }}
+    >
+      <div
+        style={{
+          background: "linear-gradient(180deg,#0a1a38 0%,#050d1c 100%)",
+          borderBottom: "1px solid #1a3060",
+          padding: "20px 20px 16px"
+        }}
+      >
+        <div style={{ maxWidth: 640, margin: "0 auto" }}>
+          <div style={{ fontSize: 10, color: "#22d3ee", letterSpacing: 3, marginBottom: 4 }}>
+            ANESTESIOLOGÍA · URGENCIAS · UCI
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <img
+              src="/logo.png"
+              alt="ClinicHelper"
+              style={{ width: 34, height: 34, objectFit: "contain" }}
+            />
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#e8edf5" }}>
+                ClinicHelper
+              </div>
+              <div style={{ fontSize: 11, color: "#3a5a8f", marginTop: 2 }}>
+                Anestesiología · Urgencias · UCI
+              </div>
             </div>
           </div>
-          {valid&&<div style={{marginLeft:"auto",textAlign:"right"}}><div style={{fontSize:10,color:"#34d399",letterSpacing:2}}>ACTIVO</div><div style={{fontSize:22,fontWeight:800,color:"#34d399"}}>{w} kg</div></div>}
+
+          <div style={{ fontSize: 11, color: "#3a5a8f", marginTop: 8 }}>
+            SRI · DVA · CRI · Glasgow · Sedación · Procedimientos · Scores
+          </div>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:20}}>
-          {TABS.map((t,i)=>(
-            <button key={i} onClick={()=>setTab(i)} style={{padding:"10px 4px",borderRadius:10,fontSize:9,fontFamily:"inherit",fontWeight:700,cursor:"pointer",textAlign:"center",lineHeight:1.4,border:tab===i?"1px solid #22d3ee":"1px solid #1a3060",background:tab===i?"#0d2a4e":"#0b1730",color:tab===i?"#22d3ee":"#3a5a8f"}}>{t}</button>
+      </div>
+
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "20px 16px 0" }}>
+        <div
+          style={{
+            background: "#0b1730",
+            border: "1px solid #1a3060",
+            borderRadius: 14,
+            padding: "16px 20px",
+            marginBottom: 20,
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+            flexWrap: "wrap"
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 10, color: "#22d3ee", letterSpacing: 2, marginBottom: 6 }}>
+              PESO DEL PACIENTE
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <input
+                type="number"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                placeholder="70"
+                style={{
+                  width: 100,
+                  background: "#040c1c",
+                  border: "1px solid #1a4080",
+                  borderRadius: 8,
+                  color: "#22d3ee",
+                  fontSize: 26,
+                  fontWeight: 800,
+                  padding: "6px 14px",
+                  outline: "none",
+                  fontFamily: "inherit"
+                }}
+              />
+              <span style={{ fontSize: 18, color: "#22d3ee", fontWeight: 700 }}>kg</span>
+            </div>
+          </div>
+
+          {valid && (
+            <div style={{ marginLeft: "auto", textAlign: "right" }}>
+              <div style={{ fontSize: 10, color: "#34d399", letterSpacing: 2 }}>ACTIVO</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#34d399" }}>{w} kg</div>
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6, marginBottom: 20 }}>
+          {TABS.map((t, i) => (
+            <button
+              key={i}
+              onClick={() => setTab(i)}
+              style={{
+                padding: "10px 4px",
+                borderRadius: 10,
+                fontSize: 9,
+                fontFamily: "inherit",
+                fontWeight: 700,
+                cursor: "pointer",
+                textAlign: "center",
+                lineHeight: 1.4,
+                border: tab === i ? "1px solid #22d3ee" : "1px solid #1a3060",
+                background: tab === i ? "#0d2a4e" : "#0b1730",
+                color: tab === i ? "#22d3ee" : "#3a5a8f"
+              }}
+            >
+              {t}
+            </button>
           ))}
         </div>
-        {tab===0&&<SRITab weight={valid?w:0}/>}
-        {tab===1&&<DVATab weight={valid?w:0}/>}
-        {tab===2&&<CRITab weight={valid?w:0}/>}
-        {tab===3&&<GlasgowTab/>}
-        {tab===4&&<SedacionTab weight={valid?w:0}/>}
-        {tab===5&&<ProcedimientosTab weight={valid?w:0}/>}
-        {tab===6&&<ScoresTab/>}
-        {tab===7&&<ElectrolyteTab/>}
-        {tab===8&&<RCPTab/>}
-        {tab===9&&<VMITab/>}
-        {tab===10&&<AirwayTab/>}
-        {tab===11&&<GasesCalculator/>}
-        {tab===12&&<ArritmiasTab/>}
-        {tab===13&&<ShockTab/>}
-        {tab===14&&<DesteteTab/>}
-        {tab===15&&<NeuroTab/>} 
-        <div style={{marginTop:24,padding:"12px 16px",background:"#08111f",border:"1px solid #1a2a4f",borderRadius:10,fontSize:11,color:"#2a4a7f",lineHeight:1.7}}>
+
+        {tab === 0 && <SRITab weight={valid ? w : 0} />}
+        {tab === 1 && <DVATab weight={valid ? w : 0} />}
+        {tab === 2 && <CRITab weight={valid ? w : 0} />}
+        {tab === 3 && <GlasgowTab />}
+        {tab === 4 && <SedacionTab weight={valid ? w : 0} />}
+        {tab === 5 && <ProcedimientosTab weight={valid ? w : 0} />}
+        {tab === 6 && <ScoresTab />}
+        {tab === 7 && <ElectrolyteTab />}
+        {tab === 8 && <RCPTab />}
+        {tab === 9 && <VMITab />}
+        {tab === 10 && <AirwayTab />}
+        {tab === 11 && <GasesCalculator />}
+        {tab === 12 && <ArritmiasTab />}
+        {tab === 13 && <ShockTab />}
+        {tab === 14 && <DesteteTab />}
+        {tab === 15 && <NeuroTab />}
+
+        <div
+          style={{
+            marginTop: 24,
+            padding: "12px 16px",
+            background: "#08111f",
+            border: "1px solid #1a2a4f",
+            borderRadius: 10,
+            fontSize: 11,
+            color: "#2a4a7f",
+            lineHeight: 1.7
+          }}
+        >
           ⚠️ Herramienta de apoyo clínico. Verificar siempre con protocolos institucionales y criterio médico.
         </div>
       </div>
