@@ -4847,7 +4847,167 @@ function ShockTab() {
     </div>
   );
 }
-const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","🧠 Glasgow","🛏️ Sedación UCI","🔧 Procedimientos","📊 Scores","🧂 Electrolitos","❤️ RCP","🫁 VMI","👃 Vía Aérea", "🧪Gases","💕Arritmias","💀Shock"];
+function DesteteTab(){
+  const [values,setValues]=useState({
+    fio2:"",peep:"",tobin:"",neuro:"",hemo:"",sec:""
+  });
+
+  const setField=(k,v)=>setValues(prev=>({...prev,[k]:v}));
+  const num=v=>{const n=parseFloat(v);return isNaN(n)?null:n};
+
+  const fio2=num(values.fio2);
+  const peep=num(values.peep);
+  const tobin=num(values.tobin);
+
+  let ok=0,bad=0;
+
+  if(fio2!==null && fio2<=0.5) ok++; else if(fio2!==null) bad++;
+  if(peep!==null && peep<=8) ok++; else if(peep!==null) bad++;
+  if(tobin!==null && tobin<105) ok++; else if(tobin!==null) bad++;
+  if(values.neuro==="ok") ok++; else if(values.neuro==="bad") bad++;
+  if(values.hemo==="ok") ok++; else if(values.hemo==="bad") bad++;
+  if(values.sec==="ok") ok++; else if(values.sec==="bad") bad++;
+
+  let result=null;
+
+  if(ok>=5 && bad===0){
+    result={color:"#22c55e",title:"Apto para SBT",text:"Perfil favorable para prueba de ventilación espontánea"};
+  }else if(bad>=2){
+    result={color:"#ef4444",title:"No apto",text:"Optimizar antes de intentar destete"};
+  }else if(ok>=3){
+    result={color:"#f59e0b",title:"Intermedio",text:"Reevaluar antes de SBT"};
+  }
+
+  return(
+    <div style={{color:"#e8edf5"}}>
+
+      <div style={card}>
+        <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>
+          DESTETE / EXTUBACIÓN
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+
+          <div>
+            <div style={label}>FiO₂</div>
+            <input style={input} type="number" step="0.01" value={values.fio2} onChange={e=>setField("fio2",e.target.value)} />
+          </div>
+
+          <div>
+            <div style={label}>PEEP</div>
+            <input style={input} type="number" value={values.peep} onChange={e=>setField("peep",e.target.value)} />
+          </div>
+
+          <div>
+            <div style={label}>Tobin (RSBI)</div>
+            <input style={input} type="number" value={values.tobin} onChange={e=>setField("tobin",e.target.value)} />
+          </div>
+
+          <select style={input} value={values.neuro} onChange={e=>setField("neuro",e.target.value)}>
+            <option value="">Estado neurológico</option>
+            <option value="ok">Adecuado</option>
+            <option value="mid">Intermedio</option>
+            <option value="bad">No apto</option>
+          </select>
+
+          <select style={input} value={values.hemo} onChange={e=>setField("hemo",e.target.value)}>
+            <option value="">Hemodinamia</option>
+            <option value="ok">Estable</option>
+            <option value="mid">Límite</option>
+            <option value="bad">Inestable</option>
+          </select>
+
+          <select style={input} value={values.sec} onChange={e=>setField("sec",e.target.value)}>
+            <option value="">Secreciones</option>
+            <option value="ok">Adecuadas</option>
+            <option value="mid">Intermedias</option>
+            <option value="bad">Mal manejo</option>
+          </select>
+
+        </div>
+      </div>
+
+      {result&&(
+        <div style={card}>
+          <div style={{color:result.color,fontWeight:700,fontSize:14}}>
+            {result.title}
+          </div>
+          <div style={{color:"#7aa2d4",fontSize:12,marginTop:4}}>
+            {result.text}
+          </div>
+        </div>
+      )}
+
+      <div style={card}>
+        <div style={{fontSize:11,fontWeight:700,color:"#22d3ee",marginBottom:4}}>
+          A considerar
+        </div>
+        <div style={{fontSize:11,color:"#7aa2d4"}}>
+          No usar de forma aislada. Integrar con clínica global.
+        </div>
+      </div>
+
+    </div>
+  );
+}
+function NeuroTab(){
+  return(
+    <div style={{color:"#e8edf5"}}>
+
+      <div style={card}>
+        <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>
+          NEUROPROTECCIÓN
+        </div>
+
+        <div style={small}>
+          Metas generales. Individualizar según patología.
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={label}>Perfusión cerebral</div>
+        <div style={small}>
+          PAM ≥ 65 mmHg<br/>
+          PPC sugerida: 60–70 mmHg
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={label}>Ventilación</div>
+        <div style={small}>
+          PaO₂: 80–120 mmHg<br/>
+          PaCO₂: 35–40 mmHg
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={label}>Temperatura</div>
+        <div style={small}>
+          36–37.5°C<br/>
+          Evitar fiebre
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={label}>Glicemia</div>
+        <div style={small}>
+          140–180 mg/dL<br/>
+          Evitar &lt;70
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={label}>Sodio</div>
+        <div style={small}>
+          135–145 mEq/L<br/>
+          Evitar hiponatremia
+        </div>
+      </div>
+
+    </div>
+  );
+}
+const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","👁 Glasgow","😴 Sedación UCI","🔧 Procedimientos","📊 Scores","🧂 Electrolitos","❤️ RCP","🫁 VMI","👃 Vía Aérea", "🧪Gases","💕Arritmias","💀Shock","🛌Destete","🧠Neuroproteccion"];
 
 export default function App() {
   const [weight, setWeight] = useState("");
@@ -4893,7 +5053,9 @@ export default function App() {
         {tab===10&&<AirwayTab/>}
         {tab===11&&<GasesCalculator/>}
         {tab===12&&<ArritmiasTab/>}
-        {tab===13&&<ShockTab/>} 
+        {tab===13&&<ShockTab/>}
+        {tab===14&&<DesteteTab/>}
+        {tab===15&&<NeuroTab/>} 
         <div style={{marginTop:24,padding:"12px 16px",background:"#08111f",border:"1px solid #1a2a4f",borderRadius:10,fontSize:11,color:"#2a4a7f",lineHeight:1.7}}>
           ⚠️ Herramienta de apoyo clínico. Verificar siempre con protocolos institucionales y criterio médico.
         </div>
