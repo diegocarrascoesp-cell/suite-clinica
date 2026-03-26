@@ -1,6 +1,37 @@
 /* eslint-disable */
 import { useState } from "react";
 
+const ui = {
+  card: {
+    background: "#fff",
+    padding: "16px",
+    borderRadius: "12px",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+    marginBottom: "12px"
+  },
+  label: {
+    fontWeight: "600",
+    marginBottom: "4px",
+    display: "block"
+  },
+  input: {
+    width: "100%",
+    padding: "8px",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
+    marginBottom: "8px"
+  },
+  small: {
+    fontSize: "12px",
+    color: "#666"
+  },
+  sectionTitle: {
+    fontWeight: "700",
+    fontSize: "16px",
+    marginBottom: "8px"
+  }
+};
+
 const DRUGS_VASOA = [
   { name:"Norepinefrina", conc_mg_ml:1, ind:null, cri:{lo:0.02,hi:3,unit:"mcg/kg/min"}, dilucion:"Diluir en SG5% (preferido). 8 mg en 50 mL (160 mcg/mL) o 16 mg en 100 mL. Vía central preferible.", nota:"Primera línea en shock séptico. Sin ajuste renal/hepático." },
   { name:"Epinefrina", conc_mg_ml:1, ind:{lo:0.01,hi:0.01,unit:"mg/kg"}, cri:{lo:0.01,hi:1,unit:"mcg/kg/min"}, dilucion:"Diluir en SG5%. 4 mg en 50 mL (80 mcg/mL) o 8 mg en 100 mL.", nota:"Shock refractario con bajo GC, anafilaxia. Vigilar taquiarritmias e hiperlactatemia." },
@@ -4847,163 +4878,79 @@ function ShockTab() {
     </div>
   );
 }
-function DesteteTab(){
-  const [values,setValues]=useState({
-    fio2:"",peep:"",tobin:"",neuro:"",hemo:"",sec:""
-  });
+function DesteteTab() {
+  const [fr, setFr] = React.useState("");
+  const [vt, setVt] = React.useState("");
 
-  const setField=(k,v)=>setValues(prev=>({...prev,[k]:v}));
-  const num=v=>{const n=parseFloat(v);return isNaN(n)?null:n};
+  const rsbi = fr && vt ? (fr / vt).toFixed(1) : null;
 
-  const fio2=num(values.fio2);
-  const peep=num(values.peep);
-  const tobin=num(values.tobin);
+  return (
+    <div>
+      <div style={ui.card}>
+        <div style={ui.sectionTitle}>Criterios Previos</div>
 
-  let ok=0,bad=0;
-
-  if(fio2!==null && fio2<=0.5) ok++; else if(fio2!==null) bad++;
-  if(peep!==null && peep<=8) ok++; else if(peep!==null) bad++;
-  if(tobin!==null && tobin<105) ok++; else if(tobin!==null) bad++;
-  if(values.neuro==="ok") ok++; else if(values.neuro==="bad") bad++;
-  if(values.hemo==="ok") ok++; else if(values.hemo==="bad") bad++;
-  if(values.sec==="ok") ok++; else if(values.sec==="bad") bad++;
-
-  let result=null;
-
-  if(ok>=5 && bad===0){
-    result={color:"#22c55e",title:"Apto para SBT",text:"Perfil favorable para prueba de ventilación espontánea"};
-  }else if(bad>=2){
-    result={color:"#ef4444",title:"No apto",text:"Optimizar antes de intentar destete"};
-  }else if(ok>=3){
-    result={color:"#f59e0b",title:"Intermedio",text:"Reevaluar antes de SBT"};
-  }
-
-  return(
-    <div style={{color:"#e8edf5"}}>
-
-      <div style={card}>
-        <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>
-          DESTETE / EXTUBACIÓN
-        </div>
-
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-
-          <div>
-            <div style={label}>FiO₂</div>
-            <input style={input} type="number" step="0.01" value={values.fio2} onChange={e=>setField("fio2",e.target.value)} />
-          </div>
-
-          <div>
-            <div style={label}>PEEP</div>
-            <input style={input} type="number" value={values.peep} onChange={e=>setField("peep",e.target.value)} />
-          </div>
-
-          <div>
-            <div style={label}>Tobin (RSBI)</div>
-            <input style={input} type="number" value={values.tobin} onChange={e=>setField("tobin",e.target.value)} />
-          </div>
-
-          <select style={input} value={values.neuro} onChange={e=>setField("neuro",e.target.value)}>
-            <option value="">Estado neurológico</option>
-            <option value="ok">Adecuado</option>
-            <option value="mid">Intermedio</option>
-            <option value="bad">No apto</option>
-          </select>
-
-          <select style={input} value={values.hemo} onChange={e=>setField("hemo",e.target.value)}>
-            <option value="">Hemodinamia</option>
-            <option value="ok">Estable</option>
-            <option value="mid">Límite</option>
-            <option value="bad">Inestable</option>
-          </select>
-
-          <select style={input} value={values.sec} onChange={e=>setField("sec",e.target.value)}>
-            <option value="">Secreciones</option>
-            <option value="ok">Adecuadas</option>
-            <option value="mid">Intermedias</option>
-            <option value="bad">Mal manejo</option>
-          </select>
-
-        </div>
+        <ul>
+          <li>Estabilidad hemodinámica</li>
+          <li>FiO₂ ≤ 40%</li>
+          <li>PEEP ≤ 8</li>
+          <li>Paciente despierto</li>
+        </ul>
       </div>
 
-      {result&&(
-        <div style={card}>
-          <div style={{color:result.color,fontWeight:700,fontSize:14}}>
-            {result.title}
-          </div>
-          <div style={{color:"#7aa2d4",fontSize:12,marginTop:4}}>
-            {result.text}
-          </div>
-        </div>
-      )}
+      <div style={ui.card}>
+        <div style={ui.sectionTitle}>RSBI</div>
 
-      <div style={card}>
-        <div style={{fontSize:11,fontWeight:700,color:"#22d3ee",marginBottom:4}}>
-          A considerar
-        </div>
-        <div style={{fontSize:11,color:"#7aa2d4"}}>
-          No usar de forma aislada. Integrar con clínica global.
-        </div>
+        <label style={ui.label}>Frecuencia Respiratoria</label>
+        <input
+          style={ui.input}
+          value={fr}
+          onChange={e => setFr(e.target.value)}
+        />
+
+        <label style={ui.label}>Volumen corriente (L)</label>
+        <input
+          style={ui.input}
+          value={vt}
+          onChange={e => setVt(e.target.value)}
+        />
+
+        {rsbi && (
+          <div>
+            <b>RSBI:</b> {rsbi}
+            <br />
+            {rsbi < 105 ? "✅ Apto para destete" : "⚠️ Riesgo de falla"}
+          </div>
+        )}
       </div>
-
     </div>
   );
 }
-function NeuroTab(){
-  return(
-    <div style={{color:"#e8edf5"}}>
+function NeuroTab() {
+  return (
+    <div>
+      <div style={ui.card}>
+        <div style={ui.sectionTitle}>Objetivos de Neuroprotección</div>
 
-      <div style={card}>
-        <div style={{fontSize:10,color:"#22d3ee",letterSpacing:2,marginBottom:10}}>
-          NEUROPROTECCIÓN
-        </div>
-
-        <div style={small}>
-          Metas generales. Individualizar según patología.
-        </div>
+        <p><b>PAM:</b> 65–80 mmHg</p>
+        <p><b>SatO₂:</b> &gt; 94%</p>
+        <p><b>PaCO₂:</b> 35–40 mmHg</p>
+        <p><b>Temperatura:</b> 36–37°C</p>
       </div>
 
-      <div style={card}>
-        <div style={label}>Perfusión cerebral</div>
-        <div style={small}>
-          PAM ≥ 65 mmHg<br/>
-          PPC sugerida: 60–70 mmHg
+      <div style={ui.card}>
+        <div style={ui.sectionTitle}>Medidas Clave</div>
+
+        <ul>
+          <li>Cabecera a 30°</li>
+          <li>Evitar hipoxia</li>
+          <li>Evitar hipotensión</li>
+          <li>Control glicémico</li>
+        </ul>
+
+        <div style={ui.small}>
+          Basado en guías neurocríticas actuales
         </div>
       </div>
-
-      <div style={card}>
-        <div style={label}>Ventilación</div>
-        <div style={small}>
-          PaO₂: 80–120 mmHg<br/>
-          PaCO₂: 35–40 mmHg
-        </div>
-      </div>
-
-      <div style={card}>
-        <div style={label}>Temperatura</div>
-        <div style={small}>
-          36–37.5°C<br/>
-          Evitar fiebre
-        </div>
-      </div>
-
-      <div style={card}>
-        <div style={label}>Glicemia</div>
-        <div style={small}>
-          140–180 mg/dL<br/>
-          Evitar &lt;70
-        </div>
-      </div>
-
-      <div style={card}>
-        <div style={label}>Sodio</div>
-        <div style={small}>
-          135–145 mEq/L<br/>
-          Evitar hiponatremia
-        </div>
-      </div>
-
     </div>
   );
 }
