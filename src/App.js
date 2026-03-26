@@ -3852,17 +3852,60 @@ function ShockTab() {
     hepatic: "",
     portal: "",
     renal: "",
+
+    // bicarbonato
+    ph: "",
+    hco3: "",
+    creatinina: "",
+    cAD: false,
+    akiManual: false,
   });
 
-  const card = { background:"#0b1730", border:"1px solid #1a3060", borderRadius:14, padding:"14px 16px", marginBottom:12 };
-  const mini = { background:"#040c1c", borderRadius:10, padding:"12px 14px", minWidth:0 };
-  const input = { width:"100%", background:"#040c1c", border:"1px solid #1a3060", borderRadius:8, color:"#e8edf5", fontSize:14, padding:"8px 10px", outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
+  const [bicarbTab, setBicarbTab] = useState(0);
+
+  const card = {
+    background: "#0b1730",
+    border: "1px solid #1a3060",
+    borderRadius: 14,
+    padding: "14px 16px",
+    marginBottom: 12,
+  };
+
+  const mini = {
+    background: "#040c1c",
+    borderRadius: 10,
+    padding: "12px 14px",
+    minWidth: 0,
+  };
+
+  const input = {
+    width: "100%",
+    background: "#040c1c",
+    border: "1px solid #1a3060",
+    borderRadius: 8,
+    color: "#e8edf5",
+    fontSize: 14,
+    padding: "8px 10px",
+    outline: "none",
+    fontFamily: "inherit",
+    boxSizing: "border-box",
+  };
+
   const select = input;
-  const muted = { color:"#4a6a9f", fontSize:11 };
-  const soft = { color:"#7aa2d4", fontSize:12, lineHeight:1.5 };
+
+  const muted = {
+    color: "#4a6a9f",
+    fontSize: 11,
+  };
+
+  const soft = {
+    color: "#7aa2d4",
+    fontSize: 12,
+    lineHeight: 1.5,
+  };
 
   function setField(key, value) {
-    setVals(prev => ({ ...prev, [key]: value }));
+    setVals((prev) => ({ ...prev, [key]: value }));
   }
 
   function num(v) {
@@ -3878,37 +3921,88 @@ function ShockTab() {
     return "#22d3ee";
   }
 
-  function ResultCard({ title, body, tone="cyan" }) {
+  function ResultCard({ title, body, tone = "cyan" }) {
     const bg =
-      tone === "red" ? "#2a0505" :
-      tone === "yellow" ? "#2a1a00" :
-      tone === "green" ? "#052a10" :
-      tone === "purple" ? "#1f1637" :
-      "#062534";
+      tone === "red"
+        ? "#2a0505"
+        : tone === "yellow"
+          ? "#2a1a00"
+          : tone === "green"
+            ? "#052a10"
+            : tone === "purple"
+              ? "#1f1637"
+              : "#062534";
 
     const border =
-      tone === "red" ? "#ef444444" :
-      tone === "yellow" ? "#f59e0b44" :
-      tone === "green" ? "#22c55e44" :
-      tone === "purple" ? "#a78bfa44" :
-      "#22d3ee44";
+      tone === "red"
+        ? "#ef444444"
+        : tone === "yellow"
+          ? "#f59e0b44"
+          : tone === "green"
+            ? "#22c55e44"
+            : tone === "purple"
+              ? "#a78bfa44"
+              : "#22d3ee44";
 
     return (
-      <div style={{ background:bg, border:`1px solid ${border}`, borderRadius:10, padding:"12px 14px" }}>
-        <div style={{ fontSize:12, fontWeight:700, color:toneColor(tone), marginBottom:6 }}>{title}</div>
+      <div
+        style={{
+          background: bg,
+          border: `1px solid ${border}`,
+          borderRadius: 10,
+          padding: "12px 14px",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 12,
+            fontWeight: 700,
+            color: toneColor(tone),
+            marginBottom: 6,
+          }}
+        >
+          {title}
+        </div>
         <div style={soft}>{body}</div>
       </div>
     );
   }
 
   function getVexusGrade(ivc, hepatic, portal, renal) {
-    if (ivc !== "large") return { grade:0, label:"VExUS no congestionado o no interpretable", tone:"green" };
-    const severeCount = [hepatic, portal, renal].filter(x => x === "severe").length;
-    const anyAbnormal = [hepatic, portal, renal].some(x => x === "mild" || x === "severe");
+    if (ivc !== "large") {
+      return {
+        grade: 0,
+        label: "VExUS no congestionado o no interpretable",
+        tone: "green",
+      };
+    }
 
-    if (severeCount >= 2) return { grade:3, label:"Congestión venosa severa", tone:"purple" };
-    if (severeCount === 1 || (anyAbnormal && severeCount === 0)) return { grade:2, label:"Congestión venosa significativa", tone:"yellow" };
-    return { grade:1, label:"VCI dilatada sin Doppler grave", tone:"yellow" };
+    const severeCount = [hepatic, portal, renal].filter((x) => x === "severe").length;
+    const anyAbnormal = [hepatic, portal, renal].some(
+      (x) => x === "mild" || x === "severe"
+    );
+
+    if (severeCount >= 2) {
+      return {
+        grade: 3,
+        label: "Congestión venosa severa",
+        tone: "purple",
+      };
+    }
+
+    if (severeCount === 1 || (anyAbnormal && severeCount === 0)) {
+      return {
+        grade: 2,
+        label: "Congestión venosa significativa",
+        tone: "yellow",
+      };
+    }
+
+    return {
+      grade: 1,
+      label: "VCI dilatada sin Doppler grave",
+      tone: "yellow",
+    };
   }
 
   const MAP = num(vals.map);
@@ -3924,6 +4018,12 @@ function ShockTab() {
   const hepatic = vals.hepatic;
   const portal = vals.portal;
   const renal = vals.renal;
+
+  const pH = num(vals.ph);
+  const hco3 = num(vals.hco3);
+  const creatinina = num(vals.creatinina);
+  const cAD = vals.cAD;
+  const akiManual = vals.akiManual;
 
   const dsi = MAP && HR ? HR / MAP : null;
   const vex = getVexusGrade(ivc, hepatic, portal, renal);
@@ -3955,7 +4055,8 @@ function ShockTab() {
 
   let mainTone = "cyan";
   let mainTitle = "Fenotipo no definido";
-  let mainText = "Integra ecografía, respuesta a fluidos, signos clínicos y evolución seriada.";
+  let mainText =
+    "Integra ecografía, respuesta a fluidos, signos clínicos y evolución seriada.";
 
   const tags = [];
   if (congestion >= 2) tags.push("Congestión venosa");
@@ -3966,89 +4067,207 @@ function ShockTab() {
   if (congestion >= 2 && lowFlow >= 3) {
     mainTone = "purple";
     mainTitle = "Shock congestivo con bajo flujo";
-    mainText = "Piensa en componente cardiogénico, sobrecarga venosa o fracaso del VD. Evita fluidos ciegos y reevalúa necesidad de diuresis, vasopresor o inotrópico según contexto.";
+    mainText =
+      "Piensa en componente cardiogénico, sobrecarga venosa o fracaso del VD. Evita fluidos ciegos y reevalúa necesidad de diuresis, vasopresor o inotrópico según contexto.";
   } else if (vasoplegia >= 2 && lowFlow <= 2 && congestion === 0) {
     mainTone = "yellow";
     mainTitle = "Fenotipo distributivo / vasopléjico";
-    mainText = "PAM baja con perfil relativamente cálido. Prioriza vasopresor y control de la causa; fluidos solo si hay evidencia de respuesta.";
+    mainText =
+      "PAM baja con perfil relativamente cálido. Prioriza vasopresor y control de la causa; fluidos solo si hay evidencia de respuesta.";
   } else if (hypovolemia >= 2 && congestion === 0) {
     mainTone = "red";
     mainTitle = "Hipovolemia / precarga baja probable";
-    mainText = "Perfil compatible con déficit de precarga. Considera expansión guiada por respuesta y reevaluación ecográfica seriada.";
+    mainText =
+      "Perfil compatible con déficit de precarga. Considera expansión guiada por respuesta y reevaluación ecográfica seriada.";
   } else if (lowFlow >= 3 && congestion === 0) {
     mainTone = "red";
     mainTitle = "Bajo flujo / shock frío probable";
-    mainText = "La perfusión está comprometida. Busca disfunción de bomba u obstrucción antes de seguir dando volumen.";
+    mainText =
+      "La perfusión está comprometida. Busca disfunción de bomba u obstrucción antes de seguir dando volumen.";
   } else if (congestion >= 2 && lowFlow <= 2) {
     mainTone = "purple";
     mainTitle = "Congestión predominante";
-    mainText = "La carga venosa parece relevante. El problema puede ser más de congestión que de hipovolemia; evita fluidos sin objetivo claro.";
+    mainText =
+      "La carga venosa parece relevante. El problema puede ser más de congestión que de hipovolemia; evita fluidos sin objetivo claro.";
   }
 
-  let second = "Si dudas entre hipovolemia y cardiogénico, usa eco focal y reevalúa respuesta a pequeños cambios terapéuticos.";
+  let second =
+    "Si dudas entre hipovolemia y cardiogénico, usa eco focal y reevalúa respuesta a pequeños cambios terapéuticos.";
+
   if (mainTitle.includes("Hipovolemia")) {
-    second = "Considera fluidos guiados por respuesta, con reevaluación de PAM, TRC, diuresis y congestión. Si aparece VExUS alto, frena volumen.";
+    second =
+      "Considera fluidos guiados por respuesta, con reevaluación de PAM, TRC, diuresis y congestión. Si aparece VExUS alto, frena volumen.";
   } else if (mainTitle.includes("distributivo")) {
-    second = "Prioriza noradrenalina y control etiológico. Fluidos solo si hay datos de respondedor y sin congestión relevante.";
+    second =
+      "Prioriza noradrenalina y control etiológico. Fluidos solo si hay datos de respondedor y sin congestión relevante.";
   } else if (mainTitle.includes("congestivo") || mainTitle.includes("Congestión")) {
-    second = "Evita bolos ciegos. Piensa en diuresis/descongestión, soporte de VD/VI y corrección de presiones de llenado según contexto.";
+    second =
+      "Evita bolos ciegos. Piensa en diuresis/descongestión, soporte de VD/VI y corrección de presiones de llenado según contexto.";
   } else if (mainTitle.includes("Bajo flujo")) {
-    second = "Busca causa de bomba u obstrucción. Considera inotrópico / vasopresor según presión y ecografía clínica.";
+    second =
+      "Busca causa de bomba u obstrucción. Considera inotrópico / vasopresor según presión y ecografía clínica.";
   }
+
+  // Bicarbonato
+  const akiStage = akiManual
+    ? 2
+    : creatinina !== null && creatinina >= 4
+      ? 3
+      : creatinina !== null && creatinina >= 2
+        ? 2
+        : creatinina !== null && creatinina >= 1.5
+          ? 1
+          : 0;
+
+  const peso = 70;
+
+  const deficitBicarb =
+    hco3 !== null && hco3 < 24 ? 0.3 * peso * (24 - hco3) : null;
+
+  const ampollas = deficitBicarb !== null ? Math.round(deficitBicarb / 10) : null;
+
+  const considerBicarb =
+    pH !== null && pH <= 7.2 && hco3 !== null && hco3 < 20;
+
+  const highBenefit =
+    considerBicarb &&
+    (akiStage >= 2 || (lact !== null && lact >= 4) || (dco2 !== null && dco2 > 6));
 
   return (
     <div>
       <div style={card}>
-        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>SHOCK / PERFUSIÓN + VEXUS</div>
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: 2,
+            color: "#22d3ee",
+            marginBottom: 10,
+          }}
+        >
+          SHOCK / PERFUSIÓN + VEXUS
+        </div>
         <div style={soft}>
-          Módulo de orientación integrando perfusión global, marcadores de bajo flujo y congestión venosa.
-          VExUS se usa solo con las variables medidas, para orientar el fenotipo de shock y la conducta inicial.
+          Módulo de orientación integrando perfusión global, marcadores de bajo
+          flujo y congestión venosa. VExUS se usa solo con las variables
+          medidas, para orientar el fenotipo de shock y la conducta inicial.
         </div>
       </div>
 
       <div style={card}>
-        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>HEMODINAMIA Y PERFUSIÓN</div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: 2,
+            color: "#22d3ee",
+            marginBottom: 10,
+          }}
+        >
+          HEMODINAMIA Y PERFUSIÓN
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
           <div style={mini}>
-            <div style={{...muted, marginBottom:4}}>PAM (mmHg)</div>
-            <input style={input} type="number" placeholder="Ej: 58" value={vals.map} onChange={e=>setField("map", e.target.value)} />
+            <div style={{ ...muted, marginBottom: 4 }}>PAM (mmHg)</div>
+            <input
+              style={input}
+              type="number"
+              placeholder="Ej: 58"
+              value={vals.map}
+              onChange={(e) => setField("map", e.target.value)}
+            />
           </div>
+
           <div style={mini}>
-            <div style={{...muted, marginBottom:4}}>FC (lpm)</div>
-            <input style={input} type="number" placeholder="Ej: 122" value={vals.hr} onChange={e=>setField("hr", e.target.value)} />
+            <div style={{ ...muted, marginBottom: 4 }}>FC (lpm)</div>
+            <input
+              style={input}
+              type="number"
+              placeholder="Ej: 122"
+              value={vals.hr}
+              onChange={(e) => setField("hr", e.target.value)}
+            />
           </div>
+
           <div style={mini}>
-            <div style={{...muted, marginBottom:4}}>Lactato (mmol/L)</div>
-            <input style={input} type="number" step="0.1" placeholder="Ej: 4.2" value={vals.lactate} onChange={e=>setField("lactate", e.target.value)} />
+            <div style={{ ...muted, marginBottom: 4 }}>Lactato (mmol/L)</div>
+            <input
+              style={input}
+              type="number"
+              step="0.1"
+              placeholder="Ej: 4.2"
+              value={vals.lactate}
+              onChange={(e) => setField("lactate", e.target.value)}
+            />
           </div>
+
           <div style={mini}>
-            <div style={{...muted, marginBottom:4}}>ΔPCO₂ (mmHg)</div>
-            <input style={input} type="number" step="0.1" placeholder="Ej: 8" value={vals.dco2} onChange={e=>setField("dco2", e.target.value)} />
+            <div style={{ ...muted, marginBottom: 4 }}>ΔPCO₂ (mmHg)</div>
+            <input
+              style={input}
+              type="number"
+              step="0.1"
+              placeholder="Ej: 8"
+              value={vals.dco2}
+              onChange={(e) => setField("dco2", e.target.value)}
+            />
           </div>
+
           <div style={mini}>
-            <div style={{...muted, marginBottom:4}}>ScvO₂ (%)</div>
-            <input style={input} type="number" step="0.1" placeholder="Ej: 62" value={vals.scvo2} onChange={e=>setField("scvo2", e.target.value)} />
+            <div style={{ ...muted, marginBottom: 4 }}>ScvO₂ (%)</div>
+            <input
+              style={input}
+              type="number"
+              step="0.1"
+              placeholder="Ej: 62"
+              value={vals.scvo2}
+              onChange={(e) => setField("scvo2", e.target.value)}
+            />
           </div>
+
           <div style={mini}>
-            <div style={{...muted, marginBottom:4}}>Diuresis (mL/kg/h)</div>
-            <input style={input} type="number" step="0.1" placeholder="Ej: 0.3" value={vals.uop} onChange={e=>setField("uop", e.target.value)} />
+            <div style={{ ...muted, marginBottom: 4 }}>Diuresis (mL/kg/h)</div>
+            <input
+              style={input}
+              type="number"
+              step="0.1"
+              placeholder="Ej: 0.3"
+              value={vals.uop}
+              onChange={(e) => setField("uop", e.target.value)}
+            />
           </div>
+
           <div style={mini}>
-            <div style={{...muted, marginBottom:4}}>TRC (seg)</div>
-            <input style={input} type="number" step="0.1" placeholder="Ej: 4" value={vals.crt} onChange={e=>setField("crt", e.target.value)} />
+            <div style={{ ...muted, marginBottom: 4 }}>TRC (seg)</div>
+            <input
+              style={input}
+              type="number"
+              step="0.1"
+              placeholder="Ej: 4"
+              value={vals.crt}
+              onChange={(e) => setField("crt", e.target.value)}
+            />
           </div>
+
           <div style={mini}>
-            <div style={{...muted, marginBottom:4}}>Piel</div>
-            <select style={select} value={vals.skin} onChange={e=>setField("skin", e.target.value)}>
+            <div style={{ ...muted, marginBottom: 4 }}>Piel</div>
+            <select
+              style={select}
+              value={vals.skin}
+              onChange={(e) => setField("skin", e.target.value)}
+            >
               <option value="">Seleccionar</option>
               <option value="warm">Caliente / vasodilatada</option>
               <option value="cold">Fría / moteada</option>
               <option value="normal">Sin hallazgos evidentes</option>
             </select>
           </div>
+
           <div style={mini}>
-            <div style={{...muted, marginBottom:4}}>PVC / VCS yugular</div>
-            <select style={select} value={vals.jvp} onChange={e=>setField("jvp", e.target.value)}>
+            <div style={{ ...muted, marginBottom: 4 }}>PVC / VCS yugular</div>
+            <select
+              style={select}
+              value={vals.jvp}
+              onChange={(e) => setField("jvp", e.target.value)}
+            >
               <option value="">Seleccionar</option>
               <option value="low">Baja / colapsada</option>
               <option value="normal">No concluyente</option>
@@ -4059,38 +4278,66 @@ function ShockTab() {
       </div>
 
       <div style={card}>
-        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>VEXUS — SOLO VARIABLES MEDIDAS</div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: 2,
+            color: "#22d3ee",
+            marginBottom: 10,
+          }}
+        >
+          VEXUS — SOLO VARIABLES MEDIDAS
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <div style={mini}>
-            <div style={{...muted, marginBottom:4}}>VCI</div>
-            <select style={select} value={vals.ivc} onChange={e=>setField("ivc", e.target.value)}>
+            <div style={{ ...muted, marginBottom: 4 }}>VCI</div>
+            <select
+              style={select}
+              value={vals.ivc}
+              onChange={(e) => setField("ivc", e.target.value)}
+            >
               <option value="">Seleccionar</option>
               <option value="small">Pequeña / colapsable</option>
               <option value="mid">Intermedia / no concluyente</option>
               <option value="large">Dilata ≥ 2 cm o poco colapsable</option>
             </select>
           </div>
+
           <div style={mini}>
-            <div style={{...muted, marginBottom:4}}>Vena hepática Doppler</div>
-            <select style={select} value={vals.hepatic} onChange={e=>setField("hepatic", e.target.value)}>
+            <div style={{ ...muted, marginBottom: 4 }}>Vena hepática Doppler</div>
+            <select
+              style={select}
+              value={vals.hepatic}
+              onChange={(e) => setField("hepatic", e.target.value)}
+            >
               <option value="">Seleccionar</option>
               <option value="normal">Normal (onda S dominante)</option>
               <option value="mild">Anormal leve (S &lt; D)</option>
               <option value="severe">Anormal grave (reversión S)</option>
             </select>
           </div>
+
           <div style={mini}>
-            <div style={{...muted, marginBottom:4}}>Vena porta</div>
-            <select style={select} value={vals.portal} onChange={e=>setField("portal", e.target.value)}>
+            <div style={{ ...muted, marginBottom: 4 }}>Vena porta</div>
+            <select
+              style={select}
+              value={vals.portal}
+              onChange={(e) => setField("portal", e.target.value)}
+            >
               <option value="">Seleccionar</option>
               <option value="normal">Pulsatilidad &lt; 30%</option>
               <option value="mild">Pulsatilidad 30–49%</option>
               <option value="severe">Pulsatilidad ≥ 50%</option>
             </select>
           </div>
+
           <div style={mini}>
-            <div style={{...muted, marginBottom:4}}>Vena intrarrenal</div>
-            <select style={select} value={vals.renal} onChange={e=>setField("renal", e.target.value)}>
+            <div style={{ ...muted, marginBottom: 4 }}>Vena intrarrenal</div>
+            <select
+              style={select}
+              value={vals.renal}
+              onChange={(e) => setField("renal", e.target.value)}
+            >
               <option value="">Seleccionar</option>
               <option value="normal">Continuo normal</option>
               <option value="mild">Discontinuo bifásico</option>
@@ -4098,75 +4345,224 @@ function ShockTab() {
             </select>
           </div>
         </div>
-        <div style={{...soft, marginTop:10}}>
-          VExUS orienta congestión venosa sistémica. No usar en aislamiento: integrar con perfusión, clínica y contexto ecográfico.
+
+        <div style={{ ...soft, marginTop: 10 }}>
+          VExUS orienta congestión venosa sistémica. No usar en aislamiento:
+          integrar con perfusión, clínica y contexto ecográfico.
         </div>
       </div>
 
       <div style={card}>
-        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>SALIDA INTEGRADA</div>
-        <div style={{
-          background:
-            mainTone === "red" ? "#2a0505" :
-            mainTone === "yellow" ? "#2a1a00" :
-            mainTone === "green" ? "#052a10" :
-            mainTone === "purple" ? "#1f1637" :
-            "#062534",
-          border:`1px solid ${
-            mainTone === "red" ? "#ef444444" :
-            mainTone === "yellow" ? "#f59e0b44" :
-            mainTone === "green" ? "#22c55e44" :
-            mainTone === "purple" ? "#a78bfa44" :
-            "#22d3ee44"
-          }`,
-          borderRadius:10,
-          padding:"12px 14px"
-        }}>
-          <div style={{ fontSize:24, fontWeight:800, color:toneColor(mainTone), marginBottom:4 }}>{mainTitle}</div>
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: 2,
+            color: "#22d3ee",
+            marginBottom: 10,
+          }}
+        >
+          CONTEXTO ÁCIDO-BASE PARA BICARBONATO
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+          <div style={mini}>
+            <div style={{ ...muted, marginBottom: 4 }}>pH</div>
+            <input
+              style={input}
+              type="number"
+              step="0.01"
+              placeholder="Ej: 7.14"
+              value={vals.ph}
+              onChange={(e) => setField("ph", e.target.value)}
+            />
+          </div>
+
+          <div style={mini}>
+            <div style={{ ...muted, marginBottom: 4 }}>HCO₃⁻ (mEq/L)</div>
+            <input
+              style={input}
+              type="number"
+              step="0.1"
+              placeholder="Ej: 14"
+              value={vals.hco3}
+              onChange={(e) => setField("hco3", e.target.value)}
+            />
+          </div>
+
+          <div style={mini}>
+            <div style={{ ...muted, marginBottom: 4 }}>Creatinina (mg/dL)</div>
+            <input
+              style={input}
+              type="number"
+              step="0.1"
+              placeholder="Ej: 2.4"
+              value={vals.creatinina}
+              onChange={(e) => setField("creatinina", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+          <label
+            style={{
+              fontSize: 12,
+              color: "#7aa2d4",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={vals.cAD}
+              onChange={(e) => setField("cAD", e.target.checked)}
+            />
+            CAD
+          </label>
+
+          <label
+            style={{
+              fontSize: 12,
+              color: "#7aa2d4",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={vals.akiManual}
+              onChange={(e) => setField("akiManual", e.target.checked)}
+            />
+            AKI KDIGO 2–3 conocido
+          </label>
+        </div>
+      </div>
+
+      <div style={card}>
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: 2,
+            color: "#22d3ee",
+            marginBottom: 10,
+          }}
+        >
+          SALIDA INTEGRADA
+        </div>
+
+        <div
+          style={{
+            background:
+              mainTone === "red"
+                ? "#2a0505"
+                : mainTone === "yellow"
+                  ? "#2a1a00"
+                  : mainTone === "green"
+                    ? "#052a10"
+                    : mainTone === "purple"
+                      ? "#1f1637"
+                      : "#062534",
+            border: `1px solid ${
+              mainTone === "red"
+                ? "#ef444444"
+                : mainTone === "yellow"
+                  ? "#f59e0b44"
+                  : mainTone === "green"
+                    ? "#22c55e44"
+                    : mainTone === "purple"
+                      ? "#a78bfa44"
+                      : "#22d3ee44"
+            }`,
+            borderRadius: 10,
+            padding: "12px 14px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 24,
+              fontWeight: 800,
+              color: toneColor(mainTone),
+              marginBottom: 4,
+            }}
+          >
+            {mainTitle}
+          </div>
           <div style={soft}>{mainText}</div>
         </div>
       </div>
 
       <div style={card}>
-        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>INTERPRETACIÓN POR EJES</div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: 2,
+            color: "#22d3ee",
+            marginBottom: 10,
+          }}
+        >
+          INTERPRETACIÓN POR EJES
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <ResultCard
             title="Perfusión global"
             tone={lowFlow >= 3 ? "red" : "green"}
             body={
               <>
-                Lactato: <strong>{lact ?? "—"}</strong> · ΔPCO₂: <strong>{dco2 ?? "—"}</strong> · ScvO₂: <strong>{scv ?? "—"}</strong><br/>
-                {lowFlow >= 3 ? "Múltiples marcadores sugieren hipoperfusión / bajo flujo." : "Sin señal fuerte de bajo flujo o datos insuficientes."}
+                Lactato: <strong>{lact ?? "—"}</strong> · ΔPCO₂:{" "}
+                <strong>{dco2 ?? "—"}</strong> · ScvO₂: <strong>{scv ?? "—"}</strong>
+                <br />
+                {lowFlow >= 3
+                  ? "Múltiples marcadores sugieren hipoperfusión / bajo flujo."
+                  : "Sin señal fuerte de bajo flujo o datos insuficientes."}
               </>
             }
           />
+
           <ResultCard
             title="Presión / vasoplejia"
             tone={vasoplegia >= 2 ? "yellow" : "cyan"}
             body={
               <>
-                PAM: <strong>{MAP ?? "—"}</strong> · FC: <strong>{HR ?? "—"}</strong> · DSI: <strong>{dsi !== null ? dsi.toFixed(2) : "—"}</strong><br/>
-                {vasoplegia >= 2 ? "Perfil compatible con vasodilatación / distributivo." : "Sin patrón vasoplégico dominante."}
+                PAM: <strong>{MAP ?? "—"}</strong> · FC: <strong>{HR ?? "—"}</strong> ·
+                DSI: <strong>{dsi !== null ? dsi.toFixed(2) : "—"}</strong>
+                <br />
+                {vasoplegia >= 2
+                  ? "Perfil compatible con vasodilatación / distributivo."
+                  : "Sin patrón vasoplégico dominante."}
               </>
             }
           />
+
           <ResultCard
             title="Congestión venosa"
             tone={congestion >= 2 ? "purple" : "green"}
             body={
               <>
-                PVC/Jugular: <strong>{jvp || "—"}</strong> · VExUS: <strong>{vex.label}</strong><br/>
-                {congestion >= 2 ? "La congestión venosa sistémica probablemente es clínicamente relevante." : "Sin evidencia fuerte de congestión dominante."}
+                PVC/Jugular: <strong>{jvp || "—"}</strong> · VExUS:{" "}
+                <strong>{vex.label}</strong>
+                <br />
+                {congestion >= 2
+                  ? "La congestión venosa sistémica probablemente es clínicamente relevante."
+                  : "Sin evidencia fuerte de congestión dominante."}
               </>
             }
           />
+
           <ResultCard
             title="Riñón / microperfusión"
-            tone={((uop !== null && uop < 0.5) || (crt !== null && crt > 3)) ? "red" : "green"}
+            tone={
+              (uop !== null && uop < 0.5) || (crt !== null && crt > 3)
+                ? "red"
+                : "green"
+            }
             body={
               <>
-                Diuresis: <strong>{uop ?? "—"}</strong> mL/kg/h · TRC: <strong>{crt ?? "—"}</strong> s<br/>
-                {((uop !== null && uop < 0.5) || (crt !== null && crt > 3))
+                Diuresis: <strong>{uop ?? "—"}</strong> mL/kg/h · TRC:{" "}
+                <strong>{crt ?? "—"}</strong> s
+                <br />
+                {(uop !== null && uop < 0.5) || (crt !== null && crt > 3)
                   ? "Compromiso de perfusión periférica/renal."
                   : "Sin señal fuerte de hipoperfusión periférica/renal."}
               </>
@@ -4176,27 +4572,276 @@ function ShockTab() {
       </div>
 
       <div style={card}>
-        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>CONDUCTA INICIAL ORIENTATIVA</div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-          <ResultCard title="1) Define el eje predominante" tone="cyan" body={<>Bajo flujo, vasoplejia o congestión. El módulo orienta la prioridad: <strong>{mainTitle}</strong>.</>} />
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: 2,
+            color: "#22d3ee",
+            marginBottom: 10,
+          }}
+        >
+          CONDUCTA INICIAL ORIENTATIVA
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <ResultCard
+            title="1) Define el eje predominante"
+            tone="cyan"
+            body={
+              <>
+                Bajo flujo, vasoplejia o congestión. El módulo orienta la prioridad:{" "}
+                <strong>{mainTitle}</strong>.
+              </>
+            }
+          />
+
           <ResultCard title="2) Ajusta la terapia" tone={mainTone} body={second} />
-          <ResultCard title="3) Reevaluación seriada" tone="green" body="Repite lactato, ΔPCO₂, ScvO₂, diuresis, TRC y VExUS según evolución. La tendencia suele ser más útil que una medición aislada." />
-          <ResultCard title="4) A considerar" tone="yellow" body="VExUS alto no significa siempre “no dar nada”; significa que la congestión debe entrar explícitamente en la decisión. La perfusión y la congestión pueden coexistir." />
+
+          <ResultCard
+            title="3) Reevaluación seriada"
+            tone="green"
+            body="Repite lactato, ΔPCO₂, ScvO₂, diuresis, TRC y VExUS según evolución. La tendencia suele ser más útil que una medición aislada."
+          />
+
+          <ResultCard
+            title="4) A considerar"
+            tone="yellow"
+            body="VExUS alto no significa siempre “no dar nada”; significa que la congestión debe entrar explícitamente en la decisión. La perfusión y la congestión pueden coexistir."
+          />
         </div>
       </div>
 
       <div style={card}>
-        <div style={{ fontSize:10, letterSpacing:2, color:"#22d3ee", marginBottom:10 }}>FENOTIPOS SUGERIDOS</div>
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: 2,
+            color: "#22d3ee",
+            marginBottom: 10,
+          }}
+        >
+          FENOTIPOS SUGERIDOS
+        </div>
+
         <div>
-          {tags.length ? tags.map((t, i) => (
-            <span key={i} style={{ display:"inline-block", padding:"3px 10px", borderRadius:999, border:"1px solid #1a3060", color:"#7aa2d4", fontSize:11, marginRight:6, marginTop:6, background:"#040c1c" }}>
-              {t}
-            </span>
-          )) : (
-            <span style={{ display:"inline-block", padding:"3px 10px", borderRadius:999, border:"1px solid #1a3060", color:"#7aa2d4", fontSize:11, background:"#040c1c" }}>
+          {tags.length ? (
+            tags.map((t, i) => (
+              <span
+                key={i}
+                style={{
+                  display: "inline-block",
+                  padding: "3px 10px",
+                  borderRadius: 999,
+                  border: "1px solid #1a3060",
+                  color: "#7aa2d4",
+                  fontSize: 11,
+                  marginRight: 6,
+                  marginTop: 6,
+                  background: "#040c1c",
+                }}
+              >
+                {t}
+              </span>
+            ))
+          ) : (
+            <span
+              style={{
+                display: "inline-block",
+                padding: "3px 10px",
+                borderRadius: 999,
+                border: "1px solid #1a3060",
+                color: "#7aa2d4",
+                fontSize: 11,
+                background: "#040c1c",
+              }}
+            >
               Sin fenotipo dominante todavía
             </span>
           )}
+        </div>
+      </div>
+
+      {/* Bicarbonato */}
+      <div style={card}>
+        <div
+          style={{
+            fontSize: 10,
+            color: "#22d3ee",
+            letterSpacing: 2,
+            marginBottom: 10,
+          }}
+        >
+          BICARBONATO — ORIENTACIÓN
+        </div>
+
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: highBenefit ? "#ef4444" : considerBicarb ? "#f59e0b" : "#4a6a9f",
+          }}
+        >
+          {highBenefit && "Probable beneficio"}
+          {!highBenefit && considerBicarb && "Considerar"}
+          {!considerBicarb && "No indicado"}
+        </div>
+
+        <div style={soft}>
+          Acidosis metabólica severa (pH ≤ 7.20)<br />
+          Beneficio mayor si AKI KDIGO ≥2 o hipoperfusión
+        </div>
+
+        <div style={{ fontSize: 11, color: "#f59e0b", marginTop: 6 }}>
+          {cAD ? "Contexto CAD activo · indicar si pH < 6.9" : "CAD: indicar si pH < 6.9"}
+        </div>
+      </div>
+
+      {deficitBicarb !== null && (
+        <div style={card}>
+          <div style={{ ...muted, marginBottom: 4 }}>Déficit estimado</div>
+
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#22d3ee" }}>
+            {deficitBicarb.toFixed(0)} mEq
+          </div>
+
+          <div style={soft}>≈ {ampollas} ampollas de 10 mEq</div>
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+        {[
+          { id: 0, label: "8.4%" },
+          { id: 1, label: "1/6 M" },
+          { id: 2, label: "2/3 M" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setBicarbTab(tab.id)}
+            style={{
+              padding: "8px 12px",
+              borderRadius: 8,
+              fontFamily: "inherit",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+              border:
+                bicarbTab === tab.id
+                  ? "1px solid #22d3ee"
+                  : "1px solid #1a3060",
+              background: bicarbTab === tab.id ? "#0d2a4e" : "#060d1f",
+              color: bicarbTab === tab.id ? "#22d3ee" : "#4a6a9f",
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {bicarbTab === 0 && (
+        <div style={card}>
+          <div style={{ ...muted, marginBottom: 6 }}>Ampollas 8.4%</div>
+
+          <div style={soft}>
+            1 mEq/mL<br />
+            Ampolla 10 mL = 10 mEq
+          </div>
+
+          <div style={{ ...soft, marginTop: 8 }}>
+            <strong>Cómo dar:</strong>
+            <br />
+            • 50–100 mEq inicial
+            <br />
+            • Bolo lento 10–20 min
+            <br />
+            • Reevaluar gases
+          </div>
+
+          <div style={{ ...soft, marginTop: 8 }}>
+            <strong>Vía:</strong>
+            <br />
+            Central preferible
+            <br />
+            Periférica si diluido
+          </div>
+        </div>
+      )}
+
+      {bicarbTab === 1 && (
+        <div style={card}>
+          <div style={{ ...muted, marginBottom: 6 }}>Bicarbonato 1/6 M (~167 mEq/L)</div>
+
+          <div style={soft}>
+            <strong>Preparación:</strong>
+            <br />
+            150 mEq en 1 L D5W
+          </div>
+
+          <div style={{ ...soft, marginTop: 8 }}>
+            Ejemplo:
+            <br />
+            15 ampollas = 150 mEq
+          </div>
+
+          <div style={{ ...soft, marginTop: 8 }}>
+            <strong>Infusión:</strong>
+            <br />
+            • Continua
+            <br />
+            • Segura periférica
+            <br />
+            • Corrección progresiva
+          </div>
+        </div>
+      )}
+
+      {bicarbTab === 2 && (
+        <div style={card}>
+          <div style={{ ...muted, marginBottom: 6 }}>Bicarbonato 2/3 M (~666 mEq/L)</div>
+
+          <div style={soft}>
+            <strong>Preparación:</strong>
+            <br />
+            200 mEq en 300 mL
+          </div>
+
+          <div style={{ ...soft, marginTop: 8 }}>
+            Ejemplo:
+            <br />
+            20 ampollas = 200 mEq
+          </div>
+
+          <div style={{ ...soft, marginTop: 8 }}>
+            <strong>Infusión:</strong>
+            <br />
+            • Vía central
+            <br />
+            • Paciente crítico
+            <br />
+            • Restricción de volumen
+          </div>
+        </div>
+      )}
+
+      <div style={card}>
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: "#22d3ee",
+            marginBottom: 4,
+          }}
+        >
+          A considerar
+        </div>
+
+        <div style={soft}>
+          • No corrige la causa
+          <br />
+          • Puede aumentar CO₂
+          <br />
+          • Vigilar Na, K, Ca
+          <br />
+          • Requiere ventilación adecuada
         </div>
       </div>
     </div>
