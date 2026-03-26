@@ -3,32 +3,39 @@ import { useState } from "react";
 
 const ui = {
   card: {
-    background: "#fff",
+    background: "#0b1730",
     padding: "16px",
     borderRadius: "12px",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-    marginBottom: "12px"
+    boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+    marginBottom: "12px",
+    border: "1px solid #1a3060"
   },
   label: {
     fontWeight: "600",
     marginBottom: "4px",
-    display: "block"
+    display: "block",
+    color: "#7aa2d4",
+    fontSize: "12px"
   },
   input: {
     width: "100%",
     padding: "8px",
     borderRadius: "8px",
-    border: "1px solid #ccc",
-    marginBottom: "8px"
+    border: "1px solid #1a3060",
+    marginBottom: "8px",
+    background: "#040c1c",
+    color: "#e8edf5",
+    boxSizing: "border-box"
   },
   small: {
     fontSize: "12px",
-    color: "#666"
+    color: "#7aa2d4"
   },
   sectionTitle: {
     fontWeight: "700",
     fontSize: "16px",
-    marginBottom: "8px"
+    marginBottom: "8px",
+    color: "#e8edf5"
   }
 };
 
@@ -4879,81 +4886,160 @@ function ShockTab() {
   );
 }
 function DesteteTab() {
-  const [fr, setFr] = React.useState("");
-  const [vt, setVt] = React.useState("");
+  const [fr, setFr] = useState("");
+  const [vt, setVt] = useState("");
 
-  const rsbi = fr && vt ? (fr / vt).toFixed(1) : null;
+  const frNum = parseFloat(fr);
+  const vtNum = parseFloat(vt);
+
+  // vt en litros
+  const rsbi =
+    frNum > 0 && vtNum > 0
+      ? (frNum / vtNum).toFixed(1)
+      : null;
 
   return (
     <div>
       <div style={ui.card}>
-        <div style={ui.sectionTitle}>Criterios Previos</div>
+        <div style={{ fontSize: 10, color: "#22d3ee", letterSpacing: 2, marginBottom: 10 }}>
+          DESTETE VENTILATORIO
+        </div>
 
-        <ul>
-          <li>Estabilidad hemodinámica</li>
-          <li>FiO₂ ≤ 40%</li>
-          <li>PEEP ≤ 8</li>
-          <li>Paciente despierto</li>
-        </ul>
+        <div style={ui.sectionTitle}>Criterios previos</div>
+
+        <div style={{ color: "#7aa2d4", fontSize: 12, lineHeight: 1.9 }}>
+          • Estabilidad hemodinámica o mínimo soporte vasopresor<br />
+          • FiO₂ ≤ 40%<br />
+          • PEEP ≤ 5–8 cmH₂O<br />
+          • Paciente despierto o fácilmente despertable<br />
+          • Buena tos y manejo de secreciones<br />
+          • Sin acidosis respiratoria progresiva
+        </div>
       </div>
 
       <div style={ui.card}>
-        <div style={ui.sectionTitle}>RSBI</div>
+        <div style={ui.sectionTitle}>Índice de Tobin / RSBI</div>
 
-        <label style={ui.label}>Frecuencia Respiratoria</label>
+        <label style={ui.label}>Frecuencia respiratoria (rpm)</label>
         <input
+          type="number"
           style={ui.input}
           value={fr}
           onChange={e => setFr(e.target.value)}
+          placeholder="Ej: 22"
         />
 
         <label style={ui.label}>Volumen corriente (L)</label>
         <input
+          type="number"
+          step="0.01"
           style={ui.input}
           value={vt}
           onChange={e => setVt(e.target.value)}
+          placeholder="Ej: 0.45"
         />
 
         {rsbi && (
-          <div>
-            <b>RSBI:</b> {rsbi}
-            <br />
-            {rsbi < 105 ? "✅ Apto para destete" : "⚠️ Riesgo de falla"}
+          <div
+            style={{
+              background: Number(rsbi) < 105 ? "#052a10" : "#2a0505",
+              border: `1px solid ${Number(rsbi) < 105 ? "#22c55e44" : "#ef444444"}`,
+              borderRadius: 10,
+              padding: 12,
+              marginTop: 8
+            }}
+          >
+            <div
+              style={{
+                fontSize: 24,
+                fontWeight: 800,
+                color: Number(rsbi) < 105 ? "#22c55e" : "#ef4444"
+              }}
+            >
+              {rsbi}
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: Number(rsbi) < 105 ? "#22c55e" : "#ef4444",
+                marginTop: 4
+              }}
+            >
+              {Number(rsbi) < 105 ? "✅ Apto para prueba de destete" : "⚠️ Riesgo de falla de destete"}
+            </div>
+            <div
+              style={{
+                fontSize: 11,
+                color: Number(rsbi) < 105 ? "#22c55e" : "#ef4444",
+                marginTop: 6,
+                lineHeight: 1.7
+              }}
+            >
+              Interpretar siempre junto con estado neurológico, secreciones,
+              fuerza respiratoria, intercambio gaseoso y estabilidad hemodinámica.
+            </div>
           </div>
         )}
       </div>
     </div>
   );
 }
+
 function NeuroTab() {
   return (
     <div>
       <div style={ui.card}>
-        <div style={ui.sectionTitle}>Objetivos de Neuroprotección</div>
+        <div style={{ fontSize: 10, color: "#22d3ee", letterSpacing: 2, marginBottom: 10 }}>
+          NEUROPROTECCIÓN
+        </div>
 
-        <p><b>PAM:</b> 65–80 mmHg</p>
-        <p><b>SatO₂:</b> &gt; 94%</p>
-        <p><b>PaCO₂:</b> 35–40 mmHg</p>
-        <p><b>Temperatura:</b> 36–37°C</p>
+        <div style={ui.sectionTitle}>Objetivos fisiológicos</div>
+
+        <div style={{ color: "#7aa2d4", fontSize: 12, lineHeight: 2 }}>
+          <b style={{ color: "#e8edf5" }}>PAM:</b> 65–80 mmHg<br />
+          <b style={{ color: "#e8edf5" }}>SatO₂:</b> &gt; 94%<br />
+          <b style={{ color: "#e8edf5" }}>PaCO₂:</b> 35–40 mmHg<br />
+          <b style={{ color: "#e8edf5" }}>Temperatura:</b> 36–37°C<br />
+          <b style={{ color: "#e8edf5" }}>Glicemia:</b> 140–180 mg/dL
+        </div>
       </div>
 
       <div style={ui.card}>
-        <div style={ui.sectionTitle}>Medidas Clave</div>
+        <div style={ui.sectionTitle}>Medidas clave</div>
 
-        <ul>
-          <li>Cabecera a 30°</li>
-          <li>Evitar hipoxia</li>
-          <li>Evitar hipotensión</li>
-          <li>Control glicémico</li>
-        </ul>
+        <div style={{ color: "#7aa2d4", fontSize: 12, lineHeight: 1.9 }}>
+          • Cabecera a 30°<br />
+          • Evitar hipoxia<br />
+          • Evitar hipotensión<br />
+          • Evitar hipercapnia e hipocapnia<br />
+          • Control glicémico evitando hipoglicemia<br />
+          • Mantener normotermia y evitar fiebre
+        </div>
 
-        <div style={ui.small}>
-          Basado en guías neurocríticas actuales
+        <div
+          style={{
+            marginTop: 12,
+            background: "#040c1c",
+            borderRadius: 10,
+            padding: 12,
+            border: "1px solid #1a3060"
+          }}
+        >
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#22d3ee", marginBottom: 6 }}>
+            A considerar
+          </div>
+
+          <div style={ui.small}>
+            Basado en objetivos neurocríticos habituales: normoxemia, normocapnia,
+            normotermia y control glicémico moderado.
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
 const TABS=["💉 SRI","🩸 DVA","⚗️ CRI","👁 Glasgow","😴 Sedación UCI","🔧 Procedimientos","📊 Scores","🧂 Electrolitos","❤️ RCP","🫁 VMI","👃 Vía Aérea", "🧪Gases","💕Arritmias","💀Shock","🛌Destete","🧠Neuroproteccion"];
 
 export default function App() {
